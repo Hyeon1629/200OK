@@ -2,20 +2,6 @@ spring:
   application:
     name: checkdang
 
-  datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
-    show-sql: true
-
   security:
     oauth2:
       client:
@@ -34,7 +20,6 @@ spring:
             redirect-uri: "{baseUrl}/login/oauth2/code/kakao"
             scope:
               - profile_nickname
-              - account_email
         provider:
           kakao:
             authorization-uri: https://kauth.kakao.com/oauth/authorize
@@ -48,6 +33,15 @@ jwt:
 
 oauth2:
   redirect-uri: ${OAUTH2_REDIRECT_URI}
+
+aws:
+  region: ${AWS_REGION}
+  credentials:
+    access-key: ${AWS_ACCESS_KEY_ID}
+    secret-key: ${AWS_SECRET_ACCESS_KEY}
+  dynamodb:
+    endpoint: ${DYNAMODB_ENDPOINT:}
+    table-name: users
 
 server:
   port: 8080

@@ -1,14 +1,15 @@
-spring:
-  datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+aws:
+  region: us-east-1
+  credentials:
+    access-key: local
+    secret-key: local
+  dynamodb:
+    endpoint: http://localhost:8000
+    table-name: users
 
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
-    show-sql: true
+jwt:
+  secret: Y2hlY2tkYW5nLWp3dC1zZWNyZXQta2V5LW11c3QtYmUtYXQtbGVhc3QtMjU2LWJpdHMtbG9uZw==
+  expiration: 86400000
+
+oauth2:
+  redirect-uri: http://localhost:3000/oauth2/callback

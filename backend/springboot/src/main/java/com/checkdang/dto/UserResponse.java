@@ -4,16 +4,16 @@ import com.checkdang.domain.User;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Getter
 @Builder
 public class UserResponse {
-    private Long id;
+    private String id;
     private String email;
     private String name;
     private User.Role role;
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     public static UserResponse from(User user) {
         return UserResponse.builder()
