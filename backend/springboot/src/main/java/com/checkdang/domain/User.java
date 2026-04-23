@@ -21,7 +21,7 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column
     private String password;
 
     @Column(nullable = false)
@@ -31,11 +31,23 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private Provider provider = Provider.LOCAL;
+
+    @Column
+    private String providerId;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     public enum Role {
         PATIENT, DOCTOR, ADMIN
+    }
+
+    public enum Provider {
+        LOCAL, GOOGLE, KAKAO
     }
 }

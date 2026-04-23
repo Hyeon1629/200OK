@@ -2,6 +2,7 @@ package com.checkdang.controller;
 
 import com.checkdang.dto.LoginRequest;
 import com.checkdang.dto.SignupRequest;
+import com.checkdang.dto.TokenResponse;
 import com.checkdang.dto.UserResponse;
 import com.checkdang.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(userService.login(request));
     }
 }
