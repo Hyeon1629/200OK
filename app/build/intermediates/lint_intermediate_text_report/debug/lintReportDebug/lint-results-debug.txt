@@ -1,0 +1,1206 @@
+D:\Desktop Archive\VibeCoding\VCP\app\build.gradle.kts:12: Warning: Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the android.os.Build.VERSION_CODES javadoc for details. [OldTargetApi]
+        targetSdk = 34
+        ~~~~~~~~~~~~~~
+
+   Explanation for issues of type "OldTargetApi":
+   When your application or sdk runs on a version of Android that is more
+   recent than your targetSdk specifies that it has been tested with, various
+   compatibility modes kick in. This ensures that your application continues
+   to work, but it may look out of place. For example, if the targetSdk is
+   less than 14, your app may get an option button in the UI.
+
+   To fix this issue, set the targetSdk to the highest available value. Then
+   test your app to make sure everything works correctly. You may want to
+   consult the compatibility notes to see what changes apply to each version
+   you are adding support for:
+   https://developer.android.com/reference/android/os/Build.VERSION_CODES.html
+   as well as follow this guide:
+   https://developer.android.com/distribute/best-practices/develop/target-sdk.
+   html
+
+   https://developer.android.com/distribute/best-practices/develop/target-sdk.html
+
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_sleep_detail.xml:109: Warning: Attribute clipToOutline is only used in API level 31 and higher (current min is 26) [UnusedAttribute]
+                        android:clipToOutline="true"
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:260: Warning: Attribute clipToOutline is only used in API level 31 and higher (current min is 26) [UnusedAttribute]
+                    android:clipToOutline="true"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:400: Warning: Attribute clipToOutline is only used in API level 31 and higher (current min is 26) [UnusedAttribute]
+                    android:clipToOutline="true"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "UnusedAttribute":
+   This check finds attributes set in XML files that were introduced in a
+   version newer than the oldest version targeted by your application (with
+   the minSdkVersion attribute).
+
+   This is not an error; the application will simply ignore the attribute.
+   However, if the attribute is important to the appearance or functionality
+   of your application, you should consider finding an alternative way to
+   achieve the same result with only available attributes, and then you can
+   optionally create a copy of the layout in a layout-vNN folder which will be
+   used on API NN or higher where you can take advantage of the newer
+   attribute.
+
+   Note: This check does not only apply to attributes. For example, some tags
+   can be unused too, such as the new <tag> element in layouts introduced in
+   API 21.
+
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\splash\SplashActivity.kt:12: Warning: The application should not provide its own launch screen [CustomSplashScreen]
+class SplashActivity : AppCompatActivity() {
+      ~~~~~~~~~~~~~~
+
+   Explanation for issues of type "CustomSplashScreen":
+   Starting in Android 12 (API 31+), the application's Launch Screen is
+   provided by the system and the application should not create its own,
+   otherwise the user will see two splashscreens. Please check the
+   SplashScreen class to check how the Splash Screen can be controlled and
+   customized.
+
+   https://developer.android.com/guide/topics/ui/splash-screen
+
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\drawable\body_back.xml:4: Warning: Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more [VectorRaster]
+    android:height="400dp"
+                    ~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\drawable\body_front.xml:4: Warning: Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more [VectorRaster]
+    android:height="400dp"
+                    ~~~~~
+
+   Explanation for issues of type "VectorRaster":
+   Vector icons require API 21 or API 24 depending on used features, but when
+   minSdkVersion is less than 21 or 24 and Android Gradle plugin 1.4 or higher
+   is used, a vector drawable placed in the drawable folder is automatically
+   moved to drawable-anydpi-v21 or drawable-anydpi-v24 and bitmap images are
+   generated for different screen resolutions for backwards compatibility.
+
+   However, there are some limitations to this raster image generation, and
+   this lint check flags elements and attributes that are not fully supported.
+   You should manually check whether the generated output is acceptable for
+   those older devices.
+
+D:\Desktop Archive\VibeCoding\VCP\gradle\wrapper\gradle-wrapper.properties:3: Warning: A newer version of Gradle than 9.4.0 is available: 9.4.1 [AndroidGradlePluginVersion]
+distributionUrl=https\://services.gradle.org/distributions/gradle-9.4.0-bin.zip
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\gradle\libs.versions.toml:2: Warning: A newer version of com.android.application than 9.1.1 is available: 9.2.0 [AndroidGradlePluginVersion]
+agp = "9.1.1"
+      ~~~~~~~
+
+   Explanation for issues of type "AndroidGradlePluginVersion":
+   This detector looks for usage of the Android Gradle Plugin where the
+   version you are using is not the current stable release. Using older
+   versions is fine, and there are cases where you deliberately want to stick
+   with an older version. However, you may simply not be aware that a more
+   recent version is available, and that is what this lint check helps find.
+
+D:\Desktop Archive\VibeCoding\VCP\app\build.gradle.kts:7: Warning: A newer version of compileSdk than 34 is available: 36 [GradleDependency]
+    compileSdk = 34
+    ~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\gradle\libs.versions.toml:4: Warning: A newer version of androidx.core:core-ktx than 1.12.0 is available: 1.18.0 [GradleDependency]
+coreKtx = "1.12.0"
+          ~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\gradle\libs.versions.toml:5: Warning: A newer version of androidx.appcompat:appcompat than 1.6.1 is available: 1.7.1 [GradleDependency]
+appcompat = "1.6.1"
+            ~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\gradle\libs.versions.toml:6: Warning: A newer version of com.google.android.material:material than 1.11.0 is available: 1.13.0 [GradleDependency]
+material = "1.11.0"
+           ~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\gradle\libs.versions.toml:7: Warning: A newer version of androidx.activity:activity-ktx than 1.8.2 is available: 1.13.0 [GradleDependency]
+activity = "1.8.2"
+           ~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\gradle\libs.versions.toml:8: Warning: A newer version of androidx.constraintlayout:constraintlayout than 2.1.4 is available: 2.2.1 [GradleDependency]
+constraintlayout = "2.1.4"
+                   ~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\gradle\libs.versions.toml:9: Warning: A newer version of androidx.navigation:navigation-fragment-ktx than 2.7.7 is available: 2.9.8 [GradleDependency]
+navigation = "2.7.7"
+             ~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\gradle\libs.versions.toml:9: Warning: A newer version of androidx.navigation:navigation-ui-ktx than 2.7.7 is available: 2.9.8 [GradleDependency]
+navigation = "2.7.7"
+             ~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\gradle\libs.versions.toml:10: Warning: A newer version of androidx.lifecycle:lifecycle-livedata-ktx than 2.7.0 is available: 2.10.0 [GradleDependency]
+lifecycle = "2.7.0"
+            ~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\gradle\libs.versions.toml:10: Warning: A newer version of androidx.lifecycle:lifecycle-viewmodel-ktx than 2.7.0 is available: 2.10.0 [GradleDependency]
+lifecycle = "2.7.0"
+            ~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\gradle\libs.versions.toml:11: Warning: A newer version of androidx.fragment:fragment-ktx than 1.6.2 is available: 1.8.9 [GradleDependency]
+fragment = "1.6.2"
+           ~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\gradle\libs.versions.toml:12: Warning: A newer version of androidx.viewpager2:viewpager2 than 1.0.0 is available: 1.1.0 [GradleDependency]
+viewpager2 = "1.0.0"
+             ~~~~~~~
+
+   Explanation for issues of type "GradleDependency":
+   This detector looks for usages of libraries where the version you are using
+   is not the current stable release. Using older versions is fine, and there
+   are cases where you deliberately want to stick with an older version.
+   However, you may simply not be aware that a more recent version is
+   available, and that is what this lint check helps find.
+
+D:\Desktop Archive\VibeCoding\VCP\gradle\libs.versions.toml:3: Warning: A newer version of org.jetbrains.kotlin.android than 2.3.0 is available: 2.3.21 [NewerVersionAvailable]
+kotlin = "2.3.0"
+         ~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\gradle\libs.versions.toml:13: Warning: A newer version of io.coil-kt:coil than 2.6.0 is available: 2.7.0 [NewerVersionAvailable]
+coil = "2.6.0"
+       ~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\gradle\libs.versions.toml:14: Warning: A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-android than 1.7.3 is available: 1.10.2 [NewerVersionAvailable]
+coroutines = "1.7.3"
+             ~~~~~~~
+
+   Explanation for issues of type "NewerVersionAvailable":
+   This detector checks with a central repository to see if there are newer
+   versions available for the dependencies used by this project. This is
+   similar to the GradleDependency check, which checks for newer versions
+   available in the Android SDK tools and libraries, but this works with any
+   MavenCentral dependency, and connects to the library every time, which
+   makes it more flexible but also much slower.
+
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:101: Warning: This tag and its children can be replaced by one <TextView/> and a compound drawable [UseCompoundDrawables]
+                <LinearLayout
+                 ~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:212: Warning: This tag and its children can be replaced by one <TextView/> and a compound drawable [UseCompoundDrawables]
+                <LinearLayout
+                 ~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:341: Warning: This tag and its children can be replaced by one <TextView/> and a compound drawable [UseCompoundDrawables]
+                <LinearLayout
+                 ~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\item_benefit_row.xml:2: Warning: This tag and its children can be replaced by one <TextView/> and a compound drawable [UseCompoundDrawables]
+<LinearLayout
+ ~~~~~~~~~~~~
+
+   Explanation for issues of type "UseCompoundDrawables":
+   A LinearLayout which contains an ImageView and a TextView can be more
+   efficiently handled as a compound drawable (a single TextView, using the
+   drawableTop, drawableLeft, drawableRight and/or drawableBottom attributes
+   to draw one or more images adjacent to the text).
+
+   If the two widgets are offset from each other with margins, this can be
+   replaced with a drawablePadding attribute.
+
+   There's a lint quickfix to perform this conversion in the Eclipse plugin.
+
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_sleep_detail.xml:50: Warning: Set android:baselineAligned="false" on this element for better performance [DisableBaselineAlignment]
+                    <LinearLayout
+                     ~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_sleep_detail.xml:124: Warning: Set android:baselineAligned="false" on this element for better performance [DisableBaselineAlignment]
+                    <LinearLayout
+                     ~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:124: Warning: Set android:baselineAligned="false" on this element for better performance [DisableBaselineAlignment]
+                <LinearLayout
+                 ~~~~~~~~~~~~
+
+   Explanation for issues of type "DisableBaselineAlignment":
+   When a LinearLayout is used to distribute the space proportionally between
+   nested layouts, the baseline alignment property should be turned off to
+   make the layout computation faster.
+
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_ai_analysis.xml:9: Warning: Possible overdraw: Root element paints background @color/background_secondary with a theme that also paints a background (inferred theme is @style/Theme.CheckDang) [Overdraw]
+    android:background="@color/background_secondary">
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_exercise_detail.xml:9: Warning: Possible overdraw: Root element paints background @color/background_secondary with a theme that also paints a background (inferred theme is @style/Theme.CheckDang) [Overdraw]
+    android:background="@color/background_secondary">
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_family.xml:8: Warning: Possible overdraw: Root element paints background @color/background_secondary with a theme that also paints a background (inferred theme is @style/Theme.CheckDang) [Overdraw]
+    android:background="@color/background_secondary">
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_meal_detail.xml:9: Warning: Possible overdraw: Root element paints background @color/background_secondary with a theme that also paints a background (inferred theme is @style/Theme.CheckDang) [Overdraw]
+    android:background="@color/background_secondary">
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_sleep_detail.xml:9: Warning: Possible overdraw: Root element paints background @color/background_secondary with a theme that also paints a background (inferred theme is @style/Theme.CheckDang) [Overdraw]
+    android:background="@color/background_secondary">
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_subscription.xml:8: Warning: Possible overdraw: Root element paints background @color/background_secondary with a theme that also paints a background (inferred theme is @style/Theme.CheckDang) [Overdraw]
+    android:background="@color/background_secondary">
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_glucose_input.xml:7: Warning: Possible overdraw: Root element paints background @color/background_primary with a theme that also paints a background (inferred theme is @style/Theme.CheckDang) [Overdraw]
+    android:background="@color/background_primary">
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_bodymap.xml:8: Warning: Possible overdraw: Root element paints background @color/background_secondary with a theme that also paints a background (inferred theme is @style/Theme.CheckDang) [Overdraw]
+    android:background="@color/background_secondary">
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose.xml:8: Warning: Possible overdraw: Root element paints background @color/background_secondary with a theme that also paints a background (inferred theme is @style/Theme.CheckDang) [Overdraw]
+    android:background="@color/background_secondary">
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose_chart.xml:7: Warning: Possible overdraw: Root element paints background @color/background_secondary with a theme that also paints a background (inferred theme is @style/Theme.CheckDang) [Overdraw]
+    android:background="@color/background_secondary">
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose_list.xml:7: Warning: Possible overdraw: Root element paints background @color/background_secondary with a theme that also paints a background (inferred theme is @style/Theme.CheckDang) [Overdraw]
+    android:background="@color/background_secondary">
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_home.xml:8: Warning: Possible overdraw: Root element paints background @color/background_secondary with a theme that also paints a background (inferred theme is @style/Theme.CheckDang) [Overdraw]
+    android:background="@color/background_secondary"
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:8: Warning: Possible overdraw: Root element paints background @color/background_secondary with a theme that also paints a background (inferred theme is @style/Theme.CheckDang) [Overdraw]
+    android:background="@color/background_secondary">
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_menu.xml:8: Warning: Possible overdraw: Root element paints background @color/background_secondary with a theme that also paints a background (inferred theme is @style/Theme.CheckDang) [Overdraw]
+    android:background="@color/background_secondary">
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\item_glucose_date_header.xml:7: Warning: Possible overdraw: Root element paints background @color/background_secondary with a theme that also paints a background (inferred theme is @style/Theme.CheckDang) [Overdraw]
+    android:background="@color/background_secondary"
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\item_glucose_record.xml:8: Warning: Possible overdraw: Root element paints background @color/background_primary with a theme that also paints a background (inferred theme is @style/Theme.CheckDang) [Overdraw]
+    android:background="@color/background_primary">
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\item_menu_row.xml:10: Warning: Possible overdraw: Root element paints background ?attr/selectableItemBackground with a theme that also paints a background (inferred theme is @style/Theme.CheckDang) [Overdraw]
+    android:background="?attr/selectableItemBackground"
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "Overdraw":
+   If you set a background drawable on a root view, then you should use a
+   custom theme where the theme background is null. Otherwise, the theme
+   background will be painted first, only to have your custom background
+   completely cover it; this is called "overdraw".
+
+   NOTE: This detector relies on figuring out which layouts are associated
+   with which activities based on scanning the Java code, and it's currently
+   doing that using an inexact pattern matching algorithm. Therefore, it can
+   incorrectly conclude which activity the layout is associated with and then
+   wrongly complain that a background-theme is hidden.
+
+   If you want your custom background on multiple pages, then you should
+   consider making a custom theme with your custom background and just using
+   that theme instead of a root element background.
+
+   Of course it's possible that your custom drawable is translucent and you
+   want it to be mixed with the background. However, you will get better
+   performance if you pre-mix the background with your drawable and use that
+   resulting image or color as a custom theme background instead.
+
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\drawable\body_back.xml:2: Warning: The resource R.drawable.body_back appears to be unused [UnusedResources]
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+^
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\drawable\body_front.xml:2: Warning: The resource R.drawable.body_front appears to be unused [UnusedResources]
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+^
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\drawable\ic_star.xml:2: Warning: The resource R.drawable.ic_star appears to be unused [UnusedResources]
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+^
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\values\strings.xml:22: Warning: The resource R.string.onboarding_step_complete appears to be unused [UnusedResources]
+    <string name="onboarding_step_complete">설정 완료</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\values\strings.xml:27: Warning: The resource R.string.main_placeholder appears to be unused [UnusedResources]
+    <string name="main_placeholder">메인 화면 (Phase 3에서 구현)</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\values\styles.xml:82: Warning: The resource R.style.ShapeAppearance_CheckDang_BottomSheet appears to be unused [UnusedResources]
+    <style name="ShapeAppearance.CheckDang.BottomSheet" parent="">
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "UnusedResources":
+   Unused resources make applications larger and slow down builds.
+
+
+   The unused resource check can ignore tests. If you want to include
+   resources that are only referenced from tests, consider packaging them in a
+   test source set instead.
+
+   You can include test sources in the unused resource check by setting the
+   system property lint.unused-resources.include-tests =true, and to exclude
+   them (usually for performance reasons), use
+   lint.unused-resources.exclude-tests =true.
+   ,
+
+   Available options:
+
+   **skip-libraries** (default is true):
+   Whether the unused resource check should skip reporting unused resources in libraries.
+
+   Many libraries will declare resources that are part of the library surface; other modules depending on the library will also reference the resources. To avoid reporting all these resources as unused (in the context of a library), the unused resource check normally skips reporting unused resources in libraries. Instead, run the unused resource check on the consuming app module (along with `checkDependencies=true`).
+
+   However, there are cases where you want to check that all the resources declared in a library are used; in that case, you can disable the skip option.
+
+   To configure this option, use a `lint.xml` file with an <option> like this:
+
+   ```xml
+   <lint>
+       <issue id="UnusedResources">
+           <option name="skip-libraries" value="true" />
+       </issue>
+   </lint>
+   ```
+
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\mipmap-mdpi\ic_launcher.xml:2: Warning: The application adaptive icon is missing a monochrome tag [MonochromeLauncherIcon]
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+^
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\mipmap-mdpi\ic_launcher_round.xml:2: Warning: The application adaptive roundIcon is missing a monochrome tag [MonochromeLauncherIcon]
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+^
+
+   Explanation for issues of type "MonochromeLauncherIcon":
+   The system may use the coloring of the user's chosen wallpaper and theme to
+   tint app icons. Providing a <monochrome> layer (which will be used for
+   tinting) for every adaptive icon is strongly recommended, otherwise Android
+   16 QPR 2 and above will simply tint the color version of the icon, which
+   may look unusual. Devices running earlier Android versions will (with no
+   monochrome layer) show the untinted color icon for your app, which will
+   look inconsistent.
+
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\family\FamilyActivity.kt:91: Warning: Use the KTX extension property View.isGone instead? [UseKtx]
+            val wasGone = binding.bannerDanger.visibility == View.GONE
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "UseKtx":
+   The Android KTX libraries decorates the Android platform SDK as well as
+   various libraries with more convenient extension functions available from
+   Kotlin, allowing you to use default parameters, named parameters, and
+   more.
+
+   Available options:
+
+   **remove-defaults** (default is true):
+   Whether to skip arguments that match the defaults provided by the extension.
+
+   Extensions often provide default values for some of the parameters. For example:
+   ```kotlin
+   fun Path.readLines(charset: Charset = Charsets.UTF_8): List<String> { return Files.readAllLines(this, charset) }
+   ```
+   This lint check will by default automatically omit parameters that match the default, so if your code was calling
+
+   ```kotlin
+   Files.readAllLines(file, Charset.UTF_8)
+   ```
+   lint would replace this with
+   ```kotlin
+   file.readLines()
+   ```
+   rather than
+
+   ```kotlin
+   file.readLines(Charset.UTF_8
+   ```
+   You can turn this behavior off using this option.
+
+   To configure this option, use a `lint.xml` file with an <option> like this:
+
+   ```xml
+   <lint>
+       <issue id="UseKtx">
+           <option name="remove-defaults" value="true" />
+       </issue>
+   </lint>
+   ```
+
+   **require-present** (default is true):
+   Whether to only offer extensions already available.
+
+   This option lets you only have lint suggest extension replacements if those extensions are already available on the class path (in other words, you're already depending on the library containing the extension method.)
+
+   To configure this option, use a `lint.xml` file with an <option> like this:
+
+   ```xml
+   <lint>
+       <issue id="UseKtx">
+           <option name="require-present" value="true" />
+       </issue>
+   </lint>
+   ```
+
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_meal_detail.xml:61: Warning: Missing contentDescription attribute on image [ContentDescription]
+                        <ImageView android:layout_width="10dp" android:layout_height="10dp"
+                         ~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_meal_detail.xml:69: Warning: Missing contentDescription attribute on image [ContentDescription]
+                        <ImageView android:layout_width="10dp" android:layout_height="10dp"
+                         ~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_meal_detail.xml:77: Warning: Missing contentDescription attribute on image [ContentDescription]
+                        <ImageView android:layout_width="10dp" android:layout_height="10dp"
+                         ~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose_chart.xml:87: Warning: Missing contentDescription attribute on image [ContentDescription]
+                    <ImageView
+                     ~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose_chart.xml:101: Warning: Missing contentDescription attribute on image [ContentDescription]
+                    <ImageView
+                     ~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose_chart.xml:115: Warning: Missing contentDescription attribute on image [ContentDescription]
+                    <ImageView
+                     ~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:433: Warning: Missing contentDescription attribute on image [ContentDescription]
+                    <ImageView android:layout_width="8dp" android:layout_height="8dp"
+                     ~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:441: Warning: Missing contentDescription attribute on image [ContentDescription]
+                    <ImageView android:layout_width="8dp" android:layout_height="8dp"
+                     ~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:449: Warning: Missing contentDescription attribute on image [ContentDescription]
+                    <ImageView android:layout_width="8dp" android:layout_height="8dp"
+                     ~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_menu.xml:70: Warning: Missing contentDescription attribute on image [ContentDescription]
+                <ImageView
+                 ~~~~~~~~~
+
+   Explanation for issues of type "ContentDescription":
+   Non-textual widgets like ImageViews and ImageButtons should use the
+   contentDescription attribute to specify a textual description of the widget
+   such that screen readers and other accessibility tools can adequately
+   describe the user interface.
+
+   Note that elements in application screens that are purely decorative and do
+   not provide any content or enable a user action should not have
+   accessibility content descriptions. In this case, set their descriptions to
+   @null. If your app's minSdkVersion is 16 or higher, you can instead set
+   these graphical elements' android:importantForAccessibility attributes to
+   no.
+
+   Note that for text fields, you should not set both the hint and the
+   contentDescription attributes since the hint will never be shown. Just set
+   the hint.
+
+   https://developer.android.com/guide/topics/ui/accessibility/apps#special-cases
+
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\bodymap\analysis\AIAnalysisActivity.kt:91: Warning: Number formatting does not take into account locale settings. Consider using String.format instead. [SetTextI18n]
+        binding.tvResultIntensity.text = record.intensity.toString()
+                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\family\AddFamilyDialog.kt:43: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvMyCode.text = "내 초대 코드: $MY_INVITE_CODE"
+                                ~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\bodymap\BodyMapFragment.kt:57: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+            binding.tvHint.text = "${part.label} 선택됨"
+                                  ~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\designsystem\DesignSystemActivity.kt:41: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+            card.tvGlucoseValue.text  = "${value} mg/dL"
+                                        ~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\designsystem\DesignSystemActivity.kt:41: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            card.tvGlucoseValue.text  = "${value} mg/dL"
+                                                 ~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\exercise\ExerciseDetailActivity.kt:66: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvDetailPercent.text = "${(progress * 100).toInt()}%"
+                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\exercise\ExerciseDetailActivity.kt:67: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvDetailSub.text    = "$minutes / ${goal}분"
+                                      ~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\exercise\ExerciseDetailActivity.kt:71: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvTotalMinutes.text  = "${minutes}분"
+                                       ~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\exercise\ExerciseDetailActivity.kt:72: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvTotalCalories.text = "${calories} kcal"
+                                       ~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\exercise\ExerciseDetailActivity.kt:72: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        binding.tvTotalCalories.text = "${calories} kcal"
+                                                   ~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\exercise\ExerciseDetailActivity.kt:159: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+            holder.b.tvSessionStats.text   = "${s.durationMin}분 · ${s.calories} kcal"
+                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\exercise\ExerciseDetailActivity.kt:159: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            holder.b.tvSessionStats.text   = "${s.durationMin}분 · ${s.calories} kcal"
+                                                                               ~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\family\FamilyActivity.kt:81: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+                    binding.tvFamilyCount.text = "함께 관리 중인 가족 ${members.size}명"
+                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\family\FamilyActivity.kt:94: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+                "⚠ ${dangerMember.name}님의 혈당이 위험 수준이에요. 안부 전화를 권장해요"
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\family\FamilyMemberAdapter.kt:38: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+            b.tvNameRelation.text = "${member.name} · ${member.relation}"
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\family\FamilyMemberAdapter.kt:39: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+            b.tvTodayInfo.text    = "오늘 측정 ${member.todayCount}회 · ${member.latestMeasuredAt}"
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\family\FamilyMemberAdapter.kt:54: Warning: Number formatting does not take into account locale settings. Consider using String.format instead. [SetTextI18n]
+            b.tvGlucoseValue.text      = member.latestGlucose.toString()
+                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\glucose\input\GlucoseInputBottomSheet.kt:58: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        binding.etValue.setText("100")
+                                 ~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\glucose\list\GlucoseRecordAdapter.kt:113: Warning: Number formatting does not take into account locale settings. Consider using String.format instead. [SetTextI18n]
+            b.tvValue.text = record.value.toString()
+                             ~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\home\HomeFragment.kt:55: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvGreeting.text = "안녕하세요, ${nickname}님"
+                                  ~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\home\HomeFragment.kt:60: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvDate.text = "오늘 ${sdf.format(today)} ${dayOfWeekSdf.format(today)}"
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\home\HomeFragment.kt:78: Warning: Number formatting does not take into account locale settings. Consider using String.format instead. [SetTextI18n]
+        binding.tvGlucoseValue.text = summary.latestValue.toString()
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\home\HomeFragment.kt:90: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvGlucoseTime.text  = "${summary.measuredAt} · ${summary.timing.label}"
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\home\HomeFragment.kt:91: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvTodayCount.text   = "오늘 측정 ${summary.todayCount}회"
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\home\HomeFragment.kt:92: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvTodayAverage.text = "평균 ${summary.todayAverage} mg/dL"
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\home\HomeFragment.kt:92: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        binding.tvTodayAverage.text = "평균 ${summary.todayAverage} mg/dL"
+                                                                 ~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\home\HomeFragment.kt:107: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvExerciseValue.text = "${s.exerciseMinutes}/${s.exerciseGoalMinutes}분"
+                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\home\HomeFragment.kt:111: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvMealValue.text = "${String.format(Locale.getDefault(), "%,d", s.mealKcal)} kcal"
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\home\HomeFragment.kt:111: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        binding.tvMealValue.text = "${String.format(Locale.getDefault(), "%,d", s.mealKcal)} kcal"
+                                                                                            ~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\home\HomeFragment.kt:115: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvSleepValue.text      = "${s.sleepHours}시간"
+                                         ~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\home\HomeFragment.kt:116: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvSleepEfficiency.text = "효율 ${s.sleepEfficiency}%"
+                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\LifestyleFragment.kt:44: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvDate.text = "오늘 ${sdf.format(today)} ${dayOfWeek.format(today)}"
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\LifestyleFragment.kt:59: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvExercisePercent.text  = "${(progress * 100).toInt()}%"
+                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\LifestyleFragment.kt:60: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvExerciseSub.text      = "${s.totalMinutes} / ${s.goalMinutes}분"
+                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\LifestyleFragment.kt:61: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvExerciseCalories.text = "${s.totalCalories} kcal 소모"
+                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\LifestyleFragment.kt:61: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        binding.tvExerciseCalories.text = "${s.totalCalories} kcal 소모"
+                                                             ~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\LifestyleFragment.kt:62: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvExerciseSessions.text = "운동 ${s.sessions.size}회"
+                                          ~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\LifestyleFragment.kt:79: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvMealKcal.text     = "${String.format(Locale.getDefault(), "%,d", s.totalKcal)} kcal"
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\LifestyleFragment.kt:79: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        binding.tvMealKcal.text     = "${String.format(Locale.getDefault(), "%,d", s.totalKcal)} kcal"
+                                                                                                ~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\LifestyleFragment.kt:80: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvMealGoal.text     = "/ ${String.format(Locale.getDefault(), "%,d", s.goalKcal)} kcal (${pct}%)"
+                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\LifestyleFragment.kt:80: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        binding.tvMealGoal.text     = "/ ${String.format(Locale.getDefault(), "%,d", s.goalKcal)} kcal (${pct}%)"
+                                                                                                 ~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\LifestyleFragment.kt:81: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvCarbsLabel.text   = "탄수화물 ${s.carbsG}g"
+                                      ~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\LifestyleFragment.kt:82: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvProteinLabel.text = "단백질 ${s.proteinG}g"
+                                      ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\LifestyleFragment.kt:83: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvFatLabel.text     = "지방 ${s.fatG}g"
+                                      ~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\LifestyleFragment.kt:103: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvSleepTotal.text      = "${hours}시간 ${minutes}분"
+                                         ~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\LifestyleFragment.kt:104: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvSleepEfficiency.text = "효율 ${s.efficiency}%"
+                                         ~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\LifestyleFragment.kt:105: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvSleepBedtime.text    = "취침 ${s.bedtime} · 기상 ${s.wakeTime}"
+                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\meal\MealDetailActivity.kt:103: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvKcalValue.text = "${String.format(Locale.getDefault(), "%,d", total)} kcal"
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\meal\MealDetailActivity.kt:103: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        binding.tvKcalValue.text = "${String.format(Locale.getDefault(), "%,d", total)} kcal"
+                                                                                       ~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\meal\MealDetailActivity.kt:104: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvKcalGoal.text  = "/ ${String.format(Locale.getDefault(), "%,d", goal)} kcal (${pct}%)"
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\meal\MealDetailActivity.kt:104: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        binding.tvKcalGoal.text  = "/ ${String.format(Locale.getDefault(), "%,d", goal)} kcal (${pct}%)"
+                                                                                        ~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\meal\MealDetailActivity.kt:116: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+            tvTitle.text     = "[${item.type}] ${item.name}"
+                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\meal\MealDetailActivity.kt:118: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+            tvSub.text       = "${item.kcal} kcal  ·  ${item.time}"
+                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\meal\MealDetailActivity.kt:118: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            tvSub.text       = "${item.kcal} kcal  ·  ${item.time}"
+                                            ~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\menu\MenuFragment.kt:67: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            binding.tvProfileEmail.text  = "user@checkdang.app"
+                                            ~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\auth\onboarding\OnboardingCompleteFragment.kt:31: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+                    binding.tvWelcome.text = "환영합니다, ${profile.nickname}님!"
+                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\auth\onboarding\OnboardingCompleteFragment.kt:37: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+                    binding.tvSummary.text = """
+                                             ^
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\bodymap\input\PainInputBottomSheet.kt:53: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvPartTitle.text = "${bodyPart.label} 통증 기록"
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\bodymap\PainRecordAdapter.kt:20: Warning: Number formatting does not take into account locale settings. Consider using String.format instead. [SetTextI18n]
+            binding.tvIntensity.text  = record.intensity.toString()
+                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\sleep\SleepDetailActivity.kt:63: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvSleepTotal.text  = "${hours}시간 ${minutes}분"
+                                     ~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\sleep\SleepDetailActivity.kt:64: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvEfficiency.text  = "${s.efficiency}%"
+                                     ~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\sleep\SleepDetailActivity.kt:65: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvDeepHours.text   = "${s.deepHours}h"
+                                     ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\sleep\SleepDetailActivity.kt:66: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvLightHours.text  = "${s.lightHours}h"
+                                     ~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\java\com\checkdang\app\ui\lifestyle\sleep\SleepDetailActivity.kt:67: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        binding.tvRemHours.text    = "${s.remHours}h"
+                                     ~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "SetTextI18n":
+   When calling TextView#setText
+   * Never call Number#toString() to format numbers; it will not handle
+   fraction separators and locale-specific digits properly. Consider using
+   String#format with proper format specifications (%d or %f) instead.
+   * Do not pass a string literal (e.g. "Hello") to display text. Hardcoded
+   text can not be properly translated to other languages. Consider using
+   Android resource strings instead.
+   * Do not build messages by concatenating text chunks. Such messages can not
+   be properly translated.
+
+   https://developer.android.com/guide/topics/resources/localization.html
+
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_ai_analysis.xml:40: Warning: Hardcoded string "AI가 분석 중입니다…", should use @string resource [HardcodedText]
+            android:text="AI가 분석 중입니다…"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_ai_analysis.xml:131: Warning: Hardcoded string "AI 분석 요약", should use @string resource [HardcodedText]
+                        android:text="AI 분석 요약"
+                        ~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_ai_analysis.xml:150: Warning: Hardcoded string "연관 요인", should use @string resource [HardcodedText]
+                android:text="연관 요인"
+                ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_ai_analysis.xml:174: Warning: Hardcoded string "생활 습관 권장 사항", should use @string resource [HardcodedText]
+                android:text="생활 습관 권장 사항"
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_ai_analysis.xml:201: Warning: Hardcoded string "⚠ 이 분석은 AI가 생성한 참고 정보이며 의학적 진단을 대체하지 않습니다. 지속적인 통증은 반드시 전문의와 상담하세요.", should use @string resource [HardcodedText]
+                android:text="⚠ 이 분석은 AI가 생성한 참고 정보이며 의학적 진단을 대체하지 않습니다. 지속적인 통증은 반드시 전문의와 상담하세요."
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_ai_analysis.xml:220: Warning: Hardcoded string "PDF 저장", should use @string resource [HardcodedText]
+                    android:text="PDF 저장"
+                    ~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_ai_analysis.xml:228: Warning: Hardcoded string "확인", should use @string resource [HardcodedText]
+                    android:text="확인"
+                    ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:18: Warning: Hardcoded string "디자인 시스템", should use @string resource [HardcodedText]
+            android:text="디자인 시스템"
+            ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:26: Warning: Hardcoded string "컬러 팔레트", should use @string resource [HardcodedText]
+            android:text="컬러 팔레트"
+            ~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:49: Warning: Hardcoded string "brand_green", should use @string resource [HardcodedText]
+                        android:text="brand_green" android:textAppearance="@style/TextAppearance.CheckDang.Body2" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:51: Warning: Hardcoded string "#4CAF50", should use @string resource [HardcodedText]
+                        android:text="#4CAF50" android:textAppearance="@style/TextAppearance.CheckDang.Caption" />
+                        ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:62: Warning: Hardcoded string "brand_green_dark", should use @string resource [HardcodedText]
+                        android:text="brand_green_dark" android:textAppearance="@style/TextAppearance.CheckDang.Body2" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:64: Warning: Hardcoded string "#388E3C", should use @string resource [HardcodedText]
+                        android:text="#388E3C" android:textAppearance="@style/TextAppearance.CheckDang.Caption" />
+                        ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:75: Warning: Hardcoded string "brand_green_light", should use @string resource [HardcodedText]
+                        android:text="brand_green_light" android:textAppearance="@style/TextAppearance.CheckDang.Body2" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:77: Warning: Hardcoded string "#E8F5E9", should use @string resource [HardcodedText]
+                        android:text="#E8F5E9" android:textAppearance="@style/TextAppearance.CheckDang.Caption" />
+                        ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:88: Warning: Hardcoded string "background_secondary", should use @string resource [HardcodedText]
+                        android:text="background_secondary" android:textAppearance="@style/TextAppearance.CheckDang.Body2" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:90: Warning: Hardcoded string "#F7F8FA", should use @string resource [HardcodedText]
+                        android:text="#F7F8FA" android:textAppearance="@style/TextAppearance.CheckDang.Caption" />
+                        ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:101: Warning: Hardcoded string "status_normal", should use @string resource [HardcodedText]
+                        android:text="status_normal" android:textAppearance="@style/TextAppearance.CheckDang.Body2" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:103: Warning: Hardcoded string "#4CAF50", should use @string resource [HardcodedText]
+                        android:text="#4CAF50" android:textAppearance="@style/TextAppearance.CheckDang.Caption" />
+                        ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:114: Warning: Hardcoded string "status_warning", should use @string resource [HardcodedText]
+                        android:text="status_warning" android:textAppearance="@style/TextAppearance.CheckDang.Body2" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:116: Warning: Hardcoded string "#FF9800", should use @string resource [HardcodedText]
+                        android:text="#FF9800" android:textAppearance="@style/TextAppearance.CheckDang.Caption" />
+                        ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:127: Warning: Hardcoded string "status_danger", should use @string resource [HardcodedText]
+                        android:text="status_danger" android:textAppearance="@style/TextAppearance.CheckDang.Body2" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:129: Warning: Hardcoded string "#F44336", should use @string resource [HardcodedText]
+                        android:text="#F44336" android:textAppearance="@style/TextAppearance.CheckDang.Caption" />
+                        ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:140: Warning: Hardcoded string "status_normal_bg", should use @string resource [HardcodedText]
+                        android:text="status_normal_bg" android:textAppearance="@style/TextAppearance.CheckDang.Body2" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:142: Warning: Hardcoded string "alpha 15%", should use @string resource [HardcodedText]
+                        android:text="alpha 15%" android:textAppearance="@style/TextAppearance.CheckDang.Caption" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:153: Warning: Hardcoded string "status_warning_bg", should use @string resource [HardcodedText]
+                        android:text="status_warning_bg" android:textAppearance="@style/TextAppearance.CheckDang.Body2" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:155: Warning: Hardcoded string "alpha 15%", should use @string resource [HardcodedText]
+                        android:text="alpha 15%" android:textAppearance="@style/TextAppearance.CheckDang.Caption" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:165: Warning: Hardcoded string "status_danger_bg", should use @string resource [HardcodedText]
+                        android:text="status_danger_bg" android:textAppearance="@style/TextAppearance.CheckDang.Body2" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:167: Warning: Hardcoded string "alpha 15%", should use @string resource [HardcodedText]
+                        android:text="alpha 15%" android:textAppearance="@style/TextAppearance.CheckDang.Caption" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:177: Warning: Hardcoded string "타이포그래피", should use @string resource [HardcodedText]
+            android:text="타이포그래피"
+            ~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:193: Warning: Hardcoded string "Display — 혈당 수치 표시용 (32sp Bold)", should use @string resource [HardcodedText]
+                    android:text="Display — 혈당 수치 표시용 (32sp Bold)"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:198: Warning: Hardcoded string "Title1 — 섹션 제목 (24sp Bold)", should use @string resource [HardcodedText]
+                    android:text="Title1 — 섹션 제목 (24sp Bold)"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:203: Warning: Hardcoded string "Title2 — 카드 제목 (20sp SemiBold)", should use @string resource [HardcodedText]
+                    android:text="Title2 — 카드 제목 (20sp SemiBold)"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:208: Warning: Hardcoded string "Body1 — 본문 텍스트 (16sp Regular)", should use @string resource [HardcodedText]
+                    android:text="Body1 — 본문 텍스트 (16sp Regular)"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:213: Warning: Hardcoded string "Body2 — 보조 텍스트 (14sp Regular)", should use @string resource [HardcodedText]
+                    android:text="Body2 — 보조 텍스트 (14sp Regular)"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:218: Warning: Hardcoded string "Caption — 캡션/레이블 (12sp Regular)", should use @string resource [HardcodedText]
+                    android:text="Caption — 캡션/레이블 (12sp Regular)"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:228: Warning: Hardcoded string "버튼", should use @string resource [HardcodedText]
+            android:text="버튼"
+            ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:247: Warning: Hardcoded string "Primary Button", should use @string resource [HardcodedText]
+                    android:text="Primary Button"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:254: Warning: Hardcoded string "Secondary Button", should use @string resource [HardcodedText]
+                    android:text="Secondary Button" />
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:263: Warning: Hardcoded string "카드", should use @string resource [HardcodedText]
+            android:text="카드"
+            ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:279: Warning: Hardcoded string "카드 제목", should use @string resource [HardcodedText]
+                    android:text="카드 제목"
+                    ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:283: Warning: Hardcoded string "이것은 Widget.CheckDang.Card 스타일이 적용된 더미 카드입니다. radius 16dp, elevation 2dp.", should use @string resource [HardcodedText]
+                    android:text="이것은 Widget.CheckDang.Card 스타일이 적용된 더미 카드입니다. radius 16dp, elevation 2dp."
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:294: Warning: Hardcoded string "혈당 상태 칩", should use @string resource [HardcodedText]
+            android:text="혈당 상태 칩"
+            ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:314: Warning: Hardcoded string "정상", should use @string resource [HardcodedText]
+                    android:text="정상"
+                    ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:327: Warning: Hardcoded string "주의", should use @string resource [HardcodedText]
+                    android:text="주의"
+                    ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:340: Warning: Hardcoded string "위험", should use @string resource [HardcodedText]
+                    android:text="위험"
+                    ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_design_system.xml:355: Warning: Hardcoded string "혈당 상태 평가 (식후 2시간)", should use @string resource [HardcodedText]
+            android:text="혈당 상태 평가 (식후 2시간)"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_exercise_detail.xml:109: Warning: Hardcoded string "운동 시간", should use @string resource [HardcodedText]
+                                android:text="운동 시간"
+                                ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_exercise_detail.xml:134: Warning: Hardcoded string "소모 칼로리", should use @string resource [HardcodedText]
+                                android:text="소모 칼로리"
+                                ~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_exercise_detail.xml:147: Warning: Hardcoded string "오늘의 운동 세션", should use @string resource [HardcodedText]
+                android:text="오늘의 운동 세션"
+                ~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_exercise_detail.xml:174: Warning: Hardcoded string "주간 운동 시간", should use @string resource [HardcodedText]
+                android:text="주간 운동 시간"
+                ~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_family.xml:39: Warning: Hardcoded string "⚠ 가족의 혈당이 위험 수준이에요", should use @string resource [HardcodedText]
+            android:text="⚠ 가족의 혈당이 위험 수준이에요" />
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_family.xml:46: Warning: Hardcoded string "전화하기", should use @string resource [HardcodedText]
+            android:text="전화하기"
+            ~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_family.xml:66: Warning: Hardcoded string "🔒", should use @string resource [HardcodedText]
+            android:text="🔒"
+            ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_family.xml:74: Warning: Hardcoded string "프리미엄 회원만 사용 가능한 기능이에요", should use @string resource [HardcodedText]
+            android:text="프리미엄 회원만 사용 가능한 기능이에요"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_family.xml:83: Warning: Hardcoded string "가족 공유 기능으로 소중한 가족의 건강을 함께 챙겨보세요", should use @string resource [HardcodedText]
+            android:text="가족 공유 기능으로 소중한 가족의 건강을 함께 챙겨보세요"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_family.xml:127: Warning: Hardcoded string "함께 관리 중인 가족 0명", should use @string resource [HardcodedText]
+                        android:text="함께 관리 중인 가족 0명" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_family.xml:133: Warning: Hardcoded string "+ 가족 추가", should use @string resource [HardcodedText]
+                        android:text="+ 가족 추가"
+                        ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_meal_detail.xml:65: Warning: Hardcoded string "탄수화물", should use @string resource [HardcodedText]
+                            android:text="탄수화물"
+                            ~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_meal_detail.xml:73: Warning: Hardcoded string "단백질", should use @string resource [HardcodedText]
+                            android:text="단백질"
+                            ~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_meal_detail.xml:81: Warning: Hardcoded string "지방", should use @string resource [HardcodedText]
+                            android:text="지방"
+                            ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_meal_detail.xml:145: Warning: Hardcoded string "오늘의 식단", should use @string resource [HardcodedText]
+                android:text="오늘의 식단"
+                ~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_onboarding.xml:27: Warning: Hardcoded string "안내", should use @string resource [HardcodedText]
+            android:contentDescription="안내" />
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_onboarding.xml:32: Warning: Hardcoded string "비회원으로 이용 중이에요. 입력하신 정보는 이 기기에만 저장됩니다.", should use @string resource [HardcodedText]
+            android:text="비회원으로 이용 중이에요. 입력하신 정보는 이 기기에만 저장됩니다."
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_sleep_detail.xml:74: Warning: Hardcoded string "총 수면 시간", should use @string resource [HardcodedText]
+                                android:text="총 수면 시간"
+                                ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_sleep_detail.xml:96: Warning: Hardcoded string "수면 효율", should use @string resource [HardcodedText]
+                                android:text="수면 효율"
+                                ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_sleep_detail.xml:137: Warning: Hardcoded string "깊은수면", should use @string resource [HardcodedText]
+                                android:text="깊은수면" android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                                ~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_sleep_detail.xml:148: Warning: Hardcoded string "얕은수면", should use @string resource [HardcodedText]
+                                android:text="얕은수면" android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                                ~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_sleep_detail.xml:159: Warning: Hardcoded string "REM", should use @string resource [HardcodedText]
+                                android:text="REM" android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                                ~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_sleep_detail.xml:175: Warning: Hardcoded string "취침", should use @string resource [HardcodedText]
+                                android:text="취침" android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                                ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_sleep_detail.xml:189: Warning: Hardcoded string "기상", should use @string resource [HardcodedText]
+                                android:text="기상" android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                                ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_sleep_detail.xml:205: Warning: Hardcoded string "주간 수면 시간", should use @string resource [HardcodedText]
+                android:text="주간 수면 시간"
+                ~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_subscription.xml:38: Warning: Hardcoded string "체크당 PRO", should use @string resource [HardcodedText]
+                android:text="체크당 PRO"
+                ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_subscription.xml:48: Warning: Hardcoded string "당신과 가족의 건강을 지키는n가장 완벽한 방법", should use @string resource [HardcodedText]
+                android:text="당신과 가족의 건강을 지키는\n가장 완벽한 방법"
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_subscription.xml:71: Warning: Hardcoded string "PRO 혜택", should use @string resource [HardcodedText]
+                        android:text="PRO 혜택"
+                        ~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_subscription.xml:115: Warning: Hardcoded string "월간", should use @string resource [HardcodedText]
+                            android:text="월간"
+                            ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_subscription.xml:123: Warning: Hardcoded string "₩5,900", should use @string resource [HardcodedText]
+                            android:text="₩5,900"
+                            ~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_subscription.xml:131: Warning: Hardcoded string "/ 월", should use @string resource [HardcodedText]
+                            android:text="/ 월"
+                            ~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_subscription.xml:160: Warning: Hardcoded string "30% 할인", should use @string resource [HardcodedText]
+                            android:text="30% 할인"
+                            ~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_subscription.xml:173: Warning: Hardcoded string "연간", should use @string resource [HardcodedText]
+                            android:text="연간"
+                            ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_subscription.xml:181: Warning: Hardcoded string "₩49,000", should use @string resource [HardcodedText]
+                            android:text="₩49,000"
+                            ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_subscription.xml:189: Warning: Hardcoded string "/ 년 (월 ₩4,083)", should use @string resource [HardcodedText]
+                            android:text="/ 년 (월 ₩4,083)"
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_subscription.xml:201: Warning: Hardcoded string "구독 시작하기", should use @string resource [HardcodedText]
+                android:text="구독 시작하기"
+                ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\activity_subscription.xml:211: Warning: Hardcoded string "구독은 자동으로 갱신되며, 갱신 24시간 전에 취소하지 않으면 자동 결제됩니다.n구독 관리 및 취소는 기기 설정 > 구독에서 가능합니다.", should use @string resource [HardcodedText]
+                android:text="구독은 자동으로 갱신되며, 갱신 24시간 전에 취소하지 않으면 자동 결제됩니다.\n구독 관리 및 취소는 기기 설정 > 구독에서 가능합니다."
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\menu\bottom_nav_menu.xml:7: Warning: Hardcoded string "홈", should use @string resource [HardcodedText]
+        android:title="홈" />
+        ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\menu\bottom_nav_menu.xml:12: Warning: Hardcoded string "혈당", should use @string resource [HardcodedText]
+        android:title="혈당" />
+        ~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\menu\bottom_nav_menu.xml:17: Warning: Hardcoded string "라이프", should use @string resource [HardcodedText]
+        android:title="라이프" />
+        ~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\menu\bottom_nav_menu.xml:22: Warning: Hardcoded string "바디맵", should use @string resource [HardcodedText]
+        android:title="바디맵" />
+        ~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\menu\bottom_nav_menu.xml:27: Warning: Hardcoded string "메뉴", should use @string resource [HardcodedText]
+        android:title="메뉴" />
+        ~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_glucose_input.xml:20: Warning: Hardcoded string "혈당 입력", should use @string resource [HardcodedText]
+            android:text="혈당 입력"
+            ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_glucose_input.xml:38: Warning: Hardcoded string "혈당 수치", should use @string resource [HardcodedText]
+                android:hint="혈당 수치"
+                ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_glucose_input.xml:63: Warning: Hardcoded string "측정 시점", should use @string resource [HardcodedText]
+            android:text="측정 시점"
+            ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_glucose_input.xml:82: Warning: Hardcoded string "공복", should use @string resource [HardcodedText]
+                android:text="공복"
+                ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_glucose_input.xml:90: Warning: Hardcoded string "식전", should use @string resource [HardcodedText]
+                android:text="식전"
+                ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_glucose_input.xml:98: Warning: Hardcoded string "식후 30분", should use @string resource [HardcodedText]
+                android:text="식후 30분"
+                ~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_glucose_input.xml:106: Warning: Hardcoded string "식후 1시간", should use @string resource [HardcodedText]
+                android:text="식후 1시간"
+                ~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_glucose_input.xml:114: Warning: Hardcoded string "식후 2시간", should use @string resource [HardcodedText]
+                android:text="식후 2시간"
+                ~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_glucose_input.xml:122: Warning: Hardcoded string "취침 전", should use @string resource [HardcodedText]
+                android:text="취침 전"
+                ~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_glucose_input.xml:130: Warning: Hardcoded string "임의", should use @string resource [HardcodedText]
+                android:text="임의"
+                ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_glucose_input.xml:139: Warning: Hardcoded string "측정 시각", should use @string resource [HardcodedText]
+            android:text="측정 시각"
+            ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_glucose_input.xml:164: Warning: Hardcoded string "메모 (선택)", should use @string resource [HardcodedText]
+            android:hint="메모 (선택)"
+            ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_glucose_input.xml:183: Warning: Hardcoded string "저장", should use @string resource [HardcodedText]
+            android:text="저장" />
+            ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_pain_input.xml:35: Warning: Hardcoded string "통증 강도", should use @string resource [HardcodedText]
+        android:text="통증 강도"
+        ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_pain_input.xml:82: Warning: Hardcoded string "약함", should use @string resource [HardcodedText]
+            android:layout_weight="1" android:text="약함"
+                                      ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_pain_input.xml:86: Warning: Hardcoded string "심함", should use @string resource [HardcodedText]
+            android:text="심함"
+            ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_pain_input.xml:96: Warning: Hardcoded string "통증 유형 (복수 선택)", should use @string resource [HardcodedText]
+        android:text="통증 유형 (복수 선택)"
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_pain_input.xml:112: Warning: Hardcoded string "찌르는 통증", should use @string resource [HardcodedText]
+            android:text="찌르는 통증" />
+            ~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_pain_input.xml:117: Warning: Hardcoded string "둔한 통증", should use @string resource [HardcodedText]
+            android:text="둔한 통증" />
+            ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_pain_input.xml:122: Warning: Hardcoded string "타는 느낌", should use @string resource [HardcodedText]
+            android:text="타는 느낌" />
+            ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_pain_input.xml:127: Warning: Hardcoded string "욱신거림", should use @string resource [HardcodedText]
+            android:text="욱신거림" />
+            ~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_pain_input.xml:132: Warning: Hardcoded string "뻣뻣함", should use @string resource [HardcodedText]
+            android:text="뻣뻣함" />
+            ~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_pain_input.xml:137: Warning: Hardcoded string "저림", should use @string resource [HardcodedText]
+            android:text="저림" />
+            ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\bottom_sheet_pain_input.xml:145: Warning: Hardcoded string "AI 분석 받기", should use @string resource [HardcodedText]
+        android:text="AI 분석 받기"
+        ~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\dialog_add_family.xml:24: Warning: Hardcoded string "가족 초대", should use @string resource [HardcodedText]
+        android:text="가족 초대"
+        ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\dialog_add_family.xml:52: Warning: Hardcoded string "내 초대 코드: ABCD12", should use @string resource [HardcodedText]
+                android:text="내 초대 코드: ABCD12" />
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\dialog_add_family.xml:59: Warning: Hardcoded string "복사", should use @string resource [HardcodedText]
+                android:text="복사"
+                ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\dialog_add_family.xml:71: Warning: Hardcoded string "초대 코드 6자리 입력", should use @string resource [HardcodedText]
+        android:hint="초대 코드 6자리 입력"
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\dialog_add_family.xml:87: Warning: Hardcoded string "초대하기", should use @string resource [HardcodedText]
+        android:text="초대하기"
+        ~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_bodymap.xml:23: Warning: Hardcoded string "바디맵", should use @string resource [HardcodedText]
+            android:text="바디맵"
+            ~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_bodymap.xml:41: Warning: Hardcoded string "정면", should use @string resource [HardcodedText]
+                android:text="정면"
+                ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_bodymap.xml:49: Warning: Hardcoded string "후면", should use @string resource [HardcodedText]
+                android:text="후면"
+                ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_bodymap.xml:93: Warning: Hardcoded string "통증 부위를 터치하세요", should use @string resource [HardcodedText]
+                        android:text="통증 부위를 터치하세요"
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_bodymap.xml:102: Warning: Hardcoded string "통증 입력하기", should use @string resource [HardcodedText]
+                        android:text="통증 입력하기"
+                        ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_bodymap.xml:113: Warning: Hardcoded string "최근 통증 기록", should use @string resource [HardcodedText]
+                android:text="최근 통증 기록"
+                ~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose.xml:33: Warning: Hardcoded string "PDF로 출력하기", should use @string resource [HardcodedText]
+                android:text="PDF로 출력하기"
+                ~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose.xml:66: Warning: Hardcoded string "이번 주 평균", should use @string resource [HardcodedText]
+                        android:text="이번 주 평균"
+                        ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose.xml:79: Warning: Hardcoded string "mg/dL", should use @string resource [HardcodedText]
+                        android:text="mg/dL"
+                        ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose.xml:100: Warning: Hardcoded string "최고", should use @string resource [HardcodedText]
+                        android:text="최고"
+                        ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose.xml:114: Warning: Hardcoded string "mg/dL", should use @string resource [HardcodedText]
+                        android:text="mg/dL"
+                        ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose.xml:135: Warning: Hardcoded string "최저", should use @string resource [HardcodedText]
+                        android:text="최저"
+                        ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose.xml:149: Warning: Hardcoded string "mg/dL", should use @string resource [HardcodedText]
+                        android:text="mg/dL"
+                        ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose.xml:185: Warning: Hardcoded string "혈당 입력", should use @string resource [HardcodedText]
+        android:contentDescription="혈당 입력"
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose_chart.xml:31: Warning: Hardcoded string "7일", should use @string resource [HardcodedText]
+                android:text="7일"
+                ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose_chart.xml:41: Warning: Hardcoded string "1개월", should use @string resource [HardcodedText]
+                android:text="1개월"
+                ~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose_chart.xml:50: Warning: Hardcoded string "3개월", should use @string resource [HardcodedText]
+                android:text="3개월"
+                ~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose_chart.xml:97: Warning: Hardcoded string "정상", should use @string resource [HardcodedText]
+                        android:text="정상"
+                        ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose_chart.xml:111: Warning: Hardcoded string "주의", should use @string resource [HardcodedText]
+                        android:text="주의"
+                        ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose_chart.xml:124: Warning: Hardcoded string "위험", should use @string resource [HardcodedText]
+                        android:text="위험"
+                        ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose_list.xml:32: Warning: Hardcoded string "아직 기록이 없어요.", should use @string resource [HardcodedText]
+            android:text="아직 기록이 없어요."
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_glucose_list.xml:40: Warning: Hardcoded string "+ 버튼으로 추가해 보세요", should use @string resource [HardcodedText]
+            android:text="+ 버튼으로 추가해 보세요"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_home.xml:102: Warning: Hardcoded string "mg/dL", should use @string resource [HardcodedText]
+                        android:text="mg/dL"
+                        ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_home.xml:160: Warning: Hardcoded string "오늘 혈당 기록이 없어요", should use @string resource [HardcodedText]
+                        android:text="오늘 혈당 기록이 없어요"
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_home.xml:171: Warning: Hardcoded string "혈당 입력하기", should use @string resource [HardcodedText]
+                        android:text="혈당 입력하기" />
+                        ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_home.xml:182: Warning: Hardcoded string "오늘의 라이프스타일", should use @string resource [HardcodedText]
+            android:text="오늘의 라이프스타일"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_home.xml:215: Warning: Hardcoded string "운동", should use @string resource [HardcodedText]
+                        android:text="운동"
+                        ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_home.xml:261: Warning: Hardcoded string "식사", should use @string resource [HardcodedText]
+                        android:text="식사"
+                        ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_home.xml:307: Warning: Hardcoded string "수면", should use @string resource [HardcodedText]
+                        android:text="수면"
+                        ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_home.xml:338: Warning: Hardcoded string "7일 혈당 추이", should use @string resource [HardcodedText]
+            android:text="7일 혈당 추이"
+            ~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:22: Warning: Hardcoded string "오늘의 라이프스타일", should use @string resource [HardcodedText]
+            android:text="오늘의 라이프스타일"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:59: Warning: Hardcoded string "동기화 완료", should use @string resource [HardcodedText]
+                    android:contentDescription="동기화 완료" />
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:65: Warning: Hardcoded string "삼성 헬스에서 자동 동기화됨 · 5분 전", should use @string resource [HardcodedText]
+                    android:text="삼성 헬스에서 자동 동기화됨 · 5분 전"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:76: Warning: Hardcoded string "수동 새로고침", should use @string resource [HardcodedText]
+                    android:text="수동 새로고침"
+                    ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:112: Warning: Hardcoded string "🏃 운동", should use @string resource [HardcodedText]
+                        android:text="🏃 운동"
+                        ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:120: Warning: Hardcoded string "상세 보기", should use @string resource [HardcodedText]
+                        android:contentDescription="상세 보기" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:223: Warning: Hardcoded string "🍽 식사", should use @string resource [HardcodedText]
+                        android:text="🍽 식사"
+                        ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:231: Warning: Hardcoded string "상세 보기", should use @string resource [HardcodedText]
+                        android:contentDescription="상세 보기" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:352: Warning: Hardcoded string "😴 수면", should use @string resource [HardcodedText]
+                        android:text="😴 수면"
+                        ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:360: Warning: Hardcoded string "상세 보기", should use @string resource [HardcodedText]
+                        android:contentDescription="상세 보기" />
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:437: Warning: Hardcoded string "깊은수면 25%", should use @string resource [HardcodedText]
+                        android:text="깊은수면 25%"
+                        ~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:445: Warning: Hardcoded string "얕은수면 64%", should use @string resource [HardcodedText]
+                        android:text="얕은수면 64%"
+                        ~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_lifestyle.xml:453: Warning: Hardcoded string "REM 11%", should use @string resource [HardcodedText]
+                        android:text="REM 11%"
+                        ~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_menu.xml:105: Warning: Hardcoded string "현재 등급", should use @string resource [HardcodedText]
+                        android:text="현재 등급"
+                        ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_menu.xml:126: Warning: Hardcoded string "프리미엄 시작하기", should use @string resource [HardcodedText]
+                    android:text="프리미엄 시작하기"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_menu.xml:136: Warning: Hardcoded string "내 정보", should use @string resource [HardcodedText]
+            android:text="내 정보"
+            ~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_menu.xml:183: Warning: Hardcoded string "데이터", should use @string resource [HardcodedText]
+            android:text="데이터"
+            ~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_menu.xml:230: Warning: Hardcoded string "고객센터", should use @string resource [HardcodedText]
+            android:text="고객센터"
+            ~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_menu.xml:293: Warning: Hardcoded string "계정", should use @string resource [HardcodedText]
+            android:text="계정"
+            ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_onboarding_birth_gender.xml:27: Warning: Hardcoded string "맞춤 혈당 분석에 활용됩니다.", should use @string resource [HardcodedText]
+            android:text="맞춤 혈당 분석에 활용됩니다."
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_onboarding_birth_gender.xml:57: Warning: Hardcoded string "성별", should use @string resource [HardcodedText]
+            android:text="성별"
+            ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_onboarding_body.xml:27: Warning: Hardcoded string "BMI 기반 건강 분석에 활용됩니다.", should use @string resource [HardcodedText]
+            android:text="BMI 기반 건강 분석에 활용됩니다."
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_onboarding_complete.xml:22: Warning: Hardcoded string "✓", should use @string resource [HardcodedText]
+            android:text="✓"
+            ~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_onboarding_complete.xml:59: Warning: Hardcoded string "—", should use @string resource [HardcodedText]
+                android:text="—" />
+                ~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\fragment_onboarding_nickname.xml:27: Warning: Hardcoded string "앱 내에서 사용할 이름을 알려주세요.", should use @string resource [HardcodedText]
+            android:text="앱 내에서 사용할 이름을 알려주세요."
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\item_family_member.xml:104: Warning: Hardcoded string " mg/dL", should use @string resource [HardcodedText]
+                android:text=" mg/dL"
+                ~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\item_glucose_card.xml:30: Warning: Hardcoded string "-- mg/dL", should use @string resource [HardcodedText]
+            android:text="-- mg/dL" />
+            ~~~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\item_glucose_card.xml:38: Warning: Hardcoded string "식후 2시간", should use @string resource [HardcodedText]
+            android:text="식후 2시간" />
+            ~~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\item_glucose_card.xml:47: Warning: Hardcoded string "정상", should use @string resource [HardcodedText]
+            android:text="정상" />
+            ~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\item_glucose_record.xml:95: Warning: Hardcoded string "mg/dL", should use @string resource [HardcodedText]
+                android:text="mg/dL"
+                ~~~~~~~~~~~~~~~~~~~~
+D:\Desktop Archive\VibeCoding\VCP\app\src\main\res\layout\view_empty_state.xml:16: Warning: Hardcoded string "빈 상태 아이콘", should use @string resource [HardcodedText]
+        android:contentDescription="빈 상태 아이콘" />
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "HardcodedText":
+   Hardcoding text attributes directly in layout files is bad for several
+   reasons:
+
+   * When creating configuration variations (for example for landscape or
+   portrait) you have to repeat the actual text (and keep it up to date when
+   making changes)
+
+   * The application cannot be translated to other languages by just adding
+   new translations for existing string resources.
+
+   There are quickfixes to automatically extract this hardcoded string into a
+   resource lookup.
+
+0 errors, 310 warnings

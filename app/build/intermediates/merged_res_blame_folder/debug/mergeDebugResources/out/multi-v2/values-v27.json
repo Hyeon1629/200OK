@@ -1,0 +1,28 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.checkdang.app-mergeDebugResources-46:/values-v27/values-v27.xml",
+            "map": [
+                {
+                    "source": "D:\\Desktop Archive\\VibeCoding\\VCP\\app\\src\\main\\res\\values-v27\\themes.xml",
+                    "from": {
+                        "startLines": "3",
+                        "startColumns": "4",
+                        "startOffsets": "127",
+                        "endLines": "16",
+                        "endColumns": "12",
+                        "endOffsets": "1008"
+                    },
+                    "to": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "15",
+                        "endColumns": "12",
+                        "endOffsets": "936"
+                    }
+                }
+            ]
+        }
+    ]
+}

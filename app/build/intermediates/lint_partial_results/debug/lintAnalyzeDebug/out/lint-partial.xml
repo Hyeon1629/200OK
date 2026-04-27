@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<incidents format="6" by="lint 9.1.1" type="partial_results">
+    <map id="UnsafeIntentLaunch">
+            <map id="unprotected">
+                <entry
+                    name="com.checkdang.app.ui.splash.SplashActivity"
+                    boolean="true"/>
+            </map>
+    </map>
+    <map id="UnusedResources">
+        <location id="R.drawable.body_back"
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/drawable/body_back.xml"
+            line="2"
+            column="1"
+            startOffset="39"
+            endLine="79"
+            endColumn="10"
+            endOffset="2858"/>
+        <location id="R.drawable.body_front"
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/drawable/body_front.xml"
+            line="2"
+            column="1"
+            startOffset="39"
+            endLine="89"
+            endColumn="10"
+            endOffset="3292"/>
+        <location id="R.drawable.ic_star"
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/drawable/ic_star.xml"
+            line="2"
+            column="1"
+            startOffset="39"
+            endLine="9"
+            endColumn="10"
+            endOffset="531"/>
+        <location id="R.string.main_placeholder"
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/values/strings.xml"
+            line="27"
+            column="13"
+            startOffset="1349"
+            endLine="27"
+            endColumn="36"
+            endOffset="1372"/>
+        <location id="R.string.onboarding_step_complete"
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/values/strings.xml"
+            line="22"
+            column="13"
+            startOffset="1068"
+            endLine="22"
+            endColumn="44"
+            endOffset="1099"/>
+        <location id="R.style.ShapeAppearance_CheckDang_BottomSheet"
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/values/styles.xml"
+            line="82"
+            column="12"
+            startOffset="3807"
+            endLine="82"
+            endColumn="56"
+            endOffset="3851"/>
+        <entry
+            name="model"
+            string="anim[slide_down(U)],attr[actionBarSize(R),materialButtonOutlinedStyle(R),selectableItemBackground(R)],color[nav_item_color(U),brand_green(U),text_secondary(U),brand_green_light(U),divider(U),brand_green_dark(U),background_secondary(U),background_primary(U),text_primary(U),status_normal(U),status_warning(U),status_danger(U),status_normal_bg(U),status_warning_bg(U),status_danger_bg(U),white(U),carbs_color(U),protein_color(U),fat_color(U),sleep_deep(U),sleep_light(U),sleep_rem(U),avatar_0(U),avatar_1(U),avatar_2(U),avatar_3(U),avatar_4(U),avatar_5(U)],dimen[spacing_l(U),spacing_xl(U),spacing_m(U),spacing_s(U),spacing_xxl(U),corner_radius_card(U),spacing_xs(U),corner_radius_button(U),card_elevation(U),dot_size(U),bottom_sheet_corner_radius(U)],drawable[bg_bar(U),bg_chip(U),bg_circle(U),bg_intensity(U),bg_intensity_dot(U),body_back(D),body_front(D),ic_add(U),ic_backup(U),ic_bell(U),ic_chat(U),ic_check(U),ic_chevron_right(U),ic_document(U),ic_dot(U),ic_export(U),ic_group(U),ic_help(U),ic_info(U),ic_lock(U),ic_logout(U),ic_nav_bodymap(U),ic_nav_glucose(U),ic_nav_home(U),ic_nav_lifestyle(U),ic_nav_menu(U),ic_person(U),ic_shield(U),ic_star(D),ic_unit(U)],id[toolbar(U),layout_loading(D),progress_loading(D),layout_result(D),tv_result_part(D),tv_result_types(D),tv_result_intensity(D),tv_summary(D),rv_correlations(D),tv_recommendation(D),btn_pdf(D),btn_confirm(D),card_glucose_80(D),card_glucose_150(D),card_glucose_220(D),donut_exercise_detail(D),tv_detail_percent(D),tv_detail_sub(D),tv_total_minutes(D),tv_total_calories(D),recycler_sessions(D),chart_weekly_exercise(D),banner_danger(D),tv_banner_message(D),btn_call(D),layout_not_paid(D),layout_paid(D),tv_family_count(D),btn_add_family(D),rv_family_members(D),til_email(D),et_email(D),til_password(D),et_password(D),btn_login(D),btn_signup(D),btn_guest(D),nav_host_fragment(U),bottom_nav(U),pie_macro(D),tv_kcal_value(D),tv_kcal_goal(D),progress_kcal(D),layout_meals(D),banner_guest(D),dots_container(D),view_pager(D),til_password_confirm(D),et_password_confirm(D),cb_terms(D),btn_next(D),tv_sleep_total(D),tv_efficiency(D),sleep_stage_bar(D),view_deep(D),view_light(D),view_rem(D),tv_deep_hours(D),tv_light_hours(D),tv_rem_hours(D),tv_bedtime(D),tv_wake_time(D),chart_weekly_sleep(D),tv_logo(U),tv_subtitle(U),benefit_1(D),benefit_2(D),benefit_3(D),benefit_4(D),benefit_5(D),benefit_6(D),card_monthly(D),card_yearly(D),btn_subscribe(D),til_value(D),et_value(D),chip_status_preview(D),chip_group_timing(D),chip_timing_fasting(D),chip_timing_pre_meal(U),chip_timing_post30m(U),chip_timing_post1h(U),chip_timing_post2h(U),chip_timing_before_sleep(U),chip_timing_other(U),tv_measured_time(D),til_memo(D),et_memo(D),btn_save(D),tv_part_title(D),layout_intensity_dots(D),dot1(U),dot2(U),dot3(U),dot4(U),dot5(U),seekbar_intensity(D),chip_group_pain_type(D),chip_sharp(D),chip_dull(D),chip_burning(D),chip_throbbing(D),chip_stiffness(D),chip_numbness(D),btn_analyze(D),tv_my_code(D),btn_copy_code(D),et_invite_code(D),btn_invite(D),toggle_view(D),btn_front(D),btn_back(D),body_map_view(D),tv_hint(D),btn_input_pain(D),rv_pain_records(D),tv_stat_average(D),tv_stat_max(D),tv_stat_min(D),tab_layout(D),fab_add(D),chip_group_period(D),chip_7d(U),chip_1m(U),chip_3m(U),chart_glucose(D),recycler_records(D),layout_empty(D),tv_greeting(D),tv_date(D),card_glucose(D),layout_glucose_data(D),tv_glucose_value(D),tv_glucose_status(D),tv_glucose_time(D),tv_today_count(D),tv_today_average(D),layout_glucose_empty(D),btn_add_glucose(D),card_exercise(D),tv_exercise_value(D),progress_exercise(D),card_meal(D),tv_meal_value(D),progress_meal(D),card_sleep(D),tv_sleep_value(D),tv_sleep_efficiency(D),chart_weekly_glucose(D),btn_refresh(D),donut_exercise(D),tv_exercise_percent(D),tv_exercise_sub(D),tv_exercise_calories(D),tv_exercise_sessions(D),tv_meal_kcal(D),tv_meal_goal(D),nutrition_bar(D),view_carbs(D),view_protein(D),view_fat(D),tv_carbs_label(D),tv_protein_label(D),tv_fat_label(D),view_sleep_deep(D),view_sleep_light(D),view_sleep_rem(D),tv_sleep_bedtime(D),card_profile(D),tv_avatar_initial(D),tv_profile_name(D),tv_profile_email(D),card_tier(D),tv_tier_badge(D),btn_subscription_cta(D),menu_profile(D),menu_notification(D),menu_unit(D),menu_export(D),menu_backup(D),menu_family(D),menu_faq(D),menu_support(D),menu_terms(D),menu_privacy(D),menu_version(D),menu_logout(D),menu_withdraw(D),til_birth_date(D),et_birth_date(D),toggle_gender(D),btn_male(U),btn_female(U),til_height(D),et_height(D),til_weight(D),et_weight(D),tv_welcome(D),btn_start(D),til_nickname(D),et_nickname(D),tv_benefit(D),tv_factor(D),tv_level(D),tv_description(D),tv_exercise_icon(U),tv_session_type(U),tv_session_stats(U),tv_session_time(U),tv_avatar(D),tv_name_relation(D),tv_today_info(D),tv_status_badge(D),tv_timing(D),tv_measured_at(D),view_status_indicator(D),tv_glucose_timing(D),view_status_bar(U),tv_time(U),layout_timing(D),layout_value(U),tv_timing_label(D),tv_memo(D),tv_value(D),chip_status(D),iv_menu_icon(D),tv_menu_title(D),tv_menu_sub(D),iv_lock(D),iv_arrow(D),tv_intensity(D),tv_part(D),tv_pain_types(D),iv_empty_icon(D),tv_empty_title(D),tv_empty_description(D),btn_empty_action(D),nav_home(U),nav_glucose(U),nav_lifestyle(U),nav_bodymap(U),nav_menu(U),nav_graph(D),design_bottom_sheet(R)],layout[activity_ai_analysis(U),activity_design_system(U),item_glucose_card(U),activity_exercise_detail(U),item_exercise_session(U),activity_family(U),activity_login(U),activity_main(U),activity_meal_detail(U),activity_onboarding(U),activity_signup(U),activity_sleep_detail(U),activity_splash(U),activity_subscription(U),item_benefit_row(U),bottom_sheet_glucose_input(U),bottom_sheet_pain_input(U),dialog_add_family(U),fragment_bodymap(U),fragment_glucose(U),fragment_glucose_chart(U),fragment_glucose_list(U),item_glucose_record(U),fragment_home(U),fragment_lifestyle(U),fragment_menu(U),item_menu_row(U),fragment_onboarding_birth_gender(U),fragment_onboarding_body(U),fragment_onboarding_complete(U),fragment_onboarding_nickname(U),item_correlation(U),item_family_member(U),item_glucose_date_header(U),item_pain_record(U),view_empty_state(U)],menu[bottom_nav_menu(U)],mipmap[ic_launcher(U),ic_launcher_round(U)],navigation[nav_graph(U)],string[app_name(U),login_subtitle(U),hint_email(U),hint_password(U),btn_login(U),btn_signup(U),btn_guest(U),hint_password_confirm(U),terms_agree(U),btn_next(U),splash_subtitle(U),onboarding_step_birth_gender(U),hint_birth_date(U),gender_male(U),gender_female(U),onboarding_step_body(U),hint_height(U),hint_weight(U),onboarding_complete_title(U),onboarding_complete_subtitle(U),btn_start(U),onboarding_step_nickname(U),hint_nickname(U),onboarding_step_complete(D),main_placeholder(D)],style[Theme_CheckDang(U),TextAppearance_CheckDang_Title2(U),TextAppearance_CheckDang_Body1(U),TextAppearance_CheckDang_Caption(U),Widget_Material3_Button_OutlinedButton(R),TextAppearance_CheckDang_Title1(U),Widget_CheckDang_Card(U),TextAppearance_CheckDang_Body2(U),TextAppearance_CheckDang_Display(U),Widget_CheckDang_Button_Primary(U),Widget_CheckDang_Button_Secondary(U),Widget_CheckDang_TextInput(U),Widget_AppCompat_ProgressBar_Horizontal(R),Widget_Material3_Chip_Filter(R),Widget_Material3_Button_TextButton(R),Widget_Material3_Button(R),Widget_Material3_CardView_Elevated(R),Widget_Material3_TextInputLayout_OutlinedBox(R),TextAppearance_Material3_DisplaySmall(R),TextAppearance_Material3_HeadlineMedium(R),TextAppearance_Material3_TitleLarge(R),TextAppearance_Material3_BodyLarge(R),TextAppearance_Material3_BodyMedium(R),TextAppearance_Material3_BodySmall(R),ShapeAppearance_CheckDang_BottomSheet(D),Theme_Material3_Light_NoActionBar(R)];4^5^6,2d^7,2e^5,2f^8,36^9,37^6,39^8,13d^a^b^1^17f^c^5^180^6^181^2e^7^182,13e^20^21^183^22^17f^184^23^5^185^181^9^7^a^d^e^f^10^11^12^186^180^187^188^6^24^13f,13f^25^20^23^183^26^181^185,140^a^b^1^37^17f^c^186^5^185^6^181^8^e^180^141,141^2d^180^9^c^118^119^116^181^6^117,142^a^b^1^17f^c^12^181^f^182^180^6,143^165^186^5^166^185^6^167^189^168^169^187^16a^188^16b,144^164^13^4^161,145^a^b^1^17f^c^39^14^181^15^16^186^6^8^5^18a^180,146^7^3d^5^181^8,147^1^c^8^167^189^168^16c^5^16d^185^6^16e^187,148^a^b^1^17f^c^186^17^181^6^5^2b^18^19^180^8,149^165^186^5^89^16f^185^6^88,14a^a^b^1^17f^c^5^180^6^14b^8^181^7^2c^13,14b^36^5^185^c,14c^b^17f^c^189^186^185^18b^2c^a^180^187,14d^8^17f^c^180^2f^5^181^6^18b,14e^8^17f^c^7^180^5^182^189,14f^a^b^17f^c^181^182^6^180,150^a^b^1^17f^c^5^18c^181^6^8^f^e^32^13,151^a^4^18b^b^39^d^181^e^f,152^a^153^180^6^181,153^b^180^c^122^125^123^185^6^181^17f,154^a^17f^c^185^6^b^186^5^2c^10^181^8^180^187^18a,155^a^17f^c^185^6^7^5^36^9^18c^b^37^181^180^186^2b^14^15^16^2c^17^18^19^39,156^a^b^2d^5^13^17f^c^181^6^37^2c^157^8,157^3^37^180^c^181^6^3e,158^170^183^185^6^171^189^172^2^173^16e^187,159^174^183^185^6^175^189^176^16e^187,15a^5^177^183^178^185^6^184^180^179^187,15b^17a^183^185^6^17b^189^16e^187,15c^180^c^2c^181^6,15d^b^2d^13^1a^180^c^181^6^2c^8^f,15e^a^181^6,15f^2e^180^c^181^6,160^180^c^185^6^187,161^42^41^43^40^44,162^7^5,163^7^5,164^136,17e^197^5^9^13^7^b,17f^192^c,180^193^c,181^195^6,183^191^c,184^18e^25^28^20^b,185^194^c,186^190^c,187^18d^5^13^27,188^182^5^13^27,189^18f^5^6;;;"/>
+    </map>
+
+</incidents>

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/gradle/gradle/v8.13.0/gradle/wrapper/gradle-wrapper.jar' -OutFile 'D:/Desktop Archive/VibeCoding/VCP/gradle/wrapper/gradle-wrapper.jar'\")",
+      "Bash(chmod +x \"/d/Desktop Archive/VibeCoding/VCP/gradlew\")",
+      "Bash(./gradlew assembleDebug)",
+      "Bash(./gradlew assembleDebug --stacktrace)",
+      "Bash(./gradlew lint *)"
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+com.checkdang.app-pngs-0 D:\Desktop Archive\VibeCoding\VCP\app\build\generated\res\pngs\debug
+com.checkdang.app-updated_navigation_xml-1 D:\Desktop Archive\VibeCoding\VCP\app\build\generated\updated_navigation_xml\debug
+com.checkdang.app-packageDebugResources-2 D:\Desktop Archive\VibeCoding\VCP\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+com.checkdang.app-packageDebugResources-3 D:\Desktop Archive\VibeCoding\VCP\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+com.checkdang.app-debug-4 D:\Desktop Archive\VibeCoding\VCP\app\build\intermediates\merged_res\debug\mergeDebugResources
+com.checkdang.app-debug-5 D:\Desktop Archive\VibeCoding\VCP\app\src\debug\res
+com.checkdang.app-main-6 D:\Desktop Archive\VibeCoding\VCP\app\src\main\res

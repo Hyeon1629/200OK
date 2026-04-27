@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_secondary">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="32dp">
+
+        <!-- ── 프로필 헤더 카드 ── -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_profile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            app:cardBackgroundColor="@color/background_primary"
+            app:cardCornerRadius="0dp"
+            app:cardElevation="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="20dp">
+
+                <!-- 이니셜 아바타 -->
+                <TextView
+                    android:id="@+id/tv_avatar_initial"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:gravity="center"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    android:background="@drawable/bg_circle"
+                    android:backgroundTint="@color/brand_green"
+                    tools:text="건" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="14dp">
+
+                    <TextView
+                        android:id="@+id/tv_profile_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Title2"
+                        android:textColor="@color/text_primary"
+                        tools:text="건강이" />
+
+                    <TextView
+                        android:id="@+id/tv_profile_email"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                        android:textColor="@color/text_secondary"
+                        tools:text="user@example.com" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_chevron_right"
+                    android:alpha="0.4" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ── 회원 등급 카드 ── -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_tier"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            app:cardBackgroundColor="@color/background_primary"
+            app:cardCornerRadius="0dp"
+            app:cardElevation="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="16dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="현재 등급"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:id="@+id/tv_tier_badge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="4dp"
+                        android:background="@drawable/bg_chip"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                        android:textStyle="bold"
+                        tools:text="FREE" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_subscription_cta"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:text="프리미엄 시작하기"
+                    android:textSize="12sp"
+                    app:cornerRadius="8dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ── 섹션 1: 내 정보 ── -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="내 정보"
+            android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+            android:textColor="@color/text_secondary"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="4dp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            app:cardBackgroundColor="@color/background_primary"
+            app:cardCornerRadius="0dp"
+            app:cardElevation="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <include layout="@layout/item_menu_row"
+                    android:id="@+id/menu_profile"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp" />
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:layout_marginStart="56dp" android:background="@color/divider" />
+
+                <include layout="@layout/item_menu_row"
+                    android:id="@+id/menu_notification"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp" />
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:layout_marginStart="56dp" android:background="@color/divider" />
+
+                <include layout="@layout/item_menu_row"
+                    android:id="@+id/menu_unit"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ── 섹션 2: 데이터 ── -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="데이터"
+            android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+            android:textColor="@color/text_secondary"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="4dp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            app:cardBackgroundColor="@color/background_primary"
+            app:cardCornerRadius="0dp"
+            app:cardElevation="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <include layout="@layout/item_menu_row"
+                    android:id="@+id/menu_export"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp" />
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:layout_marginStart="56dp" android:background="@color/divider" />
+
+                <include layout="@layout/item_menu_row"
+                    android:id="@+id/menu_backup"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp" />
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:layout_marginStart="56dp" android:background="@color/divider" />
+
+                <include layout="@layout/item_menu_row"
+                    android:id="@+id/menu_family"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ── 섹션 3: 고객센터 ── -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="고객센터"
+            android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+            android:textColor="@color/text_secondary"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="4dp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            app:cardBackgroundColor="@color/background_primary"
+            app:cardCornerRadius="0dp"
+            app:cardElevation="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <include layout="@layout/item_menu_row"
+                    android:id="@+id/menu_faq"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp" />
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:layout_marginStart="56dp" android:background="@color/divider" />
+
+                <include layout="@layout/item_menu_row"
+                    android:id="@+id/menu_support"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp" />
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:layout_marginStart="56dp" android:background="@color/divider" />
+
+                <include layout="@layout/item_menu_row"
+                    android:id="@+id/menu_terms"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp" />
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:layout_marginStart="56dp" android:background="@color/divider" />
+
+                <include layout="@layout/item_menu_row"
+                    android:id="@+id/menu_privacy"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp" />
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:layout_marginStart="56dp" android:background="@color/divider" />
+
+                <include layout="@layout/item_menu_row"
+                    android:id="@+id/menu_version"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ── 섹션 4: 계정 ── -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="계정"
+            android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+            android:textColor="@color/text_secondary"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="4dp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            app:cardBackgroundColor="@color/background_primary"
+            app:cardCornerRadius="0dp"
+            app:cardElevation="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <include layout="@layout/item_menu_row"
+                    android:id="@+id/menu_logout"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp" />
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:layout_marginStart="56dp" android:background="@color/divider" />
+
+                <include layout="@layout/item_menu_row"
+                    android:id="@+id/menu_withdraw"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

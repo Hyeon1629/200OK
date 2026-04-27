@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background_secondary">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/background_primary"
+        android:elevation="2dp"
+        app:title="수면 상세"
+        app:titleTextColor="@color/text_primary"
+        app:titleTextAppearance="@style/TextAppearance.CheckDang.Title2" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="24dp">
+
+            <!-- 수면 요약 카드 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="@color/background_primary"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <!-- 총 수면 + 효율 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tv_sleep_total"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.CheckDang.Display"
+                                android:textColor="@color/sleep_deep"
+                                tools:text="7시간 12분" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="총 수면 시간"
+                                android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                                android:textColor="@color/text_secondary" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tv_efficiency"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.CheckDang.Title2"
+                                android:textColor="@color/brand_green"
+                                tools:text="84%" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="수면 효율"
+                                android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                                android:textColor="@color/text_secondary" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- 수면 단계 누적 막대 -->
+                    <LinearLayout
+                        android:id="@+id/sleep_stage_bar"
+                        android:layout_width="match_parent"
+                        android:layout_height="16dp"
+                        android:layout_marginBottom="10dp"
+                        android:background="@drawable/bg_bar"
+                        android:clipToOutline="true"
+                        android:orientation="horizontal">
+
+                        <View android:id="@+id/view_deep"
+                            android:layout_width="0dp" android:layout_height="match_parent"
+                            android:layout_weight="18" android:background="@color/sleep_deep" />
+                        <View android:id="@+id/view_light"
+                            android:layout_width="0dp" android:layout_height="match_parent"
+                            android:layout_weight="46" android:background="@color/sleep_light" />
+                        <View android:id="@+id/view_rem"
+                            android:layout_width="0dp" android:layout_height="match_parent"
+                            android:layout_weight="8" android:background="@color/sleep_rem" />
+                    </LinearLayout>
+
+                    <!-- 수면 단계 상세 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.CheckDang.Body1"
+                                android:textColor="@color/sleep_deep"
+                                android:id="@+id/tv_deep_hours" tools:text="1.8h" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="깊은수면" android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                                android:textColor="@color/sleep_deep" />
+                        </LinearLayout>
+
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.CheckDang.Body1"
+                                android:textColor="@color/sleep_light"
+                                android:id="@+id/tv_light_hours" tools:text="4.6h" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="얕은수면" android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                                android:textColor="@color/sleep_light" />
+                        </LinearLayout>
+
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.CheckDang.Body1"
+                                android:textColor="@color/sleep_rem"
+                                android:id="@+id/tv_rem_hours" tools:text="0.8h" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="REM" android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                                android:textColor="@color/sleep_rem" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- 취침 / 기상 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:background="@color/background_secondary"
+                        android:padding="12dp">
+
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="취침" android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                                android:textColor="@color/text_secondary" />
+                            <TextView android:id="@+id/tv_bedtime"
+                                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.CheckDang.Title2"
+                                android:textColor="@color/text_primary" tools:text="23:42" />
+                        </LinearLayout>
+
+                        <View android:layout_width="1dp" android:layout_height="match_parent"
+                            android:background="@color/divider" />
+
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="기상" android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                                android:textColor="@color/text_secondary" />
+                            <TextView android:id="@+id/tv_wake_time"
+                                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.CheckDang.Title2"
+                                android:textColor="@color/text_primary" tools:text="06:54" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 주간 수면 시간 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="주간 수면 시간"
+                android:textAppearance="@style/TextAppearance.CheckDang.Body1"
+                android:textColor="@color/text_primary" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/background_primary"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <com.github.mikephil.charting.charts.BarChart
+                    android:id="@+id/chart_weekly_sleep"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:padding="12dp" />
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

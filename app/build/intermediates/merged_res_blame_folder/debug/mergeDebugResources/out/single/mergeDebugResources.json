@@ -1,0 +1,298 @@
+[
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_bg_intensity.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\bg_intensity.xml"
+    },
+    {
+        "merged": "com.checkdang.app-debug-48:/layout_activity_family.xml.flat",
+        "source": "com.checkdang.app-main-50:/layout/activity_family.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_unit.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_unit.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_activity_signup.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_signup.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_activity_exercise_detail.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_exercise_detail.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_item_glucose_record.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\item_glucose_record.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_shield.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_shield.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_bg_intensity_dot.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\bg_intensity_dot.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_nav_glucose.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_nav_glucose.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_activity_meal_detail.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_meal_detail.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_item_glucose_date_header.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\item_glucose_date_header.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_activity_ai_analysis.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_ai_analysis.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_bottom_sheet_glucose_input.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\bottom_sheet_glucose_input.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_chat.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_chat.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_item_pain_record.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\item_pain_record.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_body_front.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\body_front.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_document.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_document.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_lock.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_lock.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_body_back.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\body_back.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_item_glucose_card.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\item_glucose_card.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_logout.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_logout.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_fragment_glucose_list.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\fragment_glucose_list.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_export.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_export.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_info.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_info.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_nav_menu.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_nav_menu.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_item_family_member.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\item_family_member.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_activity_splash.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_splash.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_nav_bodymap.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_nav_bodymap.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_dialog_add_family.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\dialog_add_family.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_view_empty_state.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\view_empty_state.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\menu_bottom_nav_menu.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\menu\\bottom_nav_menu.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_fragment_onboarding_body.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\fragment_onboarding_body.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_item_menu_row.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\item_menu_row.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_fragment_home.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\fragment_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_activity_subscription.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_subscription.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_activity_onboarding.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_onboarding.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_check.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_check.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_fragment_glucose.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\fragment_glucose.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_star.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_star.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_fragment_onboarding_nickname.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\fragment_onboarding_nickname.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_activity_login.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_login.xml"
+    },
+    {
+        "merged": "com.checkdang.app-debug-48:/layout_view_empty_state.xml.flat",
+        "source": "com.checkdang.app-main-50:/layout/view_empty_state.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_add.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_add.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_activity_sleep_detail.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_sleep_detail.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_fragment_onboarding_birth_gender.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\fragment_onboarding_birth_gender.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_group.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_group.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_bg_bar.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\bg_bar.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\color_nav_item_color.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\color\\nav_item_color.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_bg_circle.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\bg_circle.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_fragment_lifestyle.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\fragment_lifestyle.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_person.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_person.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_bottom_sheet_pain_input.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\bottom_sheet_pain_input.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\mipmap-mdpi_ic_launcher.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\mipmap-mdpi\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_bg_chip.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\bg_chip.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_chevron_right.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_chevron_right.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_fragment_onboarding_complete.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\fragment_onboarding_complete.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_item_benefit_row.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\item_benefit_row.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_activity_family.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_family.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_help.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_help.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_activity_design_system.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_design_system.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_nav_lifestyle.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_nav_lifestyle.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_bell.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_bell.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_nav_home.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_nav_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_fragment_glucose_chart.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\fragment_glucose_chart.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_backup.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_backup.xml"
+    },
+    {
+        "merged": "com.checkdang.app-debug-48:/layout_fragment_home.xml.flat",
+        "source": "com.checkdang.app-main-50:/layout/fragment_home.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\mipmap-mdpi_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\mipmap-mdpi\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_fragment_bodymap.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\fragment_bodymap.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\drawable_ic_dot.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\drawable\\ic_dot.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\anim_slide_down.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\anim\\slide_down.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_item_correlation.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\item_correlation.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_item_exercise_session.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\item_exercise_session.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-debug-48:\\layout_fragment_menu.xml.flat",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\fragment_menu.xml"
+    }
+]

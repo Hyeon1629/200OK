@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="avatar_0">#E57373</color>
+    <color name="avatar_1">#BA68C8</color>
+    <color name="avatar_2">#64B5F6</color>
+    <color name="avatar_3">#4DB6AC</color>
+    <color name="avatar_4">#FFB74D</color>
+    <color name="avatar_5">#A1887F</color>
+    <color name="background_primary">#FFFFFF</color>
+    <color name="background_secondary">#F7F8FA</color>
+    <color name="brand_green">#4CAF50</color>
+    <color name="brand_green_dark">#388E3C</color>
+    <color name="brand_green_light">#E8F5E9</color>
+    <color name="carbs_color">#FFC107</color>
+    <color name="divider">#E5E5EA</color>
+    <color name="fat_color">#F44336</color>
+    <color name="protein_color">#FF9800</color>
+    <color name="sleep_deep">#1565C0</color>
+    <color name="sleep_light">#42A5F5</color>
+    <color name="sleep_rem">#90CAF9</color>
+    <color name="status_danger">#F44336</color>
+    <color name="status_danger_bg">#26F44336</color>
+    <color name="status_normal">#4CAF50</color>
+    <color name="status_normal_bg">#264CAF50</color>
+    <color name="status_warning">#FF9800</color>
+    <color name="status_warning_bg">#26FF9800</color>
+    <color name="text_primary">#1A1A1A</color>
+    <color name="text_secondary">#6E6E73</color>
+    <color name="white">#FFFFFF</color>
+    <dimen name="bottom_sheet_corner_radius">20dp</dimen>
+    <dimen name="card_elevation">2dp</dimen>
+    <dimen name="corner_radius_button">12dp</dimen>
+    <dimen name="corner_radius_card">16dp</dimen>
+    <dimen name="dot_size">10dp</dimen>
+    <dimen name="spacing_l">16dp</dimen>
+    <dimen name="spacing_m">12dp</dimen>
+    <dimen name="spacing_s">8dp</dimen>
+    <dimen name="spacing_xl">24dp</dimen>
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="spacing_xxl">32dp</dimen>
+    <string name="app_name">체크당</string>
+    <string name="btn_guest">비회원으로 시작하기</string>
+    <string name="btn_login">로그인</string>
+    <string name="btn_next">다음</string>
+    <string name="btn_signup">회원가입</string>
+    <string name="btn_start">체크당 시작하기</string>
+    <string name="gender_female">여</string>
+    <string name="gender_male">남</string>
+    <string name="hint_birth_date">생년월일 (YYYY-MM-DD)</string>
+    <string name="hint_email">이메일</string>
+    <string name="hint_height">키 (cm)</string>
+    <string name="hint_nickname">닉네임</string>
+    <string name="hint_password">비밀번호</string>
+    <string name="hint_password_confirm">비밀번호 확인</string>
+    <string name="hint_weight">몸무게 (kg)</string>
+    <string name="login_subtitle">함께 관리하는 건강한 하루</string>
+    <string name="main_placeholder">메인 화면 (Phase 3에서 구현)</string>
+    <string name="onboarding_complete_subtitle">입력하신 정보를 확인해 주세요.</string>
+    <string name="onboarding_complete_title">환영합니다!</string>
+    <string name="onboarding_step_birth_gender">기본 정보를 입력해 주세요</string>
+    <string name="onboarding_step_body">신체 정보를 입력해 주세요</string>
+    <string name="onboarding_step_complete">설정 완료</string>
+    <string name="onboarding_step_nickname">닉네임을 알려주세요</string>
+    <string name="splash_subtitle">혈당과 일상을 함께 관리하다</string>
+    <string name="terms_agree">[필수] 서비스 이용약관 및 개인정보처리방침에 동의합니다</string>
+    <style name="ShapeAppearance.CheckDang.BottomSheet" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">16dp</item>
+        <item name="cornerSizeTopRight">16dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+    <style name="TextAppearance.CheckDang.Body1" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+    <style name="TextAppearance.CheckDang.Body2" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+    <style name="TextAppearance.CheckDang.Caption" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+    <style name="TextAppearance.CheckDang.Display" parent="TextAppearance.Material3.DisplaySmall">
+        <item name="android:textSize">32sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+    <style name="TextAppearance.CheckDang.Title1" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+    <style name="TextAppearance.CheckDang.Title2" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+    <style name="Theme.CheckDang" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/brand_green</item>
+        <item name="colorPrimaryDark">@color/brand_green_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/brand_green_light</item>
+        <item name="colorOnPrimaryContainer">@color/brand_green_dark</item>
+        <item name="colorSecondary">@color/brand_green</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="android:windowBackground">@color/background_primary</item>
+        <item name="android:statusBarColor">@color/white</item>
+        <item name="android:navigationBarColor">@color/white</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+    <style name="Widget.CheckDang.Button.Primary" parent="Widget.Material3.Button">
+        <item name="backgroundTint">@color/brand_green</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="cornerRadius">@dimen/corner_radius_button</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">16dp</item>
+    </style>
+    <style name="Widget.CheckDang.Button.Secondary" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="strokeColor">@color/brand_green</item>
+        <item name="android:textColor">@color/brand_green</item>
+        <item name="backgroundTint">@color/white</item>
+        <item name="cornerRadius">@dimen/corner_radius_button</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">16dp</item>
+    </style>
+    <style name="Widget.CheckDang.Card" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardCornerRadius">@dimen/corner_radius_card</item>
+        <item name="cardElevation">@dimen/card_elevation</item>
+        <item name="contentPadding">@dimen/spacing_l</item>
+        <item name="cardBackgroundColor">@color/background_primary</item>
+    </style>
+    <style name="Widget.CheckDang.TextInput" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/brand_green</item>
+        <item name="hintTextColor">@color/brand_green</item>
+        <item name="android:textColorHint">@color/text_secondary</item>
+    </style>
+</resources>
