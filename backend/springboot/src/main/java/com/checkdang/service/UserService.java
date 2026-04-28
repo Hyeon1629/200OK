@@ -3,6 +3,7 @@ package com.checkdang.service;
 import com.checkdang.domain.User;
 import com.checkdang.dto.LoginRequest;
 import com.checkdang.dto.SignupRequest;
+import com.checkdang.dto.UpdateProfileRequest;
 import com.checkdang.dto.UserResponse;
 import com.checkdang.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -52,10 +53,27 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserResponse getMe(Jwt jwt) {
-        String sub = jwt.getSubject();
-        User user = userRepository.findByCognitoSub(sub)
-                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
+        return UserResponse.from(findUserBySub(jwt.getSubject()));
+    }
+
+    @Transactional
+    public UserResponse updateProfile(Jwt jwt, UpdateProfileRequest request) {
+        User user = findUserBySub(jwt.getSubject());
+        if (request.getName() != null) {
+            user.updateName(request.getName());
+        }
         return UserResponse.from(user);
+    }
+
+    @Transactional
+    public void deleteAccount(Jwt jwt) {
+        User user = findUserBySub(jwt.getSubject());
+        userRepository.delete(user);
+    }
+
+    private User findUserBySub(String sub) {
+        return userRepository.findByCognitoSub(sub)
+                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
     }
 
     // 기존 이메일/비밀번호 회원가입 (LOCAL provider)
