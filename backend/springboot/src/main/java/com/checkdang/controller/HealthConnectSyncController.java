@@ -2,8 +2,11 @@ package com.checkdang.controller;
 
 import com.checkdang.dto.DietResponse;
 import com.checkdang.dto.DietSyncRequest;
+import com.checkdang.dto.SleepResponse;
+import com.checkdang.dto.SleepSyncRequest;
 import com.checkdang.dto.SyncResponse;
 import com.checkdang.service.DietService;
+import com.checkdang.service.SleepService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -22,6 +25,7 @@ import java.util.List;
 public class HealthConnectSyncController {
 
     private final DietService dietService;
+    private final SleepService sleepService;
 
     @PostMapping("/diets")
     public ResponseEntity<SyncResponse> syncDiets(
@@ -40,5 +44,23 @@ public class HealthConnectSyncController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
         String userEmail = principal.getUsername();
         return ResponseEntity.ok(dietService.getDiets(userEmail, from, to));
+    }
+
+    @PostMapping("/sleeps")
+    public ResponseEntity<SyncResponse> syncSleeps(
+            @AuthenticationPrincipal UserDetails principal,
+            @RequestBody @Valid List<SleepSyncRequest> requests) {
+        String userEmail = principal.getUsername();
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(sleepService.syncFromSamsungHealth(userEmail, requests));
+    }
+
+    @GetMapping("/sleeps")
+    public ResponseEntity<List<SleepResponse>> getSleeps(
+            @AuthenticationPrincipal UserDetails principal,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
+        String userEmail = principal.getUsername();
+        return ResponseEntity.ok(sleepService.getSleeps(userEmail, from, to));
     }
 }
