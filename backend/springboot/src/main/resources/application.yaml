@@ -2,6 +2,21 @@ spring:
   application:
     name: checkdang
 
+  datasource:
+    url: jdbc:mysql://${RDS_HOST}:3306/${RDS_DB_NAME}?useSSL=true&serverTimezone=Asia/Seoul
+    username: ${RDS_USERNAME}
+    password: ${RDS_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+    show-sql: false
+
   security:
     oauth2:
       client:
