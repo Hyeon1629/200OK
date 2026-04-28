@@ -21,6 +21,8 @@ class OnboardingNicknameFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        // TODO(backend, auth): SessionHolder.socialNickname 을 etNickname 초기값으로 설정
+        //  소셜 로그인 시 서버 응답의 닉네임을 미리 채워 UX 개선
         binding.btnNext.setOnClickListener {
             val nickname = binding.etNickname.text?.toString().orEmpty().trim()
             if (nickname.isEmpty()) {

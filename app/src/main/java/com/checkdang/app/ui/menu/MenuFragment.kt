@@ -1,6 +1,7 @@
 package com.checkdang.app.ui.menu
 
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.checkdang.app.R
 import com.checkdang.app.data.mock.SessionHolder
+import com.checkdang.app.data.mock.SocialProvider
 import com.checkdang.app.data.mock.UserTier
 import com.checkdang.app.databinding.FragmentMenuBinding
 import com.checkdang.app.databinding.ItemMenuRowBinding
@@ -39,10 +41,18 @@ class MenuFragment : Fragment() {
         setupMenuRows()
         observeTier()
 
-        // Long-press on tier card → demo tier toggle
         binding.cardTier.setOnLongClickListener {
             SessionHolder.toggleTierForDemo()
             true
+        }
+
+        binding.btnLoginFromMenu.setOnClickListener {
+            SessionHolder.reset()
+            startActivity(
+                Intent(requireContext(), LoginActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+            )
         }
     }
 
@@ -59,17 +69,55 @@ class MenuFragment : Fragment() {
     }
 
     private fun refreshProfileHeader() {
-        val profile = SessionHolder.currentProfile
-        if (profile != null) {
-            val initial = profile.nickname.firstOrNull()?.toString() ?: "?"
-            binding.tvAvatarInitial.text = initial
-            binding.tvProfileName.text   = profile.nickname
-            binding.tvProfileEmail.text  = "user@checkdang.app"
-        } else {
-            binding.tvAvatarInitial.text = "?"
-            binding.tvProfileName.text   = "비회원으로 이용 중"
-            binding.tvProfileEmail.text  = "로그인하기 >"
+        when {
+            SessionHolder.isGuest -> {
+                binding.tvAvatarInitial.text = "?"
+                binding.tvAvatarInitial.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(requireContext(), R.color.text_secondary)
+                )
+                binding.tvProfileName.text        = "비회원으로 이용 중"
+                binding.tvProfileEmail.visibility = View.GONE
+                binding.ivProfileArrow.visibility = View.GONE
+                binding.btnLoginFromMenu.visibility = View.VISIBLE
+            }
+            SessionHolder.isLoggedIn -> {
+                val profile  = SessionHolder.currentProfile
+                val initial  = profile?.nickname?.firstOrNull()?.toString() ?: "?"
+                binding.tvAvatarInitial.text = initial
+                binding.tvAvatarInitial.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(requireContext(), R.color.brand_green)
+                )
+                binding.tvProfileName.text = profile?.nickname ?: "이름 없음"
+                val providerLabel = when (SessionHolder.authProvider) {
+                    SocialProvider.GOOGLE -> "Google 계정 연결됨"
+                    SocialProvider.KAKAO  -> "카카오 계정 연결됨"
+                    SocialProvider.NONE   -> ""
+                }
+                binding.tvProfileEmail.text       = providerLabel
+                binding.tvProfileEmail.visibility = if (providerLabel.isNotEmpty()) View.VISIBLE else View.GONE
+                binding.ivProfileArrow.visibility = View.VISIBLE
+                binding.btnLoginFromMenu.visibility = View.GONE
+            }
+            else -> {
+                binding.tvAvatarInitial.text = "?"
+                binding.tvAvatarInitial.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(requireContext(), R.color.text_secondary)
+                )
+                binding.tvProfileName.text        = "비회원으로 이용 중"
+                binding.tvProfileEmail.visibility = View.GONE
+                binding.ivProfileArrow.visibility = View.GONE
+                binding.btnLoginFromMenu.visibility = View.VISIBLE
+            }
         }
+
+        // 연결된 계정 행 라벨 동적 갱신
+        val connectedLabel = when (SessionHolder.authProvider) {
+            SocialProvider.GOOGLE -> "Google"
+            SocialProvider.KAKAO  -> "카카오"
+            SocialProvider.NONE   -> "없음"
+        }
+        binding.menuConnectedAccount.tvMenuSub.visibility = View.VISIBLE
+        binding.menuConnectedAccount.tvMenuSub.text       = connectedLabel
     }
 
     private fun refreshTierCard(tier: UserTier) {
@@ -81,9 +129,7 @@ class MenuFragment : Fragment() {
         binding.tvTierBadge.text = label
         binding.tvTierBadge.setTextColor(ContextCompat.getColor(requireContext(), textColor))
         binding.tvTierBadge.backgroundTintList =
-            android.content.res.ColorStateList.valueOf(
-                ContextCompat.getColor(requireContext(), bgColor)
-            )
+            ColorStateList.valueOf(ContextCompat.getColor(requireContext(), bgColor))
         binding.btnSubscriptionCta.text = if (tier == UserTier.PAID) "구독 관리" else "프리미엄 시작하기"
         binding.btnSubscriptionCta.setOnClickListener {
             startActivity(Intent(requireContext(), SubscriptionActivity::class.java))
@@ -96,24 +142,23 @@ class MenuFragment : Fragment() {
         applyLock(binding.menuFamily, locked = !isPaid)
     }
 
-    // binding.menuXxx is ItemMenuRowBinding (ViewBinding from <include>)
     private fun applyLock(row: ItemMenuRowBinding, locked: Boolean) {
-        row.ivLock.visibility  = if (locked) View.VISIBLE else View.GONE
-        row.ivArrow.alpha      = if (locked) 0.2f else 0.3f
-        row.tvMenuTitle.alpha  = if (locked) 0.5f else 1.0f
-        row.ivMenuIcon.alpha   = if (locked) 0.4f else 1.0f
+        row.ivLock.visibility = if (locked) View.VISIBLE else View.GONE
+        row.ivArrow.alpha     = if (locked) 0.2f else 0.3f
+        row.tvMenuTitle.alpha = if (locked) 0.5f else 1.0f
+        row.ivMenuIcon.alpha  = if (locked) 0.4f else 1.0f
     }
 
     private fun setupMenuRows() {
         // 섹션 1: 내 정보
-        configRow(binding.menuProfile,       R.drawable.ic_person,   "환자 프로필 관리")
-        configRow(binding.menuNotification,  R.drawable.ic_bell,     "알림 설정")
-        configRow(binding.menuUnit,          R.drawable.ic_unit,     "단위 설정 (mg/dL)")
+        configRow(binding.menuProfile,      R.drawable.ic_person, "환자 프로필 관리")
+        configRow(binding.menuNotification, R.drawable.ic_bell,   "알림 설정")
+        configRow(binding.menuUnit,         R.drawable.ic_unit,   "단위 설정 (mg/dL)")
 
         // 섹션 2: 데이터
-        configRow(binding.menuExport,  R.drawable.ic_export, "데이터 내보내기 (PDF/CSV)")
-        configRow(binding.menuBackup,  R.drawable.ic_backup, "데이터 백업")
-        configRow(binding.menuFamily,  R.drawable.ic_group,  "가족 공유")
+        configRow(binding.menuExport, R.drawable.ic_export, "데이터 내보내기 (PDF/CSV)")
+        configRow(binding.menuBackup, R.drawable.ic_backup, "데이터 백업")
+        configRow(binding.menuFamily, R.drawable.ic_group,  "가족 공유")
 
         // 섹션 3: 고객센터
         configRow(binding.menuFaq,     R.drawable.ic_help,     "자주 묻는 질문")
@@ -124,11 +169,13 @@ class MenuFragment : Fragment() {
             subText = "1.0.0", showArrow = false)
 
         // 섹션 4: 계정
+        configRow(binding.menuConnectedAccount, R.drawable.ic_person, "연결된 계정",
+            showArrow = false)
         configRow(binding.menuLogout,   R.drawable.ic_logout, "로그아웃")
         configRow(binding.menuWithdraw, R.drawable.ic_logout, "회원 탈퇴",
             titleColor = R.color.text_secondary, titleSize = 13f)
 
-        // 클릭 리스너 (root.setOnClickListener — root is the LinearLayout)
+        // 클릭 리스너
         binding.menuFamily.root.setOnClickListener {
             if (SessionHolder.tier == UserTier.PAID) {
                 startActivity(Intent(requireContext(), FamilyActivity::class.java))
@@ -139,10 +186,9 @@ class MenuFragment : Fragment() {
         binding.menuBackup.root.setOnClickListener {
             if (SessionHolder.tier != UserTier.PAID) showPremiumDialog()
         }
-        binding.menuLogout.root.setOnClickListener  { showLogoutDialog() }
+        binding.menuLogout.root.setOnClickListener   { showLogoutDialog() }
         binding.menuWithdraw.root.setOnClickListener { showWithdrawDialog() }
 
-        // stub toast
         listOf(
             binding.menuProfile, binding.menuNotification, binding.menuUnit,
             binding.menuExport, binding.menuFaq, binding.menuSupport,
@@ -190,6 +236,10 @@ class MenuFragment : Fragment() {
             .setTitle("로그아웃")
             .setMessage("정말 로그아웃 하시겠어요?")
             .setPositiveButton("로그아웃") { _, _ ->
+                // TODO(backend, auth): 소셜 SDK 로그아웃 호출 추가
+                //  - GoogleSignIn.getClient(context, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut()
+                //  - UserApiClient.instance.logout {}
+                //  - 서버에 POST /api/v1/auth/logout
                 SessionHolder.reset()
                 startActivity(
                     Intent(requireContext(), LoginActivity::class.java).apply {

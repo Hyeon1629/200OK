@@ -24,6 +24,10 @@
         "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\item_glucose_card.xml"
     },
     {
+        "merged": "com.checkdang.app-mergeDebugResources-47:/layout/dialog_social_loading.xml",
+        "source": "com.checkdang.app-main-50:/layout/dialog_social_loading.xml"
+    },
+    {
         "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-mergeDebugResources-47:\\layout\\activity_subscription.xml",
         "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_subscription.xml"
     },
@@ -48,10 +52,6 @@
         "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\item_benefit_row.xml"
     },
     {
-        "merged": "com.checkdang.app-mergeDebugResources-47:/layout/view_empty_state.xml",
-        "source": "com.checkdang.app-main-50:/layout/view_empty_state.xml"
-    },
-    {
         "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-mergeDebugResources-47:\\layout\\fragment_glucose_chart.xml",
         "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\fragment_glucose_chart.xml"
     },
@@ -60,12 +60,12 @@
         "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\bottom_sheet_glucose_input.xml"
     },
     {
-        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-mergeDebugResources-47:\\layout\\activity_meal_detail.xml",
-        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_meal_detail.xml"
+        "merged": "com.checkdang.app-mergeDebugResources-47:/layout/activity_login.xml",
+        "source": "com.checkdang.app-main-50:/layout/activity_login.xml"
     },
     {
-        "merged": "com.checkdang.app-mergeDebugResources-47:/layout/activity_family.xml",
-        "source": "com.checkdang.app-main-50:/layout/activity_family.xml"
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-mergeDebugResources-47:\\layout\\activity_meal_detail.xml",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_meal_detail.xml"
     },
     {
         "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-mergeDebugResources-47:\\layout\\fragment_onboarding_birth_gender.xml",
@@ -104,6 +104,10 @@
         "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\dialog_add_family.xml"
     },
     {
+        "merged": "com.checkdang.app-mergeDebugResources-47:/layout/activity_onboarding.xml",
+        "source": "com.checkdang.app-main-50:/layout/activity_onboarding.xml"
+    },
+    {
         "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-mergeDebugResources-47:\\layout\\fragment_bodymap.xml",
         "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\fragment_bodymap.xml"
     },
@@ -112,20 +116,20 @@
         "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_main.xml"
     },
     {
-        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-mergeDebugResources-47:\\layout\\activity_onboarding.xml",
-        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_onboarding.xml"
-    },
-    {
         "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-mergeDebugResources-47:\\layout\\activity_family.xml",
         "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_family.xml"
+    },
+    {
+        "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-mergeDebugResources-47:\\layout\\activity_onboarding.xml",
+        "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\activity_onboarding.xml"
     },
     {
         "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-mergeDebugResources-47:\\layout\\fragment_lifestyle.xml",
         "source": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-main-50:\\layout\\fragment_lifestyle.xml"
     },
     {
-        "merged": "com.checkdang.app-mergeDebugResources-47:/layout/fragment_home.xml",
-        "source": "com.checkdang.app-main-50:/layout/fragment_home.xml"
+        "merged": "com.checkdang.app-mergeDebugResources-47:/layout/fragment_menu.xml",
+        "source": "com.checkdang.app-main-50:/layout/fragment_menu.xml"
     },
     {
         "merged": "C:\\Users\\hyeon\\.gradle\\daemon\\9.4.0\\com.checkdang.app-mergeDebugResources-47:\\layout\\fragment_glucose.xml",

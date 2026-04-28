@@ -4,61 +4,47 @@ package com.checkdang.app.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ScrollView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.checkdang.app.R;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
 import java.lang.NullPointerException;
 import java.lang.Override;
 import java.lang.String;
 
 public final class ActivityLoginBinding implements ViewBinding {
   @NonNull
-  private final ScrollView rootView;
+  private final LinearLayout rootView;
 
   @NonNull
-  public final MaterialButton btnGuest;
+  public final MaterialButton btnGoogleLogin;
 
   @NonNull
-  public final MaterialButton btnLogin;
+  public final MaterialButton btnGuestStart;
 
   @NonNull
-  public final MaterialButton btnSignup;
+  public final MaterialButton btnKakaoLogin;
 
   @NonNull
-  public final TextInputEditText etEmail;
+  public final TextView tvTermsNotice;
 
-  @NonNull
-  public final TextInputEditText etPassword;
-
-  @NonNull
-  public final TextInputLayout tilEmail;
-
-  @NonNull
-  public final TextInputLayout tilPassword;
-
-  private ActivityLoginBinding(@NonNull ScrollView rootView, @NonNull MaterialButton btnGuest,
-      @NonNull MaterialButton btnLogin, @NonNull MaterialButton btnSignup,
-      @NonNull TextInputEditText etEmail, @NonNull TextInputEditText etPassword,
-      @NonNull TextInputLayout tilEmail, @NonNull TextInputLayout tilPassword) {
+  private ActivityLoginBinding(@NonNull LinearLayout rootView,
+      @NonNull MaterialButton btnGoogleLogin, @NonNull MaterialButton btnGuestStart,
+      @NonNull MaterialButton btnKakaoLogin, @NonNull TextView tvTermsNotice) {
     this.rootView = rootView;
-    this.btnGuest = btnGuest;
-    this.btnLogin = btnLogin;
-    this.btnSignup = btnSignup;
-    this.etEmail = etEmail;
-    this.etPassword = etPassword;
-    this.tilEmail = tilEmail;
-    this.tilPassword = tilPassword;
+    this.btnGoogleLogin = btnGoogleLogin;
+    this.btnGuestStart = btnGuestStart;
+    this.btnKakaoLogin = btnKakaoLogin;
+    this.tvTermsNotice = tvTermsNotice;
   }
 
   @Override
   @NonNull
-  public ScrollView getRoot() {
+  public LinearLayout getRoot() {
     return rootView;
   }
 
@@ -83,50 +69,32 @@ public final class ActivityLoginBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
-      id = R.id.btn_guest;
-      MaterialButton btnGuest = ViewBindings.findChildViewById(rootView, id);
-      if (btnGuest == null) {
+      id = R.id.btn_google_login;
+      MaterialButton btnGoogleLogin = ViewBindings.findChildViewById(rootView, id);
+      if (btnGoogleLogin == null) {
         break missingId;
       }
 
-      id = R.id.btn_login;
-      MaterialButton btnLogin = ViewBindings.findChildViewById(rootView, id);
-      if (btnLogin == null) {
+      id = R.id.btn_guest_start;
+      MaterialButton btnGuestStart = ViewBindings.findChildViewById(rootView, id);
+      if (btnGuestStart == null) {
         break missingId;
       }
 
-      id = R.id.btn_signup;
-      MaterialButton btnSignup = ViewBindings.findChildViewById(rootView, id);
-      if (btnSignup == null) {
+      id = R.id.btn_kakao_login;
+      MaterialButton btnKakaoLogin = ViewBindings.findChildViewById(rootView, id);
+      if (btnKakaoLogin == null) {
         break missingId;
       }
 
-      id = R.id.et_email;
-      TextInputEditText etEmail = ViewBindings.findChildViewById(rootView, id);
-      if (etEmail == null) {
+      id = R.id.tv_terms_notice;
+      TextView tvTermsNotice = ViewBindings.findChildViewById(rootView, id);
+      if (tvTermsNotice == null) {
         break missingId;
       }
 
-      id = R.id.et_password;
-      TextInputEditText etPassword = ViewBindings.findChildViewById(rootView, id);
-      if (etPassword == null) {
-        break missingId;
-      }
-
-      id = R.id.til_email;
-      TextInputLayout tilEmail = ViewBindings.findChildViewById(rootView, id);
-      if (tilEmail == null) {
-        break missingId;
-      }
-
-      id = R.id.til_password;
-      TextInputLayout tilPassword = ViewBindings.findChildViewById(rootView, id);
-      if (tilPassword == null) {
-        break missingId;
-      }
-
-      return new ActivityLoginBinding((ScrollView) rootView, btnGuest, btnLogin, btnSignup, etEmail,
-          etPassword, tilEmail, tilPassword);
+      return new ActivityLoginBinding((LinearLayout) rootView, btnGoogleLogin, btnGuestStart,
+          btnKakaoLogin, tvTermsNotice);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

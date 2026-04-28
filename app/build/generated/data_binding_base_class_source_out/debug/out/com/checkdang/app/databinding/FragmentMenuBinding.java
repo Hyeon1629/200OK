@@ -4,6 +4,7 @@ package com.checkdang.app.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,6 +23,9 @@ public final class FragmentMenuBinding implements ViewBinding {
   private final NestedScrollView rootView;
 
   @NonNull
+  public final MaterialButton btnLoginFromMenu;
+
+  @NonNull
   public final MaterialButton btnSubscriptionCta;
 
   @NonNull
@@ -31,7 +35,13 @@ public final class FragmentMenuBinding implements ViewBinding {
   public final MaterialCardView cardTier;
 
   @NonNull
+  public final ImageView ivProfileArrow;
+
+  @NonNull
   public final ItemMenuRowBinding menuBackup;
+
+  @NonNull
+  public final ItemMenuRowBinding menuConnectedAccount;
 
   @NonNull
   public final ItemMenuRowBinding menuExport;
@@ -82,21 +92,26 @@ public final class FragmentMenuBinding implements ViewBinding {
   public final TextView tvTierBadge;
 
   private FragmentMenuBinding(@NonNull NestedScrollView rootView,
-      @NonNull MaterialButton btnSubscriptionCta, @NonNull MaterialCardView cardProfile,
-      @NonNull MaterialCardView cardTier, @NonNull ItemMenuRowBinding menuBackup,
-      @NonNull ItemMenuRowBinding menuExport, @NonNull ItemMenuRowBinding menuFamily,
-      @NonNull ItemMenuRowBinding menuFaq, @NonNull ItemMenuRowBinding menuLogout,
-      @NonNull ItemMenuRowBinding menuNotification, @NonNull ItemMenuRowBinding menuPrivacy,
-      @NonNull ItemMenuRowBinding menuProfile, @NonNull ItemMenuRowBinding menuSupport,
-      @NonNull ItemMenuRowBinding menuTerms, @NonNull ItemMenuRowBinding menuUnit,
-      @NonNull ItemMenuRowBinding menuVersion, @NonNull ItemMenuRowBinding menuWithdraw,
-      @NonNull TextView tvAvatarInitial, @NonNull TextView tvProfileEmail,
-      @NonNull TextView tvProfileName, @NonNull TextView tvTierBadge) {
+      @NonNull MaterialButton btnLoginFromMenu, @NonNull MaterialButton btnSubscriptionCta,
+      @NonNull MaterialCardView cardProfile, @NonNull MaterialCardView cardTier,
+      @NonNull ImageView ivProfileArrow, @NonNull ItemMenuRowBinding menuBackup,
+      @NonNull ItemMenuRowBinding menuConnectedAccount, @NonNull ItemMenuRowBinding menuExport,
+      @NonNull ItemMenuRowBinding menuFamily, @NonNull ItemMenuRowBinding menuFaq,
+      @NonNull ItemMenuRowBinding menuLogout, @NonNull ItemMenuRowBinding menuNotification,
+      @NonNull ItemMenuRowBinding menuPrivacy, @NonNull ItemMenuRowBinding menuProfile,
+      @NonNull ItemMenuRowBinding menuSupport, @NonNull ItemMenuRowBinding menuTerms,
+      @NonNull ItemMenuRowBinding menuUnit, @NonNull ItemMenuRowBinding menuVersion,
+      @NonNull ItemMenuRowBinding menuWithdraw, @NonNull TextView tvAvatarInitial,
+      @NonNull TextView tvProfileEmail, @NonNull TextView tvProfileName,
+      @NonNull TextView tvTierBadge) {
     this.rootView = rootView;
+    this.btnLoginFromMenu = btnLoginFromMenu;
     this.btnSubscriptionCta = btnSubscriptionCta;
     this.cardProfile = cardProfile;
     this.cardTier = cardTier;
+    this.ivProfileArrow = ivProfileArrow;
     this.menuBackup = menuBackup;
+    this.menuConnectedAccount = menuConnectedAccount;
     this.menuExport = menuExport;
     this.menuFamily = menuFamily;
     this.menuFaq = menuFaq;
@@ -142,6 +157,12 @@ public final class FragmentMenuBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.btn_login_from_menu;
+      MaterialButton btnLoginFromMenu = ViewBindings.findChildViewById(rootView, id);
+      if (btnLoginFromMenu == null) {
+        break missingId;
+      }
+
       id = R.id.btn_subscription_cta;
       MaterialButton btnSubscriptionCta = ViewBindings.findChildViewById(rootView, id);
       if (btnSubscriptionCta == null) {
@@ -160,12 +181,25 @@ public final class FragmentMenuBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.iv_profile_arrow;
+      ImageView ivProfileArrow = ViewBindings.findChildViewById(rootView, id);
+      if (ivProfileArrow == null) {
+        break missingId;
+      }
+
       id = R.id.menu_backup;
       View menuBackup = ViewBindings.findChildViewById(rootView, id);
       if (menuBackup == null) {
         break missingId;
       }
       ItemMenuRowBinding binding_menuBackup = ItemMenuRowBinding.bind(menuBackup);
+
+      id = R.id.menu_connected_account;
+      View menuConnectedAccount = ViewBindings.findChildViewById(rootView, id);
+      if (menuConnectedAccount == null) {
+        break missingId;
+      }
+      ItemMenuRowBinding binding_menuConnectedAccount = ItemMenuRowBinding.bind(menuConnectedAccount);
 
       id = R.id.menu_export;
       View menuExport = ViewBindings.findChildViewById(rootView, id);
@@ -275,8 +309,9 @@ public final class FragmentMenuBinding implements ViewBinding {
         break missingId;
       }
 
-      return new FragmentMenuBinding((NestedScrollView) rootView, btnSubscriptionCta, cardProfile,
-          cardTier, binding_menuBackup, binding_menuExport, binding_menuFamily, binding_menuFaq,
+      return new FragmentMenuBinding((NestedScrollView) rootView, btnLoginFromMenu,
+          btnSubscriptionCta, cardProfile, cardTier, ivProfileArrow, binding_menuBackup,
+          binding_menuConnectedAccount, binding_menuExport, binding_menuFamily, binding_menuFaq,
           binding_menuLogout, binding_menuNotification, binding_menuPrivacy, binding_menuProfile,
           binding_menuSupport, binding_menuTerms, binding_menuUnit, binding_menuVersion,
           binding_menuWithdraw, tvAvatarInitial, tvProfileEmail, tvProfileName, tvTierBadge);

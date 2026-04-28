@@ -23,7 +23,7 @@
 15-->[androidx.core:core:1.12.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\e74dc98803c48d4f7ef5ec07538d66b9\transformed\core-1.12.0\AndroidManifest.xml:26:22-94
 16
 17    <application
-17-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:4:5-75:19
+17-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:4:5-69:19
 18        android:name="com.checkdang.app.CheckDangApplication"
 18-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:5:9-45
 19        android:allowBackup="true"
@@ -68,162 +68,152 @@
 40            android:exported="false" />
 40-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:24:13-37
 41        <activity
-41-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:26:9-29:58
+41-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:26:9-28:40
 42            android:name="com.checkdang.app.ui.auth.login.LoginActivity"
 42-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:27:13-56
-43            android:exported="false"
+43            android:exported="false" />
 43-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:28:13-37
-44            android:windowSoftInputMode="adjustResize" />
-44-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:29:13-55
-45        <activity
-45-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:31:9-34:58
-46            android:name="com.checkdang.app.ui.auth.signup.SignupActivity"
-46-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:32:13-58
-47            android:exported="false"
-47-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:33:13-37
-48            android:windowSoftInputMode="adjustResize" />
-48-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:34:13-55
-49        <activity
-49-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:36:9-39:58
-50            android:name="com.checkdang.app.ui.auth.onboarding.OnboardingActivity"
-50-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:37:13-66
-51            android:exported="false"
-51-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:38:13-37
-52            android:windowSoftInputMode="adjustResize" />
-52-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:39:13-55
-53        <activity
-53-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:41:9-43:40
-54            android:name="com.checkdang.app.ui.main.MainActivity"
-54-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:42:13-49
-55            android:exported="false" />
-55-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:43:13-37
-56        <activity
-56-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:45:9-48:66
-57            android:name="com.checkdang.app.ui.lifestyle.exercise.ExerciseDetailActivity"
-57-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:46:13-73
-58            android:exported="false"
-58-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:47:13-37
-59            android:parentActivityName="com.checkdang.app.ui.main.MainActivity" />
-59-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:48:13-63
-60        <activity
-60-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:50:9-53:66
-61            android:name="com.checkdang.app.ui.lifestyle.meal.MealDetailActivity"
-61-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:51:13-65
-62            android:exported="false"
-62-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:52:13-37
-63            android:parentActivityName="com.checkdang.app.ui.main.MainActivity" />
-63-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:53:13-63
-64        <activity
-64-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:55:9-58:66
-65            android:name="com.checkdang.app.ui.lifestyle.sleep.SleepDetailActivity"
-65-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:56:13-67
-66            android:exported="false"
-66-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:57:13-37
-67            android:parentActivityName="com.checkdang.app.ui.main.MainActivity" />
-67-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:58:13-63
-68        <activity
-68-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:60:9-63:66
-69            android:name="com.checkdang.app.ui.bodymap.analysis.AIAnalysisActivity"
-69-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:61:13-67
-70            android:exported="false"
-70-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:62:13-37
-71            android:parentActivityName="com.checkdang.app.ui.main.MainActivity" />
-71-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:63:13-63
-72        <activity
-72-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:65:9-68:66
-73            android:name="com.checkdang.app.ui.family.FamilyActivity"
-73-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:66:13-53
-74            android:exported="false"
-74-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:67:13-37
-75            android:parentActivityName="com.checkdang.app.ui.main.MainActivity" />
-75-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:68:13-63
-76        <activity
-76-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:70:9-73:66
-77            android:name="com.checkdang.app.ui.menu.subscription.SubscriptionActivity"
-77-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:71:13-70
-78            android:exported="false"
-78-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:72:13-37
-79            android:parentActivityName="com.checkdang.app.ui.main.MainActivity" />
-79-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:73:13-63
-80
-81        <provider
-81-->[androidx.emoji2:emoji2:1.2.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\9a114282991e3f9e250ef26b83658c69\transformed\emoji2-1.2.0\AndroidManifest.xml:24:9-32:20
-82            android:name="androidx.startup.InitializationProvider"
-82-->[androidx.emoji2:emoji2:1.2.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\9a114282991e3f9e250ef26b83658c69\transformed\emoji2-1.2.0\AndroidManifest.xml:25:13-67
-83            android:authorities="com.checkdang.app.androidx-startup"
-83-->[androidx.emoji2:emoji2:1.2.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\9a114282991e3f9e250ef26b83658c69\transformed\emoji2-1.2.0\AndroidManifest.xml:26:13-68
-84            android:exported="false" >
-84-->[androidx.emoji2:emoji2:1.2.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\9a114282991e3f9e250ef26b83658c69\transformed\emoji2-1.2.0\AndroidManifest.xml:27:13-37
-85            <meta-data
-85-->[androidx.emoji2:emoji2:1.2.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\9a114282991e3f9e250ef26b83658c69\transformed\emoji2-1.2.0\AndroidManifest.xml:29:13-31:52
-86                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-86-->[androidx.emoji2:emoji2:1.2.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\9a114282991e3f9e250ef26b83658c69\transformed\emoji2-1.2.0\AndroidManifest.xml:30:17-75
-87                android:value="androidx.startup" />
-87-->[androidx.emoji2:emoji2:1.2.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\9a114282991e3f9e250ef26b83658c69\transformed\emoji2-1.2.0\AndroidManifest.xml:31:17-49
-88            <meta-data
-88-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\ec2949e3801538c598e3f44d76d753db\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:29:13-31:52
-89                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-89-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\ec2949e3801538c598e3f44d76d753db\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:30:17-78
-90                android:value="androidx.startup" />
-90-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\ec2949e3801538c598e3f44d76d753db\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:31:17-49
-91            <meta-data
-91-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:29:13-31:52
-92                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-92-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:30:17-85
-93                android:value="androidx.startup" />
-93-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:31:17-49
-94        </provider>
-95
-96        <uses-library
-96-->[androidx.window:window:1.0.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\a3521f9bfb539c6f78dba02690ca91ee\transformed\window-1.0.0\AndroidManifest.xml:25:9-27:40
-97            android:name="androidx.window.extensions"
-97-->[androidx.window:window:1.0.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\a3521f9bfb539c6f78dba02690ca91ee\transformed\window-1.0.0\AndroidManifest.xml:26:13-54
-98            android:required="false" />
-98-->[androidx.window:window:1.0.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\a3521f9bfb539c6f78dba02690ca91ee\transformed\window-1.0.0\AndroidManifest.xml:27:13-37
-99        <uses-library
-99-->[androidx.window:window:1.0.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\a3521f9bfb539c6f78dba02690ca91ee\transformed\window-1.0.0\AndroidManifest.xml:28:9-30:40
-100            android:name="androidx.window.sidecar"
-100-->[androidx.window:window:1.0.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\a3521f9bfb539c6f78dba02690ca91ee\transformed\window-1.0.0\AndroidManifest.xml:29:13-51
-101            android:required="false" />
-101-->[androidx.window:window:1.0.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\a3521f9bfb539c6f78dba02690ca91ee\transformed\window-1.0.0\AndroidManifest.xml:30:13-37
-102
-103        <receiver
-103-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:34:9-52:20
-104            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-104-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:35:13-76
-105            android:directBootAware="false"
-105-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:36:13-44
-106            android:enabled="true"
-106-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:37:13-35
-107            android:exported="true"
-107-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:38:13-36
-108            android:permission="android.permission.DUMP" >
-108-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:39:13-57
-109            <intent-filter>
-109-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:40:13-42:29
-110                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-110-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:17-91
-110-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:25-88
-111            </intent-filter>
-112            <intent-filter>
-112-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:43:13-45:29
-113                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-113-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:17-85
-113-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:25-82
-114            </intent-filter>
-115            <intent-filter>
-115-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:46:13-48:29
-116                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-116-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:17-88
-116-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:25-85
-117            </intent-filter>
-118            <intent-filter>
-118-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:49:13-51:29
-119                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-119-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:17-95
-119-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:25-92
-120            </intent-filter>
-121        </receiver>
-122    </application>
-123
-124</manifest>
+44        <activity
+44-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:30:9-33:58
+45            android:name="com.checkdang.app.ui.auth.onboarding.OnboardingActivity"
+45-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:31:13-66
+46            android:exported="false"
+46-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:32:13-37
+47            android:windowSoftInputMode="adjustResize" />
+47-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:33:13-55
+48        <activity
+48-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:35:9-37:40
+49            android:name="com.checkdang.app.ui.main.MainActivity"
+49-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:36:13-49
+50            android:exported="false" />
+50-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:37:13-37
+51        <activity
+51-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:39:9-42:66
+52            android:name="com.checkdang.app.ui.lifestyle.exercise.ExerciseDetailActivity"
+52-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:40:13-73
+53            android:exported="false"
+53-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:41:13-37
+54            android:parentActivityName="com.checkdang.app.ui.main.MainActivity" />
+54-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:42:13-63
+55        <activity
+55-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:44:9-47:66
+56            android:name="com.checkdang.app.ui.lifestyle.meal.MealDetailActivity"
+56-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:45:13-65
+57            android:exported="false"
+57-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:46:13-37
+58            android:parentActivityName="com.checkdang.app.ui.main.MainActivity" />
+58-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:47:13-63
+59        <activity
+59-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:49:9-52:66
+60            android:name="com.checkdang.app.ui.lifestyle.sleep.SleepDetailActivity"
+60-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:50:13-67
+61            android:exported="false"
+61-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:51:13-37
+62            android:parentActivityName="com.checkdang.app.ui.main.MainActivity" />
+62-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:52:13-63
+63        <activity
+63-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:54:9-57:66
+64            android:name="com.checkdang.app.ui.bodymap.analysis.AIAnalysisActivity"
+64-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:55:13-67
+65            android:exported="false"
+65-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:56:13-37
+66            android:parentActivityName="com.checkdang.app.ui.main.MainActivity" />
+66-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:57:13-63
+67        <activity
+67-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:59:9-62:66
+68            android:name="com.checkdang.app.ui.family.FamilyActivity"
+68-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:60:13-53
+69            android:exported="false"
+69-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:61:13-37
+70            android:parentActivityName="com.checkdang.app.ui.main.MainActivity" />
+70-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:62:13-63
+71        <activity
+71-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:64:9-67:66
+72            android:name="com.checkdang.app.ui.menu.subscription.SubscriptionActivity"
+72-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:65:13-70
+73            android:exported="false"
+73-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:66:13-37
+74            android:parentActivityName="com.checkdang.app.ui.main.MainActivity" />
+74-->D:\Desktop Archive\VibeCoding\VCP\app\src\main\AndroidManifest.xml:67:13-63
+75
+76        <provider
+76-->[androidx.emoji2:emoji2:1.2.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\9a114282991e3f9e250ef26b83658c69\transformed\emoji2-1.2.0\AndroidManifest.xml:24:9-32:20
+77            android:name="androidx.startup.InitializationProvider"
+77-->[androidx.emoji2:emoji2:1.2.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\9a114282991e3f9e250ef26b83658c69\transformed\emoji2-1.2.0\AndroidManifest.xml:25:13-67
+78            android:authorities="com.checkdang.app.androidx-startup"
+78-->[androidx.emoji2:emoji2:1.2.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\9a114282991e3f9e250ef26b83658c69\transformed\emoji2-1.2.0\AndroidManifest.xml:26:13-68
+79            android:exported="false" >
+79-->[androidx.emoji2:emoji2:1.2.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\9a114282991e3f9e250ef26b83658c69\transformed\emoji2-1.2.0\AndroidManifest.xml:27:13-37
+80            <meta-data
+80-->[androidx.emoji2:emoji2:1.2.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\9a114282991e3f9e250ef26b83658c69\transformed\emoji2-1.2.0\AndroidManifest.xml:29:13-31:52
+81                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+81-->[androidx.emoji2:emoji2:1.2.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\9a114282991e3f9e250ef26b83658c69\transformed\emoji2-1.2.0\AndroidManifest.xml:30:17-75
+82                android:value="androidx.startup" />
+82-->[androidx.emoji2:emoji2:1.2.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\9a114282991e3f9e250ef26b83658c69\transformed\emoji2-1.2.0\AndroidManifest.xml:31:17-49
+83            <meta-data
+83-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\ec2949e3801538c598e3f44d76d753db\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:29:13-31:52
+84                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+84-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\ec2949e3801538c598e3f44d76d753db\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:30:17-78
+85                android:value="androidx.startup" />
+85-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\ec2949e3801538c598e3f44d76d753db\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:31:17-49
+86            <meta-data
+86-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:29:13-31:52
+87                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+87-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:30:17-85
+88                android:value="androidx.startup" />
+88-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:31:17-49
+89        </provider>
+90
+91        <uses-library
+91-->[androidx.window:window:1.0.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\a3521f9bfb539c6f78dba02690ca91ee\transformed\window-1.0.0\AndroidManifest.xml:25:9-27:40
+92            android:name="androidx.window.extensions"
+92-->[androidx.window:window:1.0.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\a3521f9bfb539c6f78dba02690ca91ee\transformed\window-1.0.0\AndroidManifest.xml:26:13-54
+93            android:required="false" />
+93-->[androidx.window:window:1.0.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\a3521f9bfb539c6f78dba02690ca91ee\transformed\window-1.0.0\AndroidManifest.xml:27:13-37
+94        <uses-library
+94-->[androidx.window:window:1.0.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\a3521f9bfb539c6f78dba02690ca91ee\transformed\window-1.0.0\AndroidManifest.xml:28:9-30:40
+95            android:name="androidx.window.sidecar"
+95-->[androidx.window:window:1.0.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\a3521f9bfb539c6f78dba02690ca91ee\transformed\window-1.0.0\AndroidManifest.xml:29:13-51
+96            android:required="false" />
+96-->[androidx.window:window:1.0.0] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\a3521f9bfb539c6f78dba02690ca91ee\transformed\window-1.0.0\AndroidManifest.xml:30:13-37
+97
+98        <receiver
+98-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:34:9-52:20
+99            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+99-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:35:13-76
+100            android:directBootAware="false"
+100-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:36:13-44
+101            android:enabled="true"
+101-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:37:13-35
+102            android:exported="true"
+102-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:38:13-36
+103            android:permission="android.permission.DUMP" >
+103-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:39:13-57
+104            <intent-filter>
+104-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:40:13-42:29
+105                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+105-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:17-91
+105-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:25-88
+106            </intent-filter>
+107            <intent-filter>
+107-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:43:13-45:29
+108                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+108-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:17-85
+108-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:25-82
+109            </intent-filter>
+110            <intent-filter>
+110-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:46:13-48:29
+111                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+111-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:17-88
+111-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:25-85
+112            </intent-filter>
+113            <intent-filter>
+113-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:49:13-51:29
+114                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+114-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:17-95
+114-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\hyeon\.gradle\caches\9.4.0\transforms\51477ed0be316a061ae8416da882b7d6\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:25-92
+115            </intent-filter>
+116        </receiver>
+117    </application>
+118
+119</manifest>

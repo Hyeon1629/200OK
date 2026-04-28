@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.viewbinding.ViewBinding;
@@ -23,17 +24,26 @@ public final class ActivityOnboardingBinding implements ViewBinding {
   public final LinearLayout bannerGuest;
 
   @NonNull
+  public final LinearLayout bannerSocial;
+
+  @NonNull
   public final LinearLayout dotsContainer;
+
+  @NonNull
+  public final TextView tvSocialBannerText;
 
   @NonNull
   public final ViewPager2 viewPager;
 
   private ActivityOnboardingBinding(@NonNull LinearLayout rootView,
-      @NonNull LinearLayout bannerGuest, @NonNull LinearLayout dotsContainer,
+      @NonNull LinearLayout bannerGuest, @NonNull LinearLayout bannerSocial,
+      @NonNull LinearLayout dotsContainer, @NonNull TextView tvSocialBannerText,
       @NonNull ViewPager2 viewPager) {
     this.rootView = rootView;
     this.bannerGuest = bannerGuest;
+    this.bannerSocial = bannerSocial;
     this.dotsContainer = dotsContainer;
+    this.tvSocialBannerText = tvSocialBannerText;
     this.viewPager = viewPager;
   }
 
@@ -70,9 +80,21 @@ public final class ActivityOnboardingBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.banner_social;
+      LinearLayout bannerSocial = ViewBindings.findChildViewById(rootView, id);
+      if (bannerSocial == null) {
+        break missingId;
+      }
+
       id = R.id.dots_container;
       LinearLayout dotsContainer = ViewBindings.findChildViewById(rootView, id);
       if (dotsContainer == null) {
+        break missingId;
+      }
+
+      id = R.id.tv_social_banner_text;
+      TextView tvSocialBannerText = ViewBindings.findChildViewById(rootView, id);
+      if (tvSocialBannerText == null) {
         break missingId;
       }
 
@@ -82,8 +104,8 @@ public final class ActivityOnboardingBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ActivityOnboardingBinding((LinearLayout) rootView, bannerGuest, dotsContainer,
-          viewPager);
+      return new ActivityOnboardingBinding((LinearLayout) rootView, bannerGuest, bannerSocial,
+          dotsContainer, tvSocialBannerText, viewPager);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

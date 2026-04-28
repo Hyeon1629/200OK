@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TODO(backend): 백엔드 연동 단계에서 공식 Kakao 아이콘으로 교체 예정 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- 카카오 말풍선 아이콘 (단순화) -->
+    <path
+        android:fillColor="#191919"
+        android:pathData="M12,3C6.5,3 2,6.6 2,11.1C2,14.0 3.7,16.6 6.4,18.2L5.5,21.4C5.4,21.8 5.9,22.1 6.2,21.9L9.9,19.6C10.6,19.7 11.3,19.8 12,19.8C17.5,19.8 22,16.2 22,11.1C22,6.6 17.5,3 12,3Z" />
+</vector>

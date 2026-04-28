@@ -24,12 +24,41 @@
             android:layout_marginEnd="8dp"
             android:src="@drawable/ic_info"
             app:tint="@color/brand_green"
-            android:contentDescription="안내" />
+            android:contentDescription="@null" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="비회원으로 이용 중이에요. 입력하신 정보는 이 기기에만 저장됩니다."
+            android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+            android:textColor="@color/brand_green" />
+    </LinearLayout>
+
+    <!-- 소셜 로그인 신규 사용자 배너 -->
+    <LinearLayout
+        android:id="@+id/banner_social"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@color/brand_green_light"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/ic_check"
+            app:tint="@color/brand_green"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:id="@+id/tv_social_banner_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="구글 계정으로 가입되었어요. 환자 정보를 입력해 주세요."
             android:textAppearance="@style/TextAppearance.CheckDang.Caption"
             android:textColor="@color/brand_green" />
     </LinearLayout>

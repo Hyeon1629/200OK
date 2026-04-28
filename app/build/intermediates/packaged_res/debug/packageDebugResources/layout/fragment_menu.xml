@@ -68,10 +68,23 @@
                 </LinearLayout>
 
                 <ImageView
+                    android:id="@+id/iv_profile_arrow"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:src="@drawable/ic_chevron_right"
                     android:alpha="0.4" />
+
+                <!-- 비회원 전용: 로그인 버튼 -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_login_from_menu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="로그인하기"
+                    android:textSize="12sp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:visibility="gone"
+                    app:cornerRadius="8dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -309,6 +322,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
+
+                <include layout="@layout/item_menu_row"
+                    android:id="@+id/menu_connected_account"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp" />
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:layout_marginStart="56dp" android:background="@color/divider" />
 
                 <include layout="@layout/item_menu_row"
                     android:id="@+id/menu_logout"
