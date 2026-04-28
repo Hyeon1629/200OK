@@ -69,7 +69,7 @@ public class SleepService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
         return sleepRepository
-                .findByUserIdAndSleepStartBetweenOrderBySleepStartDesc(user.getId(), from, to)
+                .findWithStagesByUserIdAndRange(user.getId(), from, to)
                 .stream()
                 .map(SleepResponse::from)
                 .toList();
