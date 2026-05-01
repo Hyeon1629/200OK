@@ -11,6 +11,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.checkdang.app.R
 import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.mock.SocialProvider
+import com.checkdang.app.data.mock.UserStore
 import com.checkdang.app.data.mock.UserTier
 import com.checkdang.app.databinding.ActivityOnboardingBinding
 import com.checkdang.app.ui.main.MainActivity
@@ -108,11 +109,12 @@ class OnboardingActivity : AppCompatActivity() {
             SessionHolder.isLoggedIn = false
             SessionHolder.tier       = UserTier.GUEST
         } else {
-            SessionHolder.isGuest         = false
-            SessionHolder.isLoggedIn      = true
-            SessionHolder.tier            = UserTier.FREE
-            SessionHolder.hasEverLoggedIn = true    // 다음 로그인 시 기존 사용자로 처리
-            SessionHolder.savedProfile    = profile  // 로그아웃 후 재로그인 시 프로필 복원용
+            SessionHolder.isGuest    = false
+            SessionHolder.isLoggedIn = true
+            SessionHolder.tier       = UserTier.FREE
+            // 프로바이더별로 프로필 저장 및 가입 완료 표시 (SharedPreferences 영속)
+            UserStore.saveProfile(SessionHolder.authProvider, profile)
+            UserStore.markRegistered(SessionHolder.authProvider)
             // authProvider 는 LoginActivity 에서 이미 SessionHolder 에 세팅되어 있음
         }
         startActivity(Intent(this, MainActivity::class.java).apply {

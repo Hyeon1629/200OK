@@ -27,8 +27,6 @@ object SessionHolder {
         set(value) { _tier.value = value }
 
     var authProvider: SocialProvider = SocialProvider.NONE
-    var hasEverLoggedIn: Boolean = false   // 데모용 신규/기존 사용자 분기
-    var savedProfile: PatientProfile? = null  // 로그아웃 후 재로그인 시 프로필 복원용
 
     var socialEmail: String? = null
     var socialNickname: String? = null
@@ -47,13 +45,12 @@ object SessionHolder {
         isGuest = false
         currentProfile = null
         tier = UserTier.FREE
-        authProvider = SocialProvider.NONE
+        authProvider   = SocialProvider.NONE
         socialEmail    = null
         socialNickname = null
         accessToken    = null
         refreshToken   = null
         userId         = null
-        // hasEverLoggedIn 은 의도적으로 보존 (데모 흐름 유지)
     }
 
     val dummyProfile = PatientProfile(

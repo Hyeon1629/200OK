@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat
 import com.checkdang.app.R
 import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.mock.SocialProvider
+import com.checkdang.app.data.mock.UserStore
 import com.checkdang.app.data.mock.UserTier
 import com.checkdang.app.databinding.ActivityLoginBinding
 import com.checkdang.app.databinding.DialogSocialLoadingBinding
@@ -160,8 +161,8 @@ class LoginActivity : AppCompatActivity() {
         SessionHolder.refreshToken   = "mock_refresh_token"
         SessionHolder.userId         = "mock_user_id"
 
-        // hasEverLoggedIn: 온보딩 완료 후 true로 설정됨 → 기존 사용자는 홈으로 바로 이동
-        if (!SessionHolder.hasEverLoggedIn) {
+        // 프로바이더별 가입 여부 확인 → 신규면 온보딩, 기존이면 프로필 복원 후 홈
+        if (!UserStore.isRegistered(SessionHolder.authProvider)) {
             startActivity(
                 Intent(this, OnboardingActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -170,8 +171,7 @@ class LoginActivity : AppCompatActivity() {
                 }
             )
         } else {
-            // 재로그인: 온보딩 때 저장해둔 프로필 복원
-            SessionHolder.currentProfile = SessionHolder.savedProfile
+            SessionHolder.currentProfile = UserStore.getProfile(SessionHolder.authProvider)
             startActivity(
                 Intent(this, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
