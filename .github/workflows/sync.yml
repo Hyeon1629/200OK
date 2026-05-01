@@ -1,0 +1,24 @@
+name: Repo Sync
+
+on:
+  push:
+    branches:
+      - main  # 또는 동기화하고 싶은 브랜치명 (예: master)
+  schedule:
+    - cron: '0 */6 * * *' # 6시간마다 자동으로 실행 (선택 사항)
+  workflow_dispatch: # 수동 실행 버튼 활성화
+
+jobs:
+  repo-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Push to Destination Repo
+        run: |
+          git remote add destination https://${{ secrets.SYNC_TOKEN }}@github.com/Icanndoit/200OK.git
+          # 원본의 main 브랜치를 대상의 main 브랜치로 강제 푸시
+          git push -f destination main
