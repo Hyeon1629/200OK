@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background_primary">
+
+    <!-- 상단 브랜드 영역 (weight=6) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="6"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_check"
+            android:layout_marginBottom="16dp"
+            app:tint="@color/brand_green"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textAppearance="@style/TextAppearance.CheckDang.Display"
+            android:textColor="@color/brand_green" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/login_subtitle"
+            android:textAppearance="@style/TextAppearance.CheckDang.Body2"
+            android:textColor="@color/text_secondary" />
+    </LinearLayout>
+
+    <!-- 하단 인증 버튼 영역 (weight=4) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="4"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingBottom="32dp"
+        android:gravity="center_vertical">
+
+        <!-- Google 로그인 버튼 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_google_login"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Google로 시작하기"
+            android:textSize="16sp"
+            android:textColor="#1F1F1F"
+            android:gravity="center"
+            android:singleLine="true"
+            android:paddingHorizontal="20dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            app:backgroundTint="@android:color/white"
+            app:strokeColor="#DADCE0"
+            app:strokeWidth="1dp"
+            app:cornerRadius="12dp"
+            app:icon="@drawable/ic_google_logo"
+            app:iconGravity="textStart"
+            app:iconPadding="12dp"
+            app:iconSize="20dp"
+            app:iconTint="@null" />
+
+        <!-- 카카오 로그인 버튼 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_kakao_login"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="12dp"
+            android:text="카카오로 시작하기"
+            android:textSize="16sp"
+            android:textColor="#191919"
+            android:gravity="center"
+            android:singleLine="true"
+            android:paddingHorizontal="20dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            app:backgroundTint="@color/kakao_yellow"
+            app:cornerRadius="12dp"
+            app:icon="@drawable/ic_kakao_logo"
+            app:iconGravity="textStart"
+            app:iconPadding="12dp"
+            app:iconSize="20dp"
+            app:iconTint="#191919" />
+
+        <!-- 또는 구분선 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="24dp">
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"
+                android:background="@color/divider" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="12dp"
+                android:text="또는"
+                android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                android:textColor="@color/text_secondary" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"
+                android:background="@color/divider" />
+        </LinearLayout>
+
+        <!-- 비회원 시작 버튼 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_guest_start"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:text="@string/btn_guest"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
+
+        <!-- 약관 안내 (이용약관 / 개인정보처리방침 클릭 가능) -->
+        <TextView
+            android:id="@+id/tv_terms_notice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:text="로그인하면 이용약관 및 개인정보처리방침에 동의하게 됩니다"
+            android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+            android:textColor="@color/text_secondary"
+            android:lineSpacingMultiplier="1.3" />
+
+    </LinearLayout>
+
+</LinearLayout>

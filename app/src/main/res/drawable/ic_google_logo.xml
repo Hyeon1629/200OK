@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TODO(backend): 백엔드 연동 단계에서 공식 Google G 아이콘으로 교체 예정 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Red -->
+    <path
+        android:fillColor="#EA4335"
+        android:pathData="M12,5C13.7,5 15.2,5.7 16.3,6.7L19.4,3.6C17.5,1.9 15.1,0.9 12,0.9C7.9,0.9 4.4,3.3 2.7,6.8L6.3,9.5C7.1,7 9.4,5 12,5Z" />
+
+    <!-- Yellow -->
+    <path
+        android:fillColor="#FBBC05"
+        android:pathData="M2,11C2,9.4 2.4,7.9 2.7,6.8L6.3,9.5C6.1,10.0 6,10.5 6,11C6,11.5 6.1,12.0 6.3,12.5L2.7,15.2C2.4,14.1 2,12.6 2,11Z" />
+
+    <!-- Green -->
+    <path
+        android:fillColor="#34A853"
+        android:pathData="M12,19C9.4,19 7.1,17.0 6.3,14.5L2.7,17.2C4.4,20.7 7.9,23 12,23C14.9,23 17.5,22.0 19.3,20.2L15.9,17.6C15.0,18.5 13.6,19 12,19Z" />
+
+    <!-- Blue -->
+    <path
+        android:fillColor="#4285F4"
+        android:pathData="M22.8,11C22.8,10.3 22.7,9.6 22.6,9H12V13H18C17.7,14.3 17.0,15.3 15.9,16L19.3,18.6C21.4,16.5 22.8,14.0 22.8,11Z" />
+</vector>
