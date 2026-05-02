@@ -12,6 +12,7 @@ public class DietResponse {
 
     private Long id;
     private String userId;
+    private String sourceId;
     private Diet.MealType mealType;
     private String foodName;
     private Double calories;
@@ -21,7 +22,7 @@ public class DietResponse {
     private Double sugar;
     private Double dietaryFiber;
     private Double sodium;
-    private LocalDateTime mealTime;
+    private LocalDateTime recordedAt;
     private Diet.DataSource dataSource;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -30,6 +31,7 @@ public class DietResponse {
         return DietResponse.builder()
                 .id(diet.getId())
                 .userId(diet.getUserId())
+                .sourceId(diet.getSourceId())
                 .mealType(diet.getMealType())
                 .foodName(diet.getFoodName())
                 .calories(diet.getCalories())
@@ -39,7 +41,7 @@ public class DietResponse {
                 .sugar(diet.getSugar())
                 .dietaryFiber(diet.getDietaryFiber())
                 .sodium(diet.getSodium())
-                .mealTime(diet.getMealTime())
+                .recordedAt(diet.getRecordedAt())
                 .dataSource(diet.getDataSource())
                 .createdAt(diet.getCreatedAt())
                 .updatedAt(diet.getUpdatedAt())

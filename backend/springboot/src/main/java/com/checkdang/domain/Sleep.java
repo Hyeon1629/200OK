@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "sleeps")
+@Table(name = "sleep_data")
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -28,15 +28,15 @@ public class Sleep {
     private String userId;
 
     @Column(nullable = false)
-    private LocalDateTime sleepStart;
+    private LocalDateTime sleepTime;
 
     @Column(nullable = false)
-    private LocalDateTime sleepEnd;
+    private LocalDateTime wakeTime;
 
     @Column(nullable = false)
-    private Long totalMinutes;
+    private Long duration;
 
-    private Double efficiency;
+    private Double quality;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

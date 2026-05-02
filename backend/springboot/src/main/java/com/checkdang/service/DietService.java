@@ -29,13 +29,11 @@ public class DietService {
 
         int saved = 0;
         for (DietSyncRequest req : requests) {
-            if (dietRepository.existsByUserIdAndMealTimeAndFoodName(
-                    user.getId(), req.getMealTime(), req.getFoodName())) {
-                continue;
-            }
+            if (isDuplicate(user.getId(), req)) continue;
 
             dietRepository.save(Diet.builder()
                     .userId(user.getId())
+                    .sourceId(req.getSourceId())
                     .mealType(req.getMealType())
                     .foodName(req.getFoodName())
                     .calories(req.getCalories())
@@ -45,7 +43,7 @@ public class DietService {
                     .sugar(req.getSugar())
                     .dietaryFiber(req.getDietaryFiber())
                     .sodium(req.getSodium())
-                    .mealTime(req.getMealTime())
+                    .recordedAt(req.getRecordedAt())
                     .dataSource(Diet.DataSource.SAMSUNG_HEALTH)
                     .build());
             saved++;
@@ -59,9 +57,17 @@ public class DietService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
         return dietRepository
-                .findByUserIdAndMealTimeBetweenOrderByMealTimeDesc(user.getId(), from, to)
+                .findByUserIdAndRecordedAtBetweenOrderByRecordedAtDesc(user.getId(), from, to)
                 .stream()
                 .map(DietResponse::from)
                 .toList();
+    }
+
+    private boolean isDuplicate(String userId, DietSyncRequest req) {
+        if (req.getSourceId() != null) {
+            return dietRepository.existsByUserIdAndSourceId(userId, req.getSourceId());
+        }
+        return dietRepository.existsByUserIdAndRecordedAtAndFoodName(
+                userId, req.getRecordedAt(), req.getFoodName());
     }
 }

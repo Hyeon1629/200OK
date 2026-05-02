@@ -13,10 +13,10 @@ public class SleepResponse {
 
     private Long id;
     private String userId;
-    private LocalDateTime sleepStart;
-    private LocalDateTime sleepEnd;
-    private Long totalMinutes;
-    private Double efficiency;
+    private LocalDateTime sleepTime;
+    private LocalDateTime wakeTime;
+    private Long duration;
+    private Double quality;
     private Sleep.DataSource dataSource;
     private List<SleepStageResponse> stages;
     private LocalDateTime createdAt;
@@ -26,10 +26,10 @@ public class SleepResponse {
         return SleepResponse.builder()
                 .id(sleep.getId())
                 .userId(sleep.getUserId())
-                .sleepStart(sleep.getSleepStart())
-                .sleepEnd(sleep.getSleepEnd())
-                .totalMinutes(sleep.getTotalMinutes())
-                .efficiency(sleep.getEfficiency())
+                .sleepTime(sleep.getSleepTime())
+                .wakeTime(sleep.getWakeTime())
+                .duration(sleep.getDuration())
+                .quality(sleep.getQuality())
                 .dataSource(sleep.getDataSource())
                 .stages(sleep.getStages().stream()
                         .map(SleepStageResponse::from)

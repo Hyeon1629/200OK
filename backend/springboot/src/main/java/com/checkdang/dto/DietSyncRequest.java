@@ -12,14 +12,16 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class DietSyncRequest {
 
+    private String sourceId;
+
     @NotBlank(message = "음식명은 필수입니다.")
     private String foodName;
 
     @NotNull(message = "식사 유형은 필수입니다.")
     private Diet.MealType mealType;
 
-    @NotNull(message = "식사 시각은 필수입니다.")
-    private LocalDateTime mealTime;
+    @NotNull(message = "식사 기록 일시는 필수입니다.")
+    private LocalDateTime recordedAt;
 
     private Double calories;
     private Double carbohydrate;

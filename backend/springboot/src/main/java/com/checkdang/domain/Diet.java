@@ -9,7 +9,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "diets")
+@Table(name = "diet")
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -26,7 +26,7 @@ public class Diet {
     private String userId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "meal_time", nullable = false)
     private MealType mealType;
 
     @Column(nullable = false)
@@ -40,8 +40,10 @@ public class Diet {
     private Double dietaryFiber;
     private Double sodium;
 
-    @Column(nullable = false)
-    private LocalDateTime mealTime;
+    @Column(name = "recorded_at", nullable = false)
+    private LocalDateTime recordedAt;
+
+    private String sourceId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

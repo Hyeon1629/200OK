@@ -30,34 +30,33 @@ public class SleepService {
 
         int saved = 0;
         for (SleepSyncRequest req : requests) {
-            if (sleepRepository.existsByUserIdAndSleepStart(user.getId(), req.getSleepStart())) {
+            if (sleepRepository.existsByUserIdAndSleepTime(user.getId(), req.getSleepTime())) {
                 continue;
             }
 
-            Sleep sleep = Sleep.builder()
+            // sleep을 먼저 INSERT해 ID를 확보한 뒤 stages를 연관
+            Sleep sleep = sleepRepository.save(Sleep.builder()
                     .userId(user.getId())
-                    .sleepStart(req.getSleepStart())
-                    .sleepEnd(req.getSleepEnd())
-                    .totalMinutes(req.getTotalMinutes())
-                    .efficiency(req.getEfficiency())
+                    .sleepTime(req.getSleepTime())
+                    .wakeTime(req.getWakeTime())
+                    .duration(req.getDuration())
+                    .quality(req.getQuality())
                     .dataSource(Sleep.DataSource.SAMSUNG_HEALTH)
-                    .build();
+                    .build());
 
-            // SleepStage 목록 생성 후 연관관계 설정 (cascade로 함께 저장)
             if (req.getStages() != null) {
-                req.getStages().forEach(stageReq -> {
-                    SleepStage stage = SleepStage.builder()
-                            .sleep(sleep)
-                            .stageType(stageReq.getStageType())
-                            .startTime(stageReq.getStartTime())
-                            .endTime(stageReq.getEndTime())
-                            .durationMinutes(stageReq.getDurationMinutes())
-                            .build();
-                    sleep.getStages().add(stage);
-                });
+                req.getStages().forEach(stageReq ->
+                        sleep.getStages().add(SleepStage.builder()
+                                .sleep(sleep)
+                                .stageType(stageReq.getStageType())
+                                .startTime(stageReq.getStartTime())
+                                .endTime(stageReq.getEndTime())
+                                .durationMinutes(stageReq.getDurationMinutes())
+                                .build())
+                );
+                sleepRepository.save(sleep);
             }
 
-            sleepRepository.save(sleep);
             saved++;
         }
 

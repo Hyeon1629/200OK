@@ -8,8 +8,9 @@ import java.util.List;
 
 public interface DietRepository extends JpaRepository<Diet, Long> {
 
-    // User가 DynamoDB 엔티티이므로 userId(String)로 중복 체크
-    boolean existsByUserIdAndMealTimeAndFoodName(String userId, LocalDateTime mealTime, String foodName);
+    boolean existsByUserIdAndSourceId(String userId, String sourceId);
 
-    List<Diet> findByUserIdAndMealTimeBetweenOrderByMealTimeDesc(String userId, LocalDateTime from, LocalDateTime to);
+    boolean existsByUserIdAndRecordedAtAndFoodName(String userId, LocalDateTime recordedAt, String foodName);
+
+    List<Diet> findByUserIdAndRecordedAtBetweenOrderByRecordedAtDesc(String userId, LocalDateTime from, LocalDateTime to);
 }
