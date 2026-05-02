@@ -133,7 +133,24 @@ class LoginActivity : AppCompatActivity() {
 
     // ── 비회원으로 시작하기 → 이메일 회원가입 화면 ────────────────────────────
 
+    // ── 비회원으로 시작하기: 기존 동작 유지 (닉네임 입력부터 시작) ──────────────
+
     private fun startGuestFlow() {
+        SessionHolder.authProvider = SocialProvider.NONE
+        SessionHolder.isGuest      = true
+        SessionHolder.tier         = UserTier.GUEST
+        startActivity(
+            Intent(this, OnboardingActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra(OnboardingActivity.EXTRA_IS_GUEST, true)
+                putExtra(OnboardingActivity.EXTRA_AUTH_PROVIDER, SocialProvider.NONE.name)
+            }
+        )
+    }
+
+    // ── 이메일 회원가입 (별도 진입점) ─────────────────────────────────────────
+
+    fun startEmailSignup() {
         SessionHolder.authProvider = SocialProvider.EMAIL
         startActivity(Intent(this, com.checkdang.app.ui.auth.signup.SignupActivity::class.java))
     }
