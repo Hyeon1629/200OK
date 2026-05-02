@@ -11,6 +11,7 @@ enum class UserTier { GUEST, FREE, PAID }
 enum class SocialProvider(val labelKr: String) {
     GOOGLE("구글"),
     KAKAO("카카오"),
+    EMAIL("이메일"),
     NONE("비회원")
 }
 

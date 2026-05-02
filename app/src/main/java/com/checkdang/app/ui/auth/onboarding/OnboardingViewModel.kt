@@ -15,11 +15,19 @@ class OnboardingViewModel : ViewModel() {
 
     private var isGuest: Boolean = false
 
-    fun setGuestMode(guest: Boolean) {
-        isGuest = guest
-    }
+    // 이메일 회원가입 흐름에서만 사용
+    var email: String = ""
+    var password: String = ""
+    var termsAgreed: Boolean = false
 
+    fun setGuestMode(guest: Boolean) { isGuest = guest }
     fun isGuestMode(): Boolean = isGuest
+
+    fun setEmailCredentials(email: String, password: String, termsAgreed: Boolean) {
+        this.email = email
+        this.password = password
+        this.termsAgreed = termsAgreed
+    }
 
     fun updateNickname(nickname: String) {
         _profile.update { it.copy(nickname = nickname) }

@@ -91,6 +91,7 @@ class MenuFragment : Fragment() {
                 val providerLabel = when (SessionHolder.authProvider) {
                     SocialProvider.GOOGLE -> "Google 계정 연결됨"
                     SocialProvider.KAKAO  -> "카카오 계정 연결됨"
+                    SocialProvider.EMAIL  -> SessionHolder.socialEmail ?: "이메일 계정 연결됨"
                     SocialProvider.NONE   -> ""
                 }
                 binding.tvProfileEmail.text       = providerLabel
@@ -114,6 +115,7 @@ class MenuFragment : Fragment() {
         val connectedLabel = when (SessionHolder.authProvider) {
             SocialProvider.GOOGLE -> "Google"
             SocialProvider.KAKAO  -> "카카오"
+            SocialProvider.EMAIL  -> "이메일"
             SocialProvider.NONE   -> "없음"
         }
         binding.menuConnectedAccount.tvMenuSub.visibility = View.VISIBLE
