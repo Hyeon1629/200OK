@@ -1,0 +1,15 @@
+aws:
+  region: us-east-1
+  credentials:
+    access-key: local
+    secret-key: local
+  dynamodb:
+    endpoint: http://localhost:8000
+    table-name: users
+
+jwt:
+  secret: Y2hlY2tkYW5nLWp3dC1zZWNyZXQta2V5LW11c3QtYmUtYXQtbGVhc3QtMjU2LWJpdHMtbG9uZw==
+  expiration: 86400000
+
+oauth2:
+  redirect-uri: http://localhost:3000/oauth2/callback
