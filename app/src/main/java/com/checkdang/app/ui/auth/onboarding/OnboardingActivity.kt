@@ -109,9 +109,7 @@ class OnboardingActivity : AppCompatActivity() {
             SessionHolder.isLoggedIn = false
             SessionHolder.tier       = UserTier.GUEST
         } else {
-            SessionHolder.isGuest    = false
-            SessionHolder.isLoggedIn = true
-            SessionHolder.tier       = UserTier.FREE
+            // isLoggedIn / tier / 토큰은 LoginActivity.callSocialLoginApi()에서 이미 설정됨
             UserStore.saveProfile(SessionHolder.authProvider, profile)
             UserStore.markRegistered(SessionHolder.authProvider)
         }

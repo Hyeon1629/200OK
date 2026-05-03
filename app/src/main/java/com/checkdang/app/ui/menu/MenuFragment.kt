@@ -18,6 +18,7 @@ import com.checkdang.app.data.mock.SocialProvider
 import com.checkdang.app.data.mock.UserTier
 import com.checkdang.app.databinding.FragmentMenuBinding
 import com.checkdang.app.databinding.ItemMenuRowBinding
+import com.checkdang.app.data.remote.AuthApiClient
 import com.checkdang.app.ui.auth.login.LoginActivity
 import com.checkdang.app.ui.family.FamilyActivity
 import com.checkdang.app.ui.menu.subscription.SubscriptionActivity
@@ -236,19 +237,32 @@ class MenuFragment : Fragment() {
             .setTitle("로그아웃")
             .setMessage("정말 로그아웃 하시겠어요?")
             .setPositiveButton("로그아웃") { _, _ ->
-                // TODO(backend, auth): 소셜 SDK 로그아웃 호출 추가
-                //  - GoogleSignIn.getClient(context, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut()
-                //  - UserApiClient.instance.logout {}
-                //  - 서버에 POST /api/v1/auth/logout
-                SessionHolder.reset()
-                startActivity(
-                    Intent(requireContext(), LoginActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    }
-                )
+                performLogout()
             }
             .setNegativeButton("취소", null)
             .show()
+    }
+
+    private fun performLogout() {
+        val token = SessionHolder.refreshToken
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            // 1. refreshToken이 있으면 백엔드 로그아웃 호출
+            if (!token.isNullOrEmpty() && token != "mock_refresh_token") {
+                runCatching { AuthApiClient.logout(token) }
+                // 성공/실패 무관하게 로컬 로그아웃 진행
+            }
+
+            // 2. 로컬 세션 삭제
+            SessionHolder.reset()
+
+            // 3. 로그인 화면으로 이동
+            startActivity(
+                Intent(requireContext(), LoginActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+            )
+        }
     }
 
     private fun showWithdrawDialog() {

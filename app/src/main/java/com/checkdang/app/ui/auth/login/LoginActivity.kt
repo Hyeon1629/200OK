@@ -14,11 +14,13 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.checkdang.app.R
 import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.mock.SocialProvider
 import com.checkdang.app.data.mock.UserStore
 import com.checkdang.app.data.mock.UserTier
+import com.checkdang.app.data.remote.AuthApiClient
 import com.checkdang.app.databinding.ActivityLoginBinding
 import com.checkdang.app.databinding.DialogSocialLoadingBinding
 import com.checkdang.app.ui.auth.onboarding.OnboardingActivity
@@ -29,6 +31,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.user.UserApiClient
+import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
 
@@ -50,7 +53,7 @@ class LoginActivity : AppCompatActivity() {
             }
             callSocialLoginApi(
                 provider = "GOOGLE",
-                token    = idToken,
+                idToken  = idToken,
                 email    = account.email,
                 nickname = account.displayName
             )
@@ -123,10 +126,10 @@ class LoginActivity : AppCompatActivity() {
                 return@me
             }
             callSocialLoginApi(
-                provider = "KAKAO",
-                token    = accessToken,
-                email    = user.kakaoAccount?.email,
-                nickname = user.kakaoAccount?.profile?.nickname
+                provider   = "KAKAO",
+                kakaoToken = accessToken,
+                email      = user.kakaoAccount?.email,
+                nickname   = user.kakaoAccount?.profile?.nickname
             )
         }
     }
@@ -146,37 +149,72 @@ class LoginActivity : AppCompatActivity() {
         )
     }
 
-    // ── 소셜 로그인 처리 (MVP: 백엔드 없이 Mock) ──────────────────────────────
+    // ── 소셜 로그인 처리 ─────────────────────────────────────────────────────
 
-    private fun callSocialLoginApi(provider: String, token: String, email: String?, nickname: String?) {
-        dismissLoadingDialog()
+    private fun callSocialLoginApi(
+        provider: String,
+        idToken: String? = null,      // Google
+        kakaoToken: String? = null,   // Kakao
+        email: String?,
+        nickname: String?
+    ) {
+        showLoadingDialog("로그인 중…")
+        setButtonsEnabled(false)
 
-        SessionHolder.authProvider   = if (provider == "GOOGLE") SocialProvider.GOOGLE else SocialProvider.KAKAO
-        SessionHolder.isLoggedIn     = true
-        SessionHolder.isGuest        = false
-        SessionHolder.tier           = UserTier.FREE
-        SessionHolder.socialEmail    = email
-        SessionHolder.socialNickname = nickname
-        SessionHolder.accessToken    = "mock_access_token"
-        SessionHolder.refreshToken   = "mock_refresh_token"
-        SessionHolder.userId         = "mock_user_id"
+        val socialProvider = if (provider == "GOOGLE") SocialProvider.GOOGLE else SocialProvider.KAKAO
 
-        // 프로바이더별 가입 여부 확인 → 신규면 온보딩, 기존이면 프로필 복원 후 홈
-        if (!UserStore.isRegistered(SessionHolder.authProvider)) {
-            startActivity(
-                Intent(this, OnboardingActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    putExtra(OnboardingActivity.EXTRA_IS_GUEST, false)
-                    putExtra(OnboardingActivity.EXTRA_AUTH_PROVIDER, provider)
-                }
-            )
-        } else {
-            SessionHolder.currentProfile = UserStore.getProfile(SessionHolder.authProvider)
-            startActivity(
-                Intent(this, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                }
-            )
+        lifecycleScope.launch {
+            // ── 실제 API 호출 시도 ──────────────────────────────────────────
+            val apiResult = runCatching {
+                AuthApiClient.socialLogin(
+                    provider    = provider,
+                    idToken     = idToken,
+                    accessToken = kakaoToken
+                )
+            }
+
+            // API 성공: 실제 토큰 저장 / 실패: Mock 토큰으로 유지 (기존 동작 보장)
+            if (apiResult.isSuccess) {
+                val result = apiResult.getOrThrow()
+                SessionHolder.accessToken    = result.accessToken
+                SessionHolder.refreshToken   = result.refreshToken
+                SessionHolder.userId         = result.userId
+                SessionHolder.socialEmail    = result.email ?: email
+                SessionHolder.socialNickname = result.name  ?: nickname
+                android.util.Log.d("SocialLogin", "✅ API 성공 | userId=${result.userId} | token=${result.accessToken.take(20)}…")
+            } else {
+                SessionHolder.accessToken    = "mock_access_token"
+                SessionHolder.refreshToken   = "mock_refresh_token"
+                SessionHolder.userId         = "mock_user_id"
+                SessionHolder.socialEmail    = email
+                SessionHolder.socialNickname = nickname
+                android.util.Log.d("SocialLogin", "⚠️ API 실패 → Mock 사용 | 원인: ${apiResult.exceptionOrNull()?.message}")
+            }
+
+            // ── 아래 네비게이션 로직은 기존과 동일 ──────────────────────────
+            SessionHolder.authProvider = socialProvider
+            SessionHolder.isLoggedIn   = true
+            SessionHolder.isGuest      = false
+            SessionHolder.tier         = UserTier.FREE
+
+            dismissLoadingDialog()
+
+            if (!UserStore.isRegistered(socialProvider)) {
+                startActivity(
+                    Intent(this@LoginActivity, OnboardingActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        putExtra(OnboardingActivity.EXTRA_IS_GUEST, false)
+                        putExtra(OnboardingActivity.EXTRA_AUTH_PROVIDER, provider)
+                    }
+                )
+            } else {
+                SessionHolder.currentProfile = UserStore.getProfile(socialProvider)
+                startActivity(
+                    Intent(this@LoginActivity, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                )
+            }
         }
     }
 
