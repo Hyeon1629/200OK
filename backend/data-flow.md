@@ -79,9 +79,13 @@
 ### 입력 데이터 경로
 | 데이터 | 테이블 | 필드 |
 |---|---|---|
+| 삼성헬스 원본 ID | `exercise_record` | `source_id` |
 | 운동명 | `exercise_record` | `exercise_name` |
 | 운동시간 | `exercise_record` | `duration` |
 | 기록일시 | `exercise_record` | `recorded_at` |
+| 세트 수 | `exercise_record` | `sets` |
+| 반복 횟수 | `exercise_record` | `reps` |
+| 무게 | `exercise_record` | `weight_kg` |
 
 ### 출력 데이터 경로
 | 데이터 | 테이블 | 필드 |
