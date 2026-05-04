@@ -27,6 +27,8 @@ public class Sleep {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
+    private String sourceId;
+
     @Column(nullable = false)
     private LocalDateTime sleepTime;
 

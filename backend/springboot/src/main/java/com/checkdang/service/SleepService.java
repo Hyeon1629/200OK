@@ -30,13 +30,12 @@ public class SleepService {
 
         int saved = 0;
         for (SleepSyncRequest req : requests) {
-            if (sleepRepository.existsByUserIdAndSleepTime(user.getId(), req.getSleepTime())) {
-                continue;
-            }
+            if (isDuplicate(user.getId(), req)) continue;
 
             // sleep을 먼저 INSERT해 ID를 확보한 뒤 stages를 연관
             Sleep sleep = sleepRepository.save(Sleep.builder()
                     .userId(user.getId())
+                    .sourceId(req.getSourceId())
                     .sleepTime(req.getSleepTime())
                     .wakeTime(req.getWakeTime())
                     .duration(req.getDuration())
@@ -61,6 +60,13 @@ public class SleepService {
         }
 
         return SyncResponse.of(saved, requests.size());
+    }
+
+    private boolean isDuplicate(String userId, SleepSyncRequest req) {
+        if (req.getSourceId() != null) {
+            return sleepRepository.existsByUserIdAndSourceId(userId, req.getSourceId());
+        }
+        return sleepRepository.existsByUserIdAndSleepTime(userId, req.getSleepTime());
     }
 
     public List<SleepResponse> getSleeps(String userEmail, LocalDateTime from, LocalDateTime to) {

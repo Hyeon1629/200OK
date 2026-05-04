@@ -13,6 +13,7 @@ public class SleepResponse {
 
     private Long id;
     private String userId;
+    private String sourceId;
     private LocalDateTime sleepTime;
     private LocalDateTime wakeTime;
     private Long duration;
@@ -26,6 +27,7 @@ public class SleepResponse {
         return SleepResponse.builder()
                 .id(sleep.getId())
                 .userId(sleep.getUserId())
+                .sourceId(sleep.getSourceId())
                 .sleepTime(sleep.getSleepTime())
                 .wakeTime(sleep.getWakeTime())
                 .duration(sleep.getDuration())
