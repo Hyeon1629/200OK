@@ -10,6 +10,8 @@ import java.util.List;
 
 public interface SleepRepository extends JpaRepository<Sleep, Long> {
 
+    boolean existsByUserIdAndSourceId(String userId, String sourceId);
+
     boolean existsByUserIdAndSleepTime(String userId, LocalDateTime sleepTime);
 
     @Query("SELECT DISTINCT s FROM Sleep s LEFT JOIN FETCH s.stages " +

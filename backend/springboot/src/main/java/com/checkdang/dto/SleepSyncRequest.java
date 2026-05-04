@@ -12,6 +12,8 @@ import java.util.List;
 @NoArgsConstructor
 public class SleepSyncRequest {
 
+    private String sourceId;
+
     @NotNull(message = "수면 시작 시각은 필수입니다.")
     private LocalDateTime sleepTime;
 
