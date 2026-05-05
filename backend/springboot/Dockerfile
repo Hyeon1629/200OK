@@ -1,7 +1,7 @@
 FROM gradle:8.14-jdk17 AS build
 WORKDIR /app
-COPY . .
-RUN gradle build -x test
+COPY backend/springboot/ .
+RUN ./gradlew build -x test
 
 FROM eclipse-temurin:17-jre
 WORKDIR /app
