@@ -2,6 +2,20 @@ spring:
   application:
     name: checkdang
 
+  datasource:
+    url: ${RDS_URL:jdbc:mysql://checkdang-db.c168kuo8whz4.ap-northeast-2.rds.amazonaws.com:3306/checkdang?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true}
+    username: ${RDS_USERNAME}
+    password: ${RDS_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    show-sql: false
+
   security:
     oauth2:
       client:
@@ -44,6 +58,7 @@ aws:
     endpoint: ${DYNAMODB_ENDPOINT:}
     table-name: users
     refresh-token-table-name: refresh_tokens
+    blood-sugar-table-name: blood_glucose_record
 
 server:
   port: ${PORT:8080}

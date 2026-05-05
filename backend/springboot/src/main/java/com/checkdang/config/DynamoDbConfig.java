@@ -1,5 +1,6 @@
 package com.checkdang.config;
 
+import com.checkdang.domain.BloodSugarRecord;
 import com.checkdang.domain.RefreshToken;
 import com.checkdang.domain.User;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +39,9 @@ public class DynamoDbConfig {
 
     @Value("${aws.dynamodb.refresh-token-table-name}")
     private String refreshTokenTableName;
+
+    @Value("${aws.dynamodb.blood-sugar-table-name}")
+    private String bloodSugarTableName;
 
     @Bean
     public DynamoDbClient dynamoDbClient() {
@@ -189,5 +193,36 @@ public class DynamoDbConfig {
                 .build();
 
         return enhancedClient.table(refreshTokenTableName, schema);
+    }
+
+    @Bean
+    public DynamoDbTable<BloodSugarRecord> bloodSugarTable(DynamoDbEnhancedClient enhancedClient) {
+        StaticTableSchema<BloodSugarRecord> schema = StaticTableSchema.builder(BloodSugarRecord.class)
+                .newItemSupplier(BloodSugarRecord::new)
+                .addAttribute(String.class, a -> a
+                        .name("user_date")
+                        .getter(BloodSugarRecord::getUserDate)
+                        .setter(BloodSugarRecord::setUserDate)
+                        .tags(StaticAttributeTags.primaryPartitionKey()))
+                .addAttribute(String.class, a -> a
+                        .name("timestamp")
+                        .getter(BloodSugarRecord::getTimestamp)
+                        .setter(BloodSugarRecord::setTimestamp)
+                        .tags(StaticAttributeTags.primarySortKey()))
+                .addAttribute(Integer.class, a -> a
+                        .name("level")
+                        .getter(BloodSugarRecord::getLevel)
+                        .setter(BloodSugarRecord::setLevel))
+                .addAttribute(String.class, a -> a
+                        .name("memo")
+                        .getter(BloodSugarRecord::getMemo)
+                        .setter(BloodSugarRecord::setMemo))
+                .addAttribute(String.class, a -> a
+                        .name("meal_timing")
+                        .getter(BloodSugarRecord::getMealTiming)
+                        .setter(BloodSugarRecord::setMealTiming))
+                .build();
+
+        return enhancedClient.table(bloodSugarTableName, schema);
     }
 }

@@ -48,6 +48,10 @@ public class SecurityConfig {
                                 "/api/home/**",
                                 "/api/records/blood-sugar/**"
                         ).hasAnyRole("GUEST", "PATIENT", "CAREGIVER", "ADMIN")
+                        // 인슐린 기록은 로그인 회원만
+                        .requestMatchers(
+                                "/api/records/insulin/**"
+                        ).hasAnyRole("PATIENT", "CAREGIVER", "ADMIN")
                         // 나머지는 정식 회원만
                         .anyRequest().hasAnyRole("PATIENT", "CAREGIVER", "ADMIN")
                 )
