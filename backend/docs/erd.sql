@@ -139,7 +139,6 @@ CREATE TABLE `heart_rate` (
 	`user_date`	VARCHAR(100)	NOT NULL	COMMENT '사용자날짜 (user_id + date)',
 	`timestamp`	VARCHAR(50)	NOT NULL	COMMENT '타임스탬프',
 	`bpm`	INT	NOT NULL	COMMENT '심박수',
-	`device_id`	VARCHAR(100)	NOT NULL	COMMENT '기기아이디',
 	`ibi`	DECIMAL(10, 4)	NULL	COMMENT 'IBI',
 	`source_id`	VARCHAR(255)	NOT NULL	COMMENT '삼성헬스 원본 ID'
 );
@@ -149,7 +148,6 @@ CREATE TABLE `step_calorie` (
 	`timestamp`	VARCHAR(50)	NOT NULL	COMMENT '타임스탬프',
 	`step_count`	INT	NOT NULL	COMMENT '걸음수',
 	`calorie`	DECIMAL(10, 2)	NOT NULL	COMMENT '소비칼로리',
-	`device_id`	VARCHAR(100)	NOT NULL	COMMENT '기기아이디',
 	`source_id`	VARCHAR(255)	NOT NULL	COMMENT '삼성헬스 원본 ID'
 );
 

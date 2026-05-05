@@ -141,7 +141,6 @@
 | 사용자날짜 | user_date | VARCHAR(100) | NOT NULL | PK |
 | 타임스탬프 | timestamp | VARCHAR(50) | NOT NULL | SK |
 | 심박수 | bpm | INT | NOT NULL | |
-| 기기아이디 | device_id | VARCHAR(100) | NOT NULL | |
 | IBI | ibi | DECIMAL(10,4) | NULL | |
 | 삼성헬스원본ID | source_id | VARCHAR(255) | NOT NULL | |
 
@@ -154,7 +153,6 @@
 | 타임스탬프 | timestamp | VARCHAR(50) | NOT NULL | SK |
 | 걸음수 | step_count | INT | NOT NULL | |
 | 소비칼로리 | calorie | DECIMAL(10,2) | NOT NULL | |
-| 기기아이디 | device_id | VARCHAR(100) | NOT NULL | |
 | 삼성헬스원본ID | source_id | VARCHAR(255) | NOT NULL | |
 
 ---
