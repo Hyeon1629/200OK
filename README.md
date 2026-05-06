@@ -3,6 +3,7 @@
 사전 준비
 
 env.example에 있는 RDS 비번 채우기
+
 fastapi에 .env 파일 하나 만들고 gemini_api_key 넣기
 
 2. FastAPI 실행
