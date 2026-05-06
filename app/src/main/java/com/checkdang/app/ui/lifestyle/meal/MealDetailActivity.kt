@@ -5,15 +5,19 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.checkdang.app.R
 import com.checkdang.app.data.mock.MockDataProvider
 import com.checkdang.app.data.model.MealItem
+import com.checkdang.app.data.remote.AiAdviceApiClient
 import com.checkdang.app.databinding.ActivityMealDetailBinding
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 class MealDetailActivity : AppCompatActivity() {
@@ -35,6 +39,30 @@ class MealDetailActivity : AppCompatActivity() {
             setupPieChartEmpty()
             setupKcalCard(0, 2000)
             setupMealList(emptyList())
+        }
+
+        setupAiAdviceButton()
+    }
+
+    private fun setupAiAdviceButton() {
+        binding.btnAiAdvice.setOnClickListener {
+            binding.btnAiAdvice.isEnabled = false
+            binding.tvAiAnswer.text = "Gemini 응답을 불러오는 중..."
+
+            lifecycleScope.launch {
+                val result = runCatching {
+                    AiAdviceApiClient.getDietAdviceForDemo()
+                }
+
+                binding.tvAiAnswer.text = result.getOrElse {
+                    "AI 조언 요청 실패: ${it.message}"
+                }
+                binding.btnAiAdvice.isEnabled = true
+
+                if (result.isFailure) {
+                    Toast.makeText(this@MealDetailActivity, "AI 조언 요청에 실패했습니다.", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
