@@ -11,20 +11,15 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.checkdang.app.R
 import com.checkdang.app.data.mock.MockDataProvider
-import com.checkdang.app.data.mock.SessionHolder 
 import com.checkdang.app.data.model.MealItem
 import com.checkdang.app.data.remote.AiAdviceApiClient
 import com.checkdang.app.databinding.ActivityMealDetailBinding
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import com.github.mikephil.charting.formatter.PercentFormatter
 import kotlinx.coroutines.launch
 import java.util.Locale
-
-
-
-
-
 
 class MealDetailActivity : AppCompatActivity() {
 
@@ -50,28 +45,6 @@ class MealDetailActivity : AppCompatActivity() {
         setupAiAdviceButton()
     }
 
-    private fun setupAiAdviceButton() {
-        binding.btnAiAdvice.setOnClickListener {
-            binding.btnAiAdvice.isEnabled = false
-            binding.tvAiAnswer.text = "Gemini 응답을 불러오는 중..."
-
-            lifecycleScope.launch {
-                val result = runCatching {
-                    AiAdviceApiClient.getDietAdviceForDemo()
-                }
-
-                binding.tvAiAnswer.text = result.getOrElse {
-                    "AI 조언 요청 실패: ${it.message}"
-                }
-                binding.btnAiAdvice.isEnabled = true
-
-                if (result.isFailure) {
-                    Toast.makeText(this@MealDetailActivity, "AI 조언 요청에 실패했습니다.", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
     private fun setupToolbar() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -81,6 +54,29 @@ class MealDetailActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         onBackPressedDispatcher.onBackPressed()
         return true
+    }
+
+    private fun setupAiAdviceButton() {
+        binding.btnAiAdvice.setOnClickListener {
+            binding.btnAiAdvice.isEnabled = false
+            binding.tvAiAnswer.text = "AI 조언을 불러오는 중..."
+
+            lifecycleScope.launch {
+                val result = runCatching {
+                    AiAdviceApiClient.getDietAdviceForDemo()
+                }
+
+                binding.tvAiAnswer.text = result.getOrElse {
+                    Toast.makeText(
+                        this@MealDetailActivity,
+                        "AI 조언 요청 실패",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    "AI 조언 요청 실패: ${it.message}"
+                }
+                binding.btnAiAdvice.isEnabled = true
+            }
+        }
     }
 
     private fun setupPieChartEmpty() {
@@ -94,9 +90,9 @@ class MealDetailActivity : AppCompatActivity() {
         val chart = binding.pieMacro
 
         val entries = listOf(
-            PieEntry(carbs.toFloat(),   "탄수화물"),
+            PieEntry(carbs.toFloat(), "탄수화물"),
             PieEntry(protein.toFloat(), "단백질"),
-            PieEntry(fat.toFloat(),     "지방")
+            PieEntry(fat.toFloat(), "지방")
         )
         val colors = listOf(
             ContextCompat.getColor(this, R.color.carbs_color),
@@ -104,22 +100,24 @@ class MealDetailActivity : AppCompatActivity() {
             ContextCompat.getColor(this, R.color.fat_color)
         )
         val dataSet = PieDataSet(entries, "").apply {
-            this.colors      = colors
-            sliceSpace       = 2f
+            this.colors = colors
+            sliceSpace = 2f
             setDrawValues(true)
-            valueTextSize    = 12f
-            valueTextColor   = Color.WHITE
+            valueTextSize = 12f
+            valueTextColor = Color.WHITE
         }
 
         chart.apply {
-            data             = PieData(dataSet).apply { setValueFormatter(com.github.mikephil.charting.formatter.PercentFormatter(chart)) }
-            holeRadius       = 50f
+            data = PieData(dataSet).apply {
+                setValueFormatter(PercentFormatter(chart))
+            }
+            holeRadius = 50f
             transparentCircleRadius = 55f
             setUsePercentValues(true)
             description.isEnabled = false
-            legend.isEnabled      = false
+            legend.isEnabled = false
             setDrawEntryLabels(false)
-            centerText       = "탄·단·지"
+            centerText = "영양소"
             setCenterTextSize(14f)
             setCenterTextColor(ContextCompat.getColor(this@MealDetailActivity, R.color.text_primary))
             animateY(600)
@@ -129,13 +127,13 @@ class MealDetailActivity : AppCompatActivity() {
     private fun setupKcalCard(total: Int, goal: Int) {
         if (total == 0) {
             binding.tvKcalValue.text = "-"
-            binding.tvKcalGoal.text  = "기록 없음"
+            binding.tvKcalGoal.text = "기록 없음"
             binding.progressKcal.progress = 0
             return
         }
         val pct = total * 100 / goal
         binding.tvKcalValue.text = "${String.format(Locale.getDefault(), "%,d", total)} kcal"
-        binding.tvKcalGoal.text  = "/ ${String.format(Locale.getDefault(), "%,d", goal)} kcal (${pct}%)"
+        binding.tvKcalGoal.text = "/ ${String.format(Locale.getDefault(), "%,d", goal)} kcal (${pct}%)"
         binding.progressKcal.progress = pct.coerceIn(0, 100)
     }
 
@@ -145,18 +143,18 @@ class MealDetailActivity : AppCompatActivity() {
             val row = inflater.inflate(android.R.layout.simple_list_item_2, binding.layoutMeals, false)
 
             val tvTitle = row.findViewById<TextView>(android.R.id.text1)
-            val tvSub   = row.findViewById<TextView>(android.R.id.text2)
+            val tvSub = row.findViewById<TextView>(android.R.id.text2)
 
-            tvTitle.text     = "[${item.type}] ${item.name}"
+            tvTitle.text = "[${item.type}] ${item.name}"
             tvTitle.setTextColor(ContextCompat.getColor(this, R.color.text_primary))
-            tvSub.text       = "${item.kcal} kcal  ·  ${item.time}"
+            tvSub.text = "${item.kcal} kcal  ·  ${item.time}"
             tvSub.setTextColor(ContextCompat.getColor(this, R.color.text_secondary))
 
-            // 구분선 (마지막 제외)
             if (item != meals.last()) {
                 val divider = android.view.View(this)
                 val lp = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, 1
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1
                 ).apply { setMargins(16, 0, 16, 0) }
                 divider.layoutParams = lp
                 divider.setBackgroundColor(ContextCompat.getColor(this, R.color.divider))
