@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.checkdang.app.R
 import com.checkdang.app.data.mock.MockDataProvider
+import com.checkdang.app.data.mock.SessionHolder 
 import com.checkdang.app.data.model.MealItem
 import com.checkdang.app.data.remote.AiAdviceApiClient
 import com.checkdang.app.databinding.ActivityMealDetailBinding
@@ -19,6 +20,11 @@ import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import kotlinx.coroutines.launch
 import java.util.Locale
+
+
+
+
+
 
 class MealDetailActivity : AppCompatActivity() {
 
