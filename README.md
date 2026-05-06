@@ -2,7 +2,7 @@
 
 사전 준비
 
-env.example에 있는 RDS 비번 채우기
+env.example에 있는 RDS 비번 채우기 #backend 
 
 fastapi에 .env 파일 하나 만들고 gemini_api_key 넣기
 
