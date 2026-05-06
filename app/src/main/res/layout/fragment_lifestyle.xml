@@ -1,0 +1,470 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_secondary">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="24dp">
+
+        <!-- 헤더 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="오늘의 라이프스타일"
+            android:textAppearance="@style/TextAppearance.CheckDang.Title2"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:id="@+id/tv_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="16dp"
+            android:textAppearance="@style/TextAppearance.CheckDang.Body2"
+            android:textColor="@color/text_secondary"
+            tools:text="오늘 2024.01.15 월요일" />
+
+        <!-- 동기화 안내 배너 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="@color/brand_green_light"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/brand_green"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="12dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_check"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="동기화 완료" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="삼성 헬스에서 자동 동기화됨 · 5분 전"
+                    android:textAppearance="@style/TextAppearance.CheckDang.Body2"
+                    android:textColor="@color/brand_green_dark" />
+
+                <Button
+                    android:id="@+id/btn_refresh"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="0dp"
+                    android:paddingHorizontal="8dp"
+                    android:text="수동 새로고침"
+                    android:textColor="@color/brand_green_dark"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ── 운동 카드 ─────────────────────────────────────────────────────── -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_exercise"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardBackgroundColor="@color/background_primary"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- 헤더 행 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="🏃 운동"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Title2"
+                        android:textColor="@color/text_primary" />
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_chevron_right"
+                        android:contentDescription="상세 보기" />
+                </LinearLayout>
+
+                <!-- 도넛 + 수치 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <!-- 도넛 차트 -->
+                    <FrameLayout
+                        android:layout_width="120dp"
+                        android:layout_height="120dp">
+
+                        <com.checkdang.app.ui.common.DonutProgressView
+                            android:id="@+id/donut_exercise"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tv_exercise_percent"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.CheckDang.Title2"
+                                android:textColor="@color/brand_green"
+                                tools:text="70%" />
+
+                            <TextView
+                                android:id="@+id/tv_exercise_sub"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                                android:textColor="@color/text_secondary"
+                                tools:text="42 / 60분" />
+                        </LinearLayout>
+                    </FrameLayout>
+
+                    <!-- 우측 통계 -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tv_exercise_calories"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="@style/TextAppearance.CheckDang.Body1"
+                            android:textColor="@color/text_primary"
+                            tools:text="280 kcal 소모" />
+
+                        <TextView
+                            android:id="@+id/tv_exercise_sessions"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:textAppearance="@style/TextAppearance.CheckDang.Body2"
+                            android:textColor="@color/text_secondary"
+                            tools:text="운동 2회" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ── 식사 카드 ─────────────────────────────────────────────────────── -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_meal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardBackgroundColor="@color/background_primary"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- 헤더 행 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="🍽 식사"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Title2"
+                        android:textColor="@color/text_primary" />
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_chevron_right"
+                        android:contentDescription="상세 보기" />
+                </LinearLayout>
+
+                <!-- 총 kcal -->
+                <TextView
+                    android:id="@+id/tv_meal_kcal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.CheckDang.Display"
+                    android:textColor="@color/text_primary"
+                    tools:text="1,480 kcal" />
+
+                <TextView
+                    android:id="@+id/tv_meal_goal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="12dp"
+                    android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                    android:textColor="@color/text_secondary"
+                    tools:text="/ 2,000 kcal (74%)" />
+
+                <!-- 탄/단/지 누적 막대 -->
+                <LinearLayout
+                    android:id="@+id/nutrition_bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="10dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/bg_bar"
+                    android:clipToOutline="true"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:id="@+id/view_carbs"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="180"
+                        android:background="@color/carbs_color" />
+
+                    <View
+                        android:id="@+id/view_protein"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="85"
+                        android:background="@color/protein_color" />
+
+                    <View
+                        android:id="@+id/view_fat"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="52"
+                        android:background="@color/fat_color" />
+                </LinearLayout>
+
+                <!-- 영양소 라벨 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tv_carbs_label"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                        android:textColor="@color/carbs_color"
+                        tools:text="탄수화물 180g" />
+
+                    <TextView
+                        android:id="@+id/tv_protein_label"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                        android:textColor="@color/protein_color"
+                        tools:text="단백질 85g" />
+
+                    <TextView
+                        android:id="@+id/tv_fat_label"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                        android:textColor="@color/fat_color"
+                        tools:text="지방 52g" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ── 수면 카드 ─────────────────────────────────────────────────────── -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_sleep"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardBackgroundColor="@color/background_primary"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- 헤더 행 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="😴 수면"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Title2"
+                        android:textColor="@color/text_primary" />
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_chevron_right"
+                        android:contentDescription="상세 보기" />
+                </LinearLayout>
+
+                <!-- 총 수면 시간 + 효율 칩 -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:id="@+id/tv_sleep_total"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Display"
+                        android:textColor="@color/text_primary"
+                        tools:text="7시간 12분" />
+
+                    <TextView
+                        android:id="@+id/tv_sleep_efficiency"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_chip"
+                        android:backgroundTint="@color/brand_green_light"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                        android:textColor="@color/brand_green_dark"
+                        tools:text="효율 84%" />
+                </LinearLayout>
+
+                <!-- 수면 단계 막대 -->
+                <LinearLayout
+                    android:id="@+id/sleep_stage_bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="12dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/bg_bar"
+                    android:clipToOutline="true"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:id="@+id/view_sleep_deep"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="18"
+                        android:background="@color/sleep_deep" />
+
+                    <View
+                        android:id="@+id/view_sleep_light"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="46"
+                        android:background="@color/sleep_light" />
+
+                    <View
+                        android:id="@+id/view_sleep_rem"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="8"
+                        android:background="@color/sleep_rem" />
+                </LinearLayout>
+
+                <!-- 수면 단계 라벨 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <ImageView android:layout_width="8dp" android:layout_height="8dp"
+                        android:src="@drawable/ic_dot" app:tint="@color/sleep_deep" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:layout_marginStart="4dp"
+                        android:text="깊은수면 25%"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                        android:textColor="@color/sleep_deep" />
+
+                    <ImageView android:layout_width="8dp" android:layout_height="8dp"
+                        android:src="@drawable/ic_dot" app:tint="@color/sleep_light" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:layout_marginStart="4dp"
+                        android:text="얕은수면 64%"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                        android:textColor="@color/sleep_light" />
+
+                    <ImageView android:layout_width="8dp" android:layout_height="8dp"
+                        android:src="@drawable/ic_dot" app:tint="@color/sleep_rem" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:layout_marginStart="4dp"
+                        android:text="REM 11%"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                        android:textColor="@color/sleep_rem" />
+                </LinearLayout>
+
+                <!-- 취침/기상 시각 -->
+                <TextView
+                    android:id="@+id/tv_sleep_bedtime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.CheckDang.Body2"
+                    android:textColor="@color/text_secondary"
+                    tools:text="취침 23:42 · 기상 06:54" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

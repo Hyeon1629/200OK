@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">체크당</string>
+    <string name="splash_subtitle">혈당과 일상을 함께 관리하다</string>
+    <string name="login_subtitle">함께 관리하는 건강한 하루</string>
+    <string name="btn_guest">비회원으로 시작하기</string>
+    <string name="btn_next">다음</string>
+    <string name="btn_start">체크당 시작하기</string>
+    <string name="hint_nickname">닉네임</string>
+    <string name="hint_birth_date">생년월일 (YYYY-MM-DD)</string>
+    <string name="hint_height">키 (cm)</string>
+    <string name="hint_weight">몸무게 (kg)</string>
+    <string name="onboarding_step_nickname">닉네임을 알려주세요</string>
+    <string name="onboarding_step_birth_gender">기본 정보를 입력해 주세요</string>
+    <string name="onboarding_step_body">신체 정보를 입력해 주세요</string>
+    <string name="onboarding_step_complete">설정 완료</string>
+    <string name="onboarding_complete_title">환영합니다!</string>
+    <string name="onboarding_complete_subtitle">입력하신 정보를 확인해 주세요.</string>
+    <string name="gender_male">남</string>
+    <string name="gender_female">여</string>
+    <string name="main_placeholder">메인 화면 (Phase 3에서 구현)</string>
+    <string name="kakao_app_key">0da8cdd9268d25e9acf957d657ddce68</string>
+</resources>

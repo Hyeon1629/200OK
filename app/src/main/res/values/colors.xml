@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand -->
+    <color name="brand_green">#4CAF50</color>
+    <color name="brand_green_dark">#388E3C</color>
+    <color name="brand_green_light">#E8F5E9</color>
+
+    <!-- Background -->
+    <color name="background_primary">#FFFFFF</color>
+    <color name="background_secondary">#F7F8FA</color>
+
+    <!-- Text -->
+    <color name="text_primary">#1A1A1A</color>
+    <color name="text_secondary">#6E6E73</color>
+
+    <!-- Divider -->
+    <color name="divider">#E5E5EA</color>
+
+    <!-- Status -->
+    <color name="status_normal">#4CAF50</color>
+    <color name="status_warning">#FF9800</color>
+    <color name="status_danger">#F44336</color>
+
+    <!-- Status Background (alpha ~15%) -->
+    <color name="status_normal_bg">#264CAF50</color>
+    <color name="status_warning_bg">#26FF9800</color>
+    <color name="status_danger_bg">#26F44336</color>
+
+    <!-- Nutrition macros -->
+    <color name="carbs_color">#FFC107</color>
+    <color name="protein_color">#FF9800</color>
+    <color name="fat_color">#F44336</color>
+
+    <!-- Sleep stages -->
+    <color name="sleep_deep">#1565C0</color>
+    <color name="sleep_light">#42A5F5</color>
+    <color name="sleep_rem">#90CAF9</color>
+
+    <!-- Avatar colors (6가지) -->
+    <color name="avatar_0">#E57373</color>
+    <color name="avatar_1">#BA68C8</color>
+    <color name="avatar_2">#64B5F6</color>
+    <color name="avatar_3">#4DB6AC</color>
+    <color name="avatar_4">#FFB74D</color>
+    <color name="avatar_5">#A1887F</color>
+
+    <!-- Social login -->
+    <color name="kakao_yellow">#FEE500</color>
+
+    <!-- System (required by Material theme) -->
+    <color name="white">#FFFFFF</color>
+</resources>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    app:cardCornerRadius="@dimen/corner_radius_card"
+    app:cardElevation="0dp"
+    app:strokeWidth="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/spacing_l">
+
+        <View
+            android:id="@+id/view_status_indicator"
+            android:layout_width="32dp"
+            android:layout_height="4dp"
+            android:background="#4CAF50"
+            android:layout_marginBottom="@dimen/spacing_s" />
+
+        <TextView
+            android:id="@+id/tv_glucose_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.CheckDang.Title1"
+            android:text="-- mg/dL" />
+
+        <TextView
+            android:id="@+id/tv_glucose_timing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+            android:text="식후 2시간" />
+
+        <TextView
+            android:id="@+id/tv_glucose_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_s"
+            android:textAppearance="@style/TextAppearance.CheckDang.Body2"
+            android:textStyle="bold"
+            android:text="정상" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
