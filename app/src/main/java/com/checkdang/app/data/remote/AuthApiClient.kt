@@ -16,7 +16,7 @@ data class SocialLoginResult(
 
 object AuthApiClient {
 
-    private const val BASE_URL = "https://two00ok-8r84.onrender.com"
+    private const val BASE_URL = "https://two00ok-u15n.onrender.com"
 
     private fun post(path: String, body: JSONObject): String {
         val conn = (URL("$BASE_URL$path").openConnection() as HttpURLConnection).apply {
