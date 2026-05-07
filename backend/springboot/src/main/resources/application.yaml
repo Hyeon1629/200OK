@@ -3,7 +3,8 @@ spring:
     name: checkdang
 
   datasource:
-    url: ${RDS_URL:jdbc:mysql://checkdang-db.c168kuo8whz4.ap-northeast-2.rds.amazonaws.com:3306/checkdang?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true}
+    # RDS 연결 정보: 엔드포인트는 유지하고 한글 인코딩 설정을 추가했습니다.
+    url: ${RDS_URL:jdbc:mysql://checkdang-db.c168kuo8whz4.ap-northeast-2.rds.amazonaws.com:3306/checkdang?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true&characterEncoding=UTF-8}
     username: ${RDS_USERNAME}
     password: ${RDS_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -12,11 +13,14 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      # 테이블 자동 생성을 위해 update로 설정
+      ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-    show-sql: false
+        # MySQL 8 버전에 맞게 수정
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    # SQL 실행 로그를 보기 위해 true로 설정
+    show-sql: true
 
   security:
     oauth2:
