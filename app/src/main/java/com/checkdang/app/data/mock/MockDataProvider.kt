@@ -47,23 +47,21 @@ object MockDataProvider {
 
     fun getGlucoseSummary(): GlucoseSummary? = null   // TODO(backend): 서버에서 오늘의 요약 로드
 
-    fun getLifestyleSummary(): LifestyleSummary? = null // TODO(backend): 서버에서 라이프스타일 요약 로드
+    fun getLifestyleSummary(): LifestyleSummary? = null  // LifestyleViewModel → HealthRepository 직접 사용
 
     fun getWeeklyGlucose(): List<Float> = emptyList()
 
-    // ── Lifestyle ────────────────────────────────────────────────────────────
+    // ── Lifestyle — LifestyleViewModel/DetailActivity에서 HealthRepository로 직접 조회 ──
 
-    fun getExerciseSummary(): ExerciseSummary? = null   // TODO(backend): 서버에서 운동 요약 로드
+    fun getExerciseSummary(): ExerciseSummary? = null
+    fun getMealSummary(): MealSummary?         = null
+    fun getSleepSummary(): SleepSummary?       = null
 
-    fun getMealSummary(): MealSummary? = null           // TODO(backend): 서버에서 식사 요약 로드
+    /** @deprecated HealthRepository.getWeeklyExerciseMinutes() 직접 사용 */
+    fun getWeeklyExerciseMinutes(): List<Int>  = emptyList()
 
-    fun getSleepSummary(): SleepSummary? = null         // TODO(backend): 서버에서 수면 요약 로드
-
-    /** 주간 운동 시간 (분, 오늘=마지막) */
-    fun getWeeklyExerciseMinutes(): List<Int> = emptyList()
-
-    /** 주간 수면 시간 (시간, 오늘=마지막) */
-    fun getWeeklySleepHours(): List<Float> = emptyList()
+    /** @deprecated HealthRepository.getWeeklySleepHours() 직접 사용 */
+    fun getWeeklySleepHours(): List<Float>     = emptyList()
 
     // ── Pain Records ─────────────────────────────────────────────────────────
 

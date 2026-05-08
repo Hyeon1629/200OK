@@ -7,13 +7,15 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.checkdang.app.R
-import com.checkdang.app.data.mock.MockDataProvider
+import com.checkdang.app.data.health.HealthRepository
 import com.checkdang.app.data.model.MealItem
 import com.checkdang.app.databinding.ActivityMealDetailBinding
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 class MealDetailActivity : AppCompatActivity() {
@@ -25,16 +27,18 @@ class MealDetailActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupToolbar()
+        setupPieChartEmpty()
+        setupKcalCard(0, 2000)
 
-        val summary = MockDataProvider.getMealSummary()
-        if (summary != null) {
-            setupPieChart(summary.carbsG, summary.proteinG, summary.fatG)
-            setupKcalCard(summary.totalKcal, summary.goalKcal)
-            setupMealList(summary.meals)
-        } else {
-            setupPieChartEmpty()
-            setupKcalCard(0, 2000)
-            setupMealList(emptyList())
+        lifecycleScope.launch {
+            val summary = HealthRepository.getMealSummary()
+            if (summary != null) {
+                setupPieChart(summary.carbsG, summary.proteinG, summary.fatG)
+                setupKcalCard(summary.totalKcal, summary.goalKcal)
+                setupMealList(summary.meals)
+            } else {
+                setupMealList(emptyList())
+            }
         }
     }
 
@@ -70,22 +74,24 @@ class MealDetailActivity : AppCompatActivity() {
             ContextCompat.getColor(this, R.color.fat_color)
         )
         val dataSet = PieDataSet(entries, "").apply {
-            this.colors      = colors
-            sliceSpace       = 2f
+            this.colors   = colors
+            sliceSpace    = 2f
             setDrawValues(true)
-            valueTextSize    = 12f
-            valueTextColor   = Color.WHITE
+            valueTextSize = 12f
+            valueTextColor = Color.WHITE
         }
 
         chart.apply {
-            data             = PieData(dataSet).apply { setValueFormatter(com.github.mikephil.charting.formatter.PercentFormatter(chart)) }
-            holeRadius       = 50f
-            transparentCircleRadius = 55f
+            data = PieData(dataSet).apply {
+                setValueFormatter(com.github.mikephil.charting.formatter.PercentFormatter(chart))
+            }
+            holeRadius                  = 50f
+            transparentCircleRadius     = 55f
             setUsePercentValues(true)
-            description.isEnabled = false
-            legend.isEnabled      = false
+            description.isEnabled       = false
+            legend.isEnabled            = false
             setDrawEntryLabels(false)
-            centerText       = "탄·단·지"
+            centerText                  = "탄·단·지"
             setCenterTextSize(14f)
             setCenterTextColor(ContextCompat.getColor(this@MealDetailActivity, R.color.text_primary))
             animateY(600)
@@ -106,29 +112,25 @@ class MealDetailActivity : AppCompatActivity() {
     }
 
     private fun setupMealList(meals: List<MealItem>) {
+        binding.layoutMeals.removeAllViews()
         val inflater = LayoutInflater.from(this)
         meals.forEach { item ->
-            val row = inflater.inflate(android.R.layout.simple_list_item_2, binding.layoutMeals, false)
-
+            val row    = inflater.inflate(android.R.layout.simple_list_item_2, binding.layoutMeals, false)
             val tvTitle = row.findViewById<TextView>(android.R.id.text1)
             val tvSub   = row.findViewById<TextView>(android.R.id.text2)
-
-            tvTitle.text     = "[${item.type}] ${item.name}"
+            tvTitle.text = "[${item.type}] ${item.name}"
             tvTitle.setTextColor(ContextCompat.getColor(this, R.color.text_primary))
-            tvSub.text       = "${item.kcal} kcal  ·  ${item.time}"
+            tvSub.text   = "${item.kcal} kcal  ·  ${item.time}"
             tvSub.setTextColor(ContextCompat.getColor(this, R.color.text_secondary))
 
-            // 구분선 (마지막 제외)
             if (item != meals.last()) {
                 val divider = android.view.View(this)
-                val lp = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, 1
-                ).apply { setMargins(16, 0, 16, 0) }
+                val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 1)
+                    .apply { setMargins(16, 0, 16, 0) }
                 divider.layoutParams = lp
                 divider.setBackgroundColor(ContextCompat.getColor(this, R.color.divider))
                 binding.layoutMeals.addView(divider)
             }
-
             binding.layoutMeals.addView(row)
         }
     }

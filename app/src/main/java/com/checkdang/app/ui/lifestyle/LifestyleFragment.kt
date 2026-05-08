@@ -8,10 +8,23 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.health.connect.client.HealthConnectClient
+import androidx.health.connect.client.PermissionController
+import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.NutritionRecord
+import androidx.health.connect.client.records.SleepSessionRecord
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.checkdang.app.data.model.ExerciseSummary
+import com.checkdang.app.data.model.MealSummary
+import com.checkdang.app.data.model.SleepSummary
 import com.checkdang.app.databinding.FragmentLifestyleBinding
 import com.checkdang.app.ui.lifestyle.exercise.ExerciseDetailActivity
 import com.checkdang.app.ui.lifestyle.meal.MealDetailActivity
 import com.checkdang.app.ui.lifestyle.sleep.SleepDetailActivity
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -22,6 +35,26 @@ class LifestyleFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: LifestyleViewModel by viewModels()
 
+    private val HEALTH_PERMISSIONS = setOf(
+        HealthPermission.getReadPermission(ExerciseSessionRecord::class),
+        HealthPermission.getReadPermission(SleepSessionRecord::class),
+        HealthPermission.getReadPermission(NutritionRecord::class)
+    )
+
+    // Health Connect 권한 요청 런처 — Fragment 생성 시점에 등록해야 함
+    private val requestPermissions = registerForActivityResult(
+        PermissionController.createRequestPermissionResultContract()
+    ) { granted ->
+        if (granted.isEmpty()) {
+            Toast.makeText(requireContext(), "권한이 거부되어 삼성 헬스에 연동할 수 없어요.", Toast.LENGTH_LONG).show()
+            return@registerForActivityResult
+        }
+        viewModel.connectAndSync()
+        val msg = if (granted.containsAll(HEALTH_PERMISSIONS)) "삼성 헬스 연동 완료!"
+                  else "일부 권한만 허가됐어요. 가능한 데이터를 가져올게요."
+        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
@@ -31,10 +64,8 @@ class LifestyleFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         setupHeader()
-        setupExerciseCard()
-        setupMealCard()
-        setupSleepCard()
         setupClickListeners()
+        observeData()
     }
 
     private fun setupHeader() {
@@ -44,8 +75,18 @@ class LifestyleFragment : Fragment() {
         binding.tvDate.text = "오늘 ${sdf.format(today)} ${dayOfWeek.format(today)}"
     }
 
-    private fun setupExerciseCard() {
-        val s = viewModel.exercise
+    private fun observeData() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch { viewModel.exercise.collect  { setupExerciseCard(it) } }
+                launch { viewModel.meal.collect      { setupMealCard(it) } }
+                launch { viewModel.sleep.collect     { setupSleepCard(it) } }
+                launch { viewModel.isSyncing.collect { binding.btnRefresh.isEnabled = !it } }
+            }
+        }
+    }
+
+    private fun setupExerciseCard(s: ExerciseSummary?) {
         if (s == null) {
             binding.donutExercise.progress  = 0f
             binding.tvExercisePercent.text  = "-"
@@ -62,8 +103,7 @@ class LifestyleFragment : Fragment() {
         binding.tvExerciseSessions.text = "운동 ${s.sessions.size}회"
     }
 
-    private fun setupMealCard() {
-        val s = viewModel.meal
+    private fun setupMealCard(s: MealSummary?) {
         if (s == null) {
             binding.tvMealKcal.text     = "-"
             binding.tvMealGoal.text     = "기록 없음"
@@ -87,8 +127,7 @@ class LifestyleFragment : Fragment() {
         setWeight(binding.viewFat,     s.fatG     / total)
     }
 
-    private fun setupSleepCard() {
-        val s = viewModel.sleep
+    private fun setupSleepCard(s: SleepSummary?) {
         if (s == null) {
             binding.tvSleepTotal.text      = "-"
             binding.tvSleepEfficiency.text = "-"
@@ -115,9 +154,7 @@ class LifestyleFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
-        binding.btnRefresh.setOnClickListener {
-            Toast.makeText(requireContext(), "동기화되었어요", Toast.LENGTH_SHORT).show()
-        }
+        binding.btnRefresh.setOnClickListener { startHealthConnectSync() }
         binding.cardExercise.setOnClickListener {
             startActivity(Intent(requireContext(), ExerciseDetailActivity::class.java))
         }
@@ -126,6 +163,46 @@ class LifestyleFragment : Fragment() {
         }
         binding.cardSleep.setOnClickListener {
             startActivity(Intent(requireContext(), SleepDetailActivity::class.java))
+        }
+    }
+
+    /**
+     * 삼성 헬스 연동 버튼 플로우:
+     * 1. Health Connect 설치 여부 확인
+     * 2. 권한 보유 여부 확인
+     * 3. 권한 없으면 요청 → 허가 시 connectAndSync() 자동 호출
+     * 4. 권한 있으면 즉시 connectAndSync()
+     */
+    private fun startHealthConnectSync() {
+        val status = HealthConnectClient.getSdkStatus(requireContext())
+        when (status) {
+            HealthConnectClient.SDK_UNAVAILABLE -> {
+                Toast.makeText(
+                    requireContext(),
+                    "Samsung Health 앱이 설치되어 있지 않아요",
+                    Toast.LENGTH_LONG
+                ).show()
+                return
+            }
+            HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED -> {
+                Toast.makeText(
+                    requireContext(),
+                    "Samsung Health를 최신 버전으로 업데이트해 주세요",
+                    Toast.LENGTH_LONG
+                ).show()
+                return
+            }
+        }
+
+        val client = HealthConnectClient.getOrCreate(requireContext())
+        viewLifecycleOwner.lifecycleScope.launch {
+            val granted = client.permissionController.getGrantedPermissions()
+            if (granted.containsAll(HEALTH_PERMISSIONS)) {
+                viewModel.connectAndSync()
+                Toast.makeText(requireContext(), "삼성 헬스에서 데이터를 가져오는 중...", Toast.LENGTH_SHORT).show()
+            } else {
+                requestPermissions.launch(HEALTH_PERMISSIONS)
+            }
         }
     }
 
