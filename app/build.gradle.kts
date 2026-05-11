@@ -61,4 +61,6 @@ dependencies {
     implementation(libs.kakao.user)
     // Android Health Connect — 삼성 헬스가 One UI 6.0+ 기기에서 자동 동기화됨
     implementation("androidx.health.connect:connect-client:1.1.0-alpha10")
+    // Google Play Billing — 인앱 구독 결제 (STEP 10)
+    implementation("com.android.billingclient:billing-ktx:7.1.1")
 }

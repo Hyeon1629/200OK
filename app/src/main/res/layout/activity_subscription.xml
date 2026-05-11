@@ -82,6 +82,15 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- 결제 서비스 로딩 표시 -->
+            <ProgressBar
+                android:id="@+id/pb_loading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginBottom="12dp"
+                android:visibility="gone" />
+
             <!-- 가격 카드 2개 -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -118,6 +127,7 @@
                             android:layout_marginBottom="8dp" />
 
                         <TextView
+                            android:id="@+id/tv_price_monthly"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="₩5,900"
@@ -176,6 +186,7 @@
                             android:layout_marginBottom="4dp" />
 
                         <TextView
+                            android:id="@+id/tv_price_yearly"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="₩49,000"
@@ -191,6 +202,36 @@
                             android:textColor="@color/brand_green" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- 결제 오류 표시 -->
+            <LinearLayout
+                android:id="@+id/layout_error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="16dp"
+                android:layout_marginBottom="12dp"
+                android:background="@color/background_primary"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tv_error"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="결제 서비스에 연결할 수 없어요"
+                    android:textAppearance="@style/TextAppearance.CheckDang.Body1"
+                    android:textColor="@color/status_danger"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_retry"
+                    style="@style/Widget.CheckDang.Button.Secondary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="다시 시도" />
             </LinearLayout>
 
             <!-- 구독 시작 버튼 -->

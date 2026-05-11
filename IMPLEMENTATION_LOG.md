@@ -4,6 +4,61 @@
 
 ---
 
+## [2026-05-11] STEP 10 — Google Play Billing v7 구독 결제 연동
+
+### 작업 내용
+프리미엄 구독(월간/연간) 인앱 결제를 Play Billing Library v7 기반으로 구현. 기존 데모용 즉시 PAID 전환 코드를 실결제 흐름으로 교체. 서버 영수증 검증은 백엔드 도입 후 별도 단계로 유보(TODO 표시).
+
+### 설계서
+`docs/STEP10_billing.md`
+
+### 신규 파일
+| 파일 | 설명 |
+|------|------|
+| `data/billing/ProductIds.kt` | 상품 ID 단일 진실 공급원 (`checkdang_premium_monthly`, `checkdang_premium_yearly`) |
+| `data/billing/BillingState.kt` | sealed class — Idle/Loading/Ready/Purchasing/Success/Error |
+| `data/billing/BillingRepository.kt` | BillingClient 연결, 상품/구매 조회, 결제 흐름, acknowledgePurchase, exponential backoff 재연결 |
+| `ui/menu/subscription/SubscriptionViewModel.kt` | AndroidViewModel — BillingRepository.state 노출 + 구매/재시도 위임 |
+
+### 수정 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `app/build.gradle.kts` | `billing-ktx:7.1.1` 의존성 추가 |
+| `CheckDangApplication.kt` | `billingRepository` 초기화 및 `startConnection()` 호출 |
+| `ui/menu/subscription/SubscriptionActivity.kt` | 데모 즉시 PAID 코드 제거 → ViewModel state 구독, 가격 동적 표시, 로딩/에러/성공 UI 분기, `onResume`에서 상태 동기화 |
+| `res/layout/activity_subscription.xml` | 가격 TextView ID 추가 (`tv_price_monthly`, `tv_price_yearly`), 로딩 ProgressBar, 에러 레이아웃(`layout_error` + `btn_retry`) 추가 |
+| `ui/menu/MenuFragment.kt` | `toggleTierForDemo` long-press 호출부에 `// TODO(release)` 주석 추가 |
+
+### 주요 결정 사항
+- **클라이언트 신뢰**: 본 단계에서는 acknowledge 성공 시 `SessionHolder.tier = UserTier.PAID` 직접 갱신. 백엔드 도입 후 `POST /api/v1/billing/verify` 검증 응답에 따라 갱신하도록 교체 예정 (`TODO(backend, billing)` 표시).
+- **acknowledgePurchase 필수**: 3일 내 미호출 시 자동 환불됨. handlePurchase 내에서 `!isAcknowledged` 체크 후 호출.
+- **기존 구매 복원**: `queryPurchasesAsync(SUBS)` 를 `onBillingSetupFinished`, `startConnection`, `onResume` 시점에 호출하여 앱 재실행/재진입 시 PAID 유지.
+- **재연결 backoff**: 1s, 2s, 4s, 8s, 16s, 32s → 상한 60s.
+- **이미 구독 중**: `ITEM_ALREADY_OWNED` 응답 → `queryExistingPurchases` 로 동기화 후 안내.
+- **USER_CANCELED / ITEM_ALREADY_OWNED**: 비차단 Snackbar 표시 후 state 소비, 그 외 에러는 retry 가능한 layout_error 표시.
+- **MenuFragment 데모 토글**: 보존하되 release 빌드 제거용 TODO 명시.
+
+### 자가 검증 결과 (8/8 통과)
+1. `./gradlew assembleDebug` → BUILD SUCCESSFUL
+2. `billing-ktx` 의존성 hit 1건 (line 65)
+3. `applicationId = "com.checkdang.app"` 확인 — Play Console 등록값과 사용자 검증 필요
+4. 상품 ID 단일 진실 공급원: `checkdang_premium*` 은 `ProductIds.kt` 외 hit 없음
+5. `acknowledgePurchase` 호출: `BillingRepository.kt:165`
+6. `USER_CANCELED` 분기 처리: `BillingRepository.kt:143`
+7. `queryPurchasesAsync`: `BillingRepository.kt:103`
+8. `TODO(backend, billing)`: `BillingRepository.kt:154`
+
+### 의도적으로 하지 않은 것
+- 서버 영수증 검증 (백엔드 도입 후 별도 단계)
+- 구독 변경/취소 UI 안내 링크
+- 환불 처리 UI
+- 영구 상품(INAPP) — 구독(SUBS)만 사용
+
+### 사용자 실측 검증 필요
+실결제는 자동 검증 불가능. Play Console 내부 테스트 트랙에 서명된 AAB 업로드 후 테스트 라이선스 계정으로 결제 흐름 / 가격 표시 / 앱 재실행 후 PAID 유지를 확인해야 함. 상세 절차는 `docs/STEP10_billing.md` §10 참고.
+
+---
+
 ## [2026-05-04] 프로젝트 초기 파일 검사
 
 ### 작업 내용

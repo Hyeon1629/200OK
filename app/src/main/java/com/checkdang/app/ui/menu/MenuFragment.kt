@@ -42,6 +42,7 @@ class MenuFragment : Fragment() {
         setupMenuRows()
         observeTier()
 
+        // TODO(release): release 빌드에서 제거 — 개발자용 PAID/FREE 토글
         binding.cardTier.setOnLongClickListener {
             SessionHolder.toggleTierForDemo()
             true
