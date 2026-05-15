@@ -14,6 +14,8 @@ import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.NutritionRecord
 import androidx.health.connect.client.records.SleepSessionRecord
+import androidx.health.connect.client.records.StepsRecord
+import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -38,7 +40,10 @@ class LifestyleFragment : Fragment() {
     private val HEALTH_PERMISSIONS = setOf(
         HealthPermission.getReadPermission(ExerciseSessionRecord::class),
         HealthPermission.getReadPermission(SleepSessionRecord::class),
-        HealthPermission.getReadPermission(NutritionRecord::class)
+        HealthPermission.getReadPermission(NutritionRecord::class),
+        // 아래 두 줄이 추가되었습니다!
+        HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
+        HealthPermission.getReadPermission(StepsRecord::class)
     )
 
     // Health Connect 권한 요청 런처 — Fragment 생성 시점에 등록해야 함
@@ -174,7 +179,8 @@ class LifestyleFragment : Fragment() {
      * 4. 권한 있으면 즉시 connectAndSync()
      */
     private fun startHealthConnectSync() {
-        val status = HealthConnectClient.getSdkStatus(requireContext())
+        // 뒤에 "com.google.android.apps.healthdata" 를 추가합니다.
+        val status = HealthConnectClient.getSdkStatus(requireContext(), "com.google.android.apps.healthdata")
         when (status) {
             HealthConnectClient.SDK_UNAVAILABLE -> {
                 Toast.makeText(

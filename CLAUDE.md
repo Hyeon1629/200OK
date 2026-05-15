@@ -77,23 +77,31 @@ statusDanger:        #F44336
 
 - 백엔드 API 호출 금지 (소셜 로그인/로그아웃 API 제외)
 - Firebase, Retrofit 등 외부 서비스 의존성 추가 금지
-- **Samsung Health SDK 직접 연동 금지** — 삼성 개발자 계정 + 앱 심사 필요
-- **Android Health Connect 허용** — 삼성 헬스가 자동 동기화됨
+- **Samsung Health Data SDK 허용 (조건부)** — Samsung Health Partner Apps Program 승인 + AAR 수령 완료 후 활성화. 미승인 상태에서는 스켈레톤만 유지하고 호출 경로 비활성화.
+- **Android Health Connect 허용** — 삼성 헬스가 자동 동기화됨. Samsung Health Data SDK 와 병행 사용 가능 (Repository 가 활성 소스 관리).
 - Room DB 등 데이터 영속성 코드 금지
 - 의존성 주입 프레임워크(Hilt/Koin) 미사용
 
-## Health Connect 연동 구조
+## Health 연동 구조
 
 ```
 HealthDataSource (interface)
 ├── MockHealthDataSource      ← 기본값 (개발/오프라인)
-├── HealthConnectDataSource   ← 실제 삼성 헬스 데이터 (권한 허가 후)
-└── SamsungHealthDataSource   ← 미래 SDK 직접 연동용 stub
+├── HealthConnectDataSource   ← 실제 삼성 헬스 데이터 (Health Connect 권한 허가 후)
+└── SamsungHealthDataSource   ← 미래 SDK 직접 연동용 stub (현 미사용)
 
 HealthRepository.switchToHealthConnect() 로 구현체 교체
+
+Samsung Health Data SDK (STEP 11 — Partner 승인 후 활성화):
+data/samsunghealth/
+├── HealthDataPermission       ← 5종 권한 enum
+├── SamsungHealthRepository    ← Application scope, ConnectionState 관리
+└── SamsungHealthMapper        ← SDK Response → 도메인 모델 변환
 ```
 
-삼성 헬스 동기화 조건: Galaxy 기기 + Samsung Health 설정 → Health Platform → "Health Connect와 동기화" 활성화
+삼성 헬스 동기화 조건:
+- (현재) Galaxy 기기 + Samsung Health 설정 → Health Platform → "Health Connect와 동기화" 활성화
+- (Partner 승인 후) Samsung Health Data SDK 로 직접 조회 (Steps/Exercise/Nutrition/Sleep/Weight)
 
 ## Implementation Log 규칙
 

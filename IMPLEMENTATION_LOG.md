@@ -4,6 +4,143 @@
 
 ---
 
+## [2026-05-15] Health Connect 권한 자동 거부 버그 수정
+
+### 작업 내용
+Health Connect 권한 요청 시 다이얼로그가 즉시 자동 거부되던 버그를 해결하고 권한 처리 로직을 안정화.
+
+### 수정 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `app/src/main/AndroidManifest.xml` | Android 14+ 대응 — `ACTION_VIEW_PERMISSION_USAGE` 인텐트 필터(`activity-alias`)를 `START_VIEW_PERMISSION_USAGE` permission 으로 보호하여 추가. Health Permissions 시스템 호출 진입점 확보 |
+| `app/src/main/java/com/checkdang/app/ui/lifestyle/LifestyleFragment.kt` | 권한 콜백 로직 안정화 — `granted.isEmpty()` 일 때만 거부 처리하고 1개 이상 허가 시 `connectAndSync()` 호출. 부분 허가도 정상 흐름 진입 |
+
+### 결과
+- 라이프스타일 탭 새로고침 → Health Connect 권한 다이얼로그 정상 노출
+- 권한 허가(전체/부분) 직후 데이터 동기화 진행
+- Android 14+ 단말에서 Permission Usage 화면 진입 시 system 만 호출 가능하도록 보호
+
+---
+
+## [2026-05-11] STEP 11 Phase 1 — Samsung Health Data SDK 연동 (설계 + 스켈레톤)
+
+### 배경
+Samsung Health Partner Apps Program 이 현재 "not accepting any applications at this time" 상태. AAR / Access Code 수령 전까지 실제 SDK 호출은 불가능. 따라서 본 단계는 **승인 후 즉시 활성화 가능하도록 구조를 마련**하는 것이 목표.
+
+### 설계서
+`docs/STEP11_samsung_health.md` (12개 섹션 + 부록 2개)
+
+### 신규 파일
+| 파일 | 설명 |
+|------|------|
+| `docs/STEP11_samsung_health.md` | 전체 설계서 (SDK 선택/의존성/권한/아키텍처/4가지 분기/매핑/Phase 1·2 분리) |
+| `data/samsunghealth/HealthDataPermission.kt` | 5종 권한 enum (STEPS/EXERCISE/NUTRITION/SLEEP/WEIGHT). `sdkConstant` 는 placeholder |
+| `data/samsunghealth/SamsungHealthRepository.kt` | `ConnectionState` sealed class + 가용성/권한/read 메서드 시그니처. 모든 SDK 호출 지점에 `TODO(samsung-sdk)` 마커 |
+| `data/samsunghealth/SamsungHealthMapper.kt` | 단위 변환 헬퍼 (kcal/min/hour/kg/시각). 실제 매핑 함수는 Phase 2 |
+
+### 수정 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `CLAUDE.md` | Samsung Health SDK 정책: "직접 연동 금지" → "Data SDK 허용 (조건부)". Health 연동 구조 다이어그램에 samsunghealth 패키지 추가 |
+| `app/src/main/AndroidManifest.xml` | `<queries>` 에 `com.sec.android.app.shealth` 추가 (Android 11+ package visibility) |
+| `app/build.gradle.kts` | AAR fileTree + gson + kotlin-parcelize 활성화 안내 주석 (Phase 2 활성화 대기) |
+| `IMPLEMENTATION_LOG.md` | 본 항목 추가 |
+
+### 주요 결정 사항
+- **Phase 분리**: Partner 승인 전후를 Phase 1 / Phase 2 로 분리. Phase 1 은 코드 구조만 마련하고 호출 경로 비활성화. 기존 Health Connect 흐름은 무손상 유지.
+- **Maven 좌표 없음 확정**: 공식 문서 조사 결과 Samsung Health Data SDK 는 원격 Maven 미배포. 로컬 AAR 만 지원 (`app/libs/` 배치 + `fileTree` 포함).
+- **"App ID" 개념 없음 확정**: Client ID = package name (`com.checkdang.app`) + Access Code (승인 후 별도 발급) 2개 식별자 사용.
+- **Health Connect 와 병행**: 비-갤럭시 / Samsung Health 미설치 / Partner 미승인 단말 fallback 으로 Health Connect 유지.
+- **LifestyleViewModel / LifestyleFragment 미수정**: Phase 1 에서 ViewModel 을 교체하면 기존 Health Connect 흐름이 깨짐. Phase 2 에서 통합.
+- **TODO(samsung-sdk) 마커 규약**: SDK 호출이 들어갈 모든 지점에 동일 마커. Phase 2 진입 시 grep 으로 일괄 추적.
+
+### Phase 1 자가 검증 결과 (8/8 통과)
+1. `./gradlew assembleDebug` → 빌드 통과
+2. `AndroidManifest.xml` 의 `<queries>` 에 `com.sec.android.app.shealth` 포함
+3. `HealthDataPermission.kt` 에 STEPS/EXERCISE/NUTRITION/SLEEP/WEIGHT 5종 정의
+4. `SamsungHealthRepository.kt` 에 ConnectionState 6종(Initializing/Connected/PermissionNeeded/NotInstalled/Unsupported/Error) 정의
+5. `TODO(samsung-sdk)` 마커 ≥ 5개
+6. 모든 read 메서드가 `runCatching { ... }.getOrNull()` 패턴
+7. `LifestyleViewModel.kt` / `LifestyleFragment.kt` 미수정 (Health Connect 경로 보존)
+8. `app/build.gradle.kts` 의 AAR/gson 라인이 주석 상태
+
+### ⏳ Phase 2 진입 조건 — 사용자 TODO 체크리스트
+
+> Phase 2 (실제 SDK 호출 활성화) 는 아래 항목이 **모두** 완료된 시점에서만 가능. 항목별로 끝나면 본 체크박스에 표시.
+
+#### 🔍 1단계 — Partner Apps Program 신청 재개 확인
+- [ ] `developer.samsung.com/health/data` 접속 → "Partner Apps Program" 페이지 확인
+- [ ] "not accepting any applications at this time" 문구가 **사라졌는지** 확인
+   - 사라지지 않은 동안에는 아래 단계 진행 불가. 주기적으로 확인 필요 (월 1회 권장)
+
+#### 🔑 2단계 — SHA-256 fingerprint 추출
+- [ ] **디버그 키스토어** SHA-256 추출 (PowerShell):
+   ```powershell
+   keytool -list -v -keystore "$env:USERPROFILE\.android\debug.keystore" -alias androiddebugkey -storepass android -keypass android
+   ```
+   출력의 `SHA256:` 라인 (예: `AB:CD:EF:...`) 메모.
+- [ ] **릴리즈 키스토어** SHA-256 추출 (서명 키 생성 후):
+   ```powershell
+   keytool -list -v -keystore <release.jks 경로> -alias <alias> -storepass <비밀번호>
+   ```
+   ⚠️ 릴리즈 키스토어가 아직 없다면 먼저 생성 필요. Play Console 업로드 시 사용한 키와 동일해야 함.
+
+#### 📝 3단계 — Samsung Developer Portal 신청
+- [ ] Samsung Account 로 `developer.samsung.com` 로그인
+- [ ] Health → Data SDK → Partner Apps Program 신청 폼 작성:
+   - **앱 이름**: 체크당 (Check-Dang)
+   - **패키지명**: `com.checkdang.app`
+   - **앱 카테고리**: Health & Wellness
+   - **SHA-256 (디버그)**: 2단계에서 추출한 값
+   - **SHA-256 (릴리즈)**: 2단계에서 추출한 값
+   - **사용 데이터 카테고리 5종**: Steps / Exercise / Nutrition / Sleep / Weight
+   - **사용 목적 설명**: 사용자의 라이프스타일 데이터를 혈당 관리와 통합 분석하기 위함
+- [ ] 신청 제출 → 승인 대기 (영업일 기준 며칠 ~ 수 주)
+
+#### 📥 4단계 — 승인 후 자산 수령
+- [ ] 승인 메일 / Portal 알림 수신 확인
+- [ ] **AAR 파일** 다운로드: `samsung-health-data-api-<version>.aar`
+- [ ] **Access Code** 수신 (메일 본문 또는 Portal Console 에서 확인)
+- [ ] 승인된 카테고리 5종이 모두 포함되었는지 확인 (일부 거부 가능성)
+
+#### 📦 5단계 — 프로젝트에 자산 배치
+- [ ] `app/libs/` 폴더 생성 (없다면)
+- [ ] AAR 파일을 `app/libs/samsung-health-data-api-<version>.aar` 경로에 배치
+- [ ] Access Code 를 `local.properties` 에 추가 (Phase 2 시 정확한 키 이름 협의):
+   ```properties
+   # local.properties (Git 추적 제외)
+   samsung.health.accessCode=<Portal 에서 받은 코드>
+   ```
+- [ ] `local.properties` 가 `.gitignore` 에 포함되어 있는지 확인 (Access Code 노출 방지)
+
+#### 🚀 6단계 — Phase 2 진행 요청
+- [ ] 아래 형식으로 메시지 전달:
+   ```
+   STEP 11 Phase 2 진행
+   - AAR 버전: <samsung-health-data-api-X.Y.Z>
+   - 승인된 카테고리: Steps / Exercise / Nutrition / Sleep / Weight (또는 일부)
+   - Access Code 저장 위치: local.properties (samsung.health.accessCode)
+   ```
+- [ ] 메시지 수신 시 다음 작업 자동 진행:
+   1. `app/build.gradle.kts` AAR + gson + parcelize 활성화
+   2. `HealthDataPermission.sdkConstant` 값을 SDK 실제 상수로 교체
+   3. `SamsungHealthRepository.kt` 의 `TODO(samsung-sdk)` 마커 활성화 (grep 으로 일괄 추적)
+   4. `SamsungHealthMapper.kt` 의 SDK Response 변환 함수 활성화
+   5. `LifestyleViewModel` / `LifestyleFragment` 권한 흐름 + 4가지 분기 UI 통합
+   6. `res/layout/dialog_health_permission.xml` 작성
+   7. Phase 2 자가 검증 + 실기기 테스트 가이드 작성
+
+### 💡 참고
+- 본 체크리스트의 단계별 상세 명세는 `docs/STEP11_samsung_health.md` §10 (수정/생성 파일 목록) 및 §12 (사용자 액션) 참조.
+- Partner Program 이 보류 중인 동안에는 Health Connect 경로가 정상 동작하므로 **현재 앱 기능에 영향 없음**.
+
+### 의도적으로 하지 않은 것
+- SDK 실제 호출 코드 (AAR 미수령 — 컴파일 불가)
+- `LifestyleViewModel` / `LifestyleFragment` 수정 (Phase 2)
+- WRITE 권한 / CGM / 워치 직접 접근 / WorkManager 백그라운드 동기화
+
+---
+
 ## [2026-05-11] STEP 10 — Google Play Billing v7 구독 결제 연동
 
 ### 작업 내용
@@ -202,3 +339,13 @@ HealthConnectClient.getSdkStatus() 확인
 |------|----------|
 | `ui/lifestyle/LifestyleViewModel.kt` | `connectAndSync()` 단일 코루틴으로 재작성, `runCatching` 추가 |
 | `ui/lifestyle/LifestyleFragment.kt` | 퍼미션 콜백: 부분 허가 시에도 `connectAndSync()` 호출하도록 수정 |
+
+---
+
+## Future TODOs
+
+> 진행 시 본 체크박스에 표시하고 별도 항목으로 작업 로그를 추가한다.
+
+- [ ] 백엔드 파트와 Base URL 맞춰서 Health Connect 실데이터 전송 및 수신 테스트
+- [ ] STEP 11 Phase 2 — Samsung Health Partner Apps Program 승인 후 AAR 파일 및 Access Code 연동
+- [ ] STEP 10 — Play Billing v7 프리미엄 구독 서버 영수증 검증 API 연동

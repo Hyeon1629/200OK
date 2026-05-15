@@ -1,5 +1,6 @@
 package com.checkdang.app.data.health
 
+import android.util.Log
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.NutritionRecord
@@ -173,7 +174,9 @@ class HealthConnectDataSource(private val client: HealthConnectClient) : HealthD
     // ── 내부 유틸 ─────────────────────────────────────────────────────────────
 
     private suspend fun <T : Record> readSafe(request: ReadRecordsRequest<T>): List<T>? =
-        runCatching { client.readRecords(request).records }.getOrNull()
+        runCatching { client.readRecords(request).records }
+            .onFailure { Log.e("HealthConnect", "read failed: ${request.recordType}", it) }
+            .getOrNull()
 
     private fun todayRange(): Pair<Instant, Instant> {
         val zone  = ZoneId.systemDefault()

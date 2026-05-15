@@ -7,10 +7,16 @@
     <uses-permission android:name="android.permission.health.READ_EXERCISE" />
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
     <uses-permission android:name="android.permission.health.READ_NUTRITION" />
+    <!-- 아래 두 줄 추가 -->
+    <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
 
-    <!-- Health Connect 앱 패키지 가시성 선언 -->
+    <!-- 패키지 가시성 선언 (Android 11+) -->
+    <!-- Health Connect: com.google.android.apps.healthdata -->
+    <!-- Samsung Health: com.sec.android.app.shealth (STEP 11 — Data SDK 호스트) -->
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
+        <package android:name="com.sec.android.app.shealth" />
     </queries>
 
     <application
@@ -48,12 +54,24 @@
 
         <activity
             android:name=".ui.main.MainActivity"
-            android:exported="false">
-            <!-- Health Connect 권한 안내 화면 진입점 -->
+            android:exported="true">
+            <!-- Android 13 이하 (Health Connect APK) -->
             <intent-filter>
                 <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
             </intent-filter>
         </activity>
+
+        <!-- Android 14+ (Health Connect 플랫폼 통합) — system 만 호출 가능하도록 permission 제한 필수 -->
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".ui.main.MainActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
 
         <activity
             android:name=".ui.lifestyle.exercise.ExerciseDetailActivity"
