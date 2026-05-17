@@ -64,12 +64,10 @@ dependencies {
     // Google Play Billing — 인앱 구독 결제 (STEP 10)
     implementation("com.android.billingclient:billing-ktx:7.1.1")
 
-    // === Samsung Health Data SDK (STEP 11 — Phase 2 활성화 대기) ===
-    // Samsung Health Partner Apps Program 승인 + AAR 수령 후 아래 블록 활성화:
-    //   1. app/libs/samsung-health-data-api-<version>.aar 배치
-    //   2. 아래 두 implementation 라인 주석 해제
-    //   3. 파일 상단 plugins 블록에 `kotlin("plugin.parcelize")` 추가
-    //   4. SamsungHealthRepository.kt 의 TODO(samsung-sdk) 마커 활성화
-    // implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
-    // implementation("com.google.code.gson:gson:2.9.0")
+    // === Samsung Health Data SDK (STEP 11 — Phase 2 활성화) ===
+    // app/libs/samsung-health-data-api-1.1.0.aar — 개발자 모드 가정.
+    // SDK 가 Kotlin coroutines suspend API 를 네이티브로 노출하므로 별도 래퍼 불필요.
+    // minSdk: AAR=29, 앱=26 → AndroidManifest 의 tools:overrideLibrary 로 merger 통과,
+    //        런타임은 Build.VERSION.SDK_INT >= 29 가드(SamsungHealthRepository.connect)로 보호.
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
 }

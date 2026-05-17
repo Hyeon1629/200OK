@@ -4,6 +4,9 @@
 *.ap_
 *.aab
 
+# Samsung Health Data SDK (Partner 미배포 + 개발자 모드 전용 라이브러리) — 의도적으로 포함
+!app/libs/*.aar
+
 # Files for the ART/Dalvik VM
 *.dex
 

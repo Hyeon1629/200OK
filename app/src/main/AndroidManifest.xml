@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Samsung Health Data SDK: AAR 의 minSdk=29 와 앱 minSdk=26 충돌 해소.
+         API 26-28 단말에서는 SamsungHealthRepository.connect() 가 Unsupported 반환. -->
+    <uses-sdk tools:overrideLibrary="com.samsung.android.sdk.health.data" />
 
     <uses-permission android:name="android.permission.INTERNET" />
 

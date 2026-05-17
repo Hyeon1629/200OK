@@ -4,6 +4,237 @@
 
 ---
 
+## [2026-05-17] STEP 11 — 실 단말 테스트 완료 + 진단 로그 정리
+
+### 테스트 결과 (Galaxy / Android 15 / SDK 35)
+실 단말에서 Samsung Health Data SDK 연동 정상 동작 확인.
+
+| 검증 항목 | 결과 |
+|----------|------|
+| Galaxy 단말 감지 (`mfr=samsung`) | ✅ |
+| Samsung Health 설치 감지 | ✅ |
+| 권한 6종 다이얼로그 노출 + 전부 허가 | ✅ `granted=6/6` |
+| SDK 연결 (`HealthDataService.getStore`) | ✅ `Connected` |
+| HealthRepository → Samsung 소스 전환 | ✅ |
+| 걸음 수 read (`DataType.StepsType.TOTAL`) | ✅ 오늘 5495보 / 어제 2942보 |
+| 운동/식사/수면 read | ✅ 호출 성공, 단 사용자가 Samsung Health 에 데이터를 입력하지 않은 카테고리는 0 dataPoints (정상) |
+| 운동/식사/혈당 수동 입력 후 재시도 | ✅ 입력한 데이터 모두 앱 카드/차트에 정상 반영 |
+
+### 핵심 발견
+- **자동 측정 vs 수동 입력 구분**: Samsung Health 의 걸음 수는 폰 가속도 센서로 자동 추적되지만, 운동 세션/식사/수면/혈당은 사용자가 직접 입력하거나 갤럭시 워치 같은 외부 기기 연동이 필요. 데이터가 없는 카테고리는 SDK 가 0 dataPoints 반환 — 우리 코드 정상
+- **개발자 모드 필수성 재확인**: Samsung Health 앱의 개발자 모드 ON 상태에서만 Partner 미승인 앱이 데이터 접근 가능. OFF 면 `connect()` 단계에서 차단됨
+
+### 수정 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `ui/lifestyle/LifestyleViewModel.kt` | `activateSamsung` 의 진단용 `readSteps` 호출 제거. 핵심 상태 전이 Log.i 는 유지 (운영 중 디버깅에 유용) |
+| `data/samsunghealth/SamsungHealthRepository.kt` | `readSteps` 에 Log.i 추가 (응답성 검증용으로 추후에도 유용). 데이터 읽기 섹션 헤더 주석 정리 ("Phase 2-foundation" → 일반 헤더) |
+| `IMPLEMENTATION_LOG.md` | 본 항목 추가 |
+
+### 배포 시 추가 작업 (현 시점 미적용)
+- Samsung Health Partner Apps Program 신청 (현재 "not accepting" 상태일 수 있음 — 추후 모니터링)
+- 앱 서명 키의 SHA-256 fingerprint 등록
+- Production Access Code 발급 + 코드 내 적용
+- Samsung Health 개발자 모드 비의존 동작 검증
+
+### 검증 완료 — STEP 11 종료
+인프라/데이터 입수/UI 와이어링 모두 완성. 코드 측면 작업 없음.
+
+---
+
+## [2026-05-17] STEP 11 — GlucoseFragment 에 Samsung 혈당 데이터 와이어링
+
+### 작업 내용
+Samsung Health Data SDK 가 가져오는 혈당 기록이 실제로 GlucoseFragment UI(차트/리스트/주간통계)에 표시되도록 데이터 흐름 연결. 사용자 직접 입력(MockDataProvider)과 Samsung 자동 측정(SamsungHealthRepository)을 ViewModel 에서 병합.
+
+### 신규 인터페이스 메서드
+| 메서드 | 위치 | 기본 구현 |
+|--------|------|----------|
+| `getBloodGlucoseRecords(days: Int): List<GlucoseRecord>` | `HealthDataSource` | `emptyList()` (default implementation in interface) |
+
+### 수정 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `data/health/HealthDataSource.kt` | `getBloodGlucoseRecords(days)` default 메서드 추가. Mock/HC 자동 구현 |
+| `data/health/SamsungHealthDataSource.kt` | `getBloodGlucoseRecords` override — `repo.readBloodGlucoseRange(today-N, today+1)` 위임 |
+| `data/health/HealthRepository.kt` | `getBloodGlucoseRecords(days)` pass-through 메서드 |
+| `data/samsunghealth/SamsungHealthRepository.kt` | `readBloodGlucoseRange(start, endExclusive)` 신규 — 한 번의 SDK 호출로 다중 일자. 기존 `readBloodGlucose(date)` 는 range 호출 위임 |
+| `ui/glucose/GlucoseViewModel.kt` | `_samsungRecords` flow 추가. `records` 가 `MockDataProvider.recordsFlow` + `_samsungRecords` 의 `combine` 결과로 변경. `filteredForChart`/`weeklyStats` 도 새 `records` 기반으로 derive. `refresh()` 공개 메서드 + init 시 1회 호출 |
+| `ui/glucose/GlucoseFragment.kt` | `onViewCreated` 에서 `viewModel.refresh()` 호출. 탭 진입마다 Samsung 데이터 재조회 |
+| `IMPLEMENTATION_LOG.md` | 본 항목 추가 |
+
+### 데이터 병합 정책
+| 출처 | ID 형식 | 용도 |
+|------|---------|------|
+| 사용자 직접 입력 (MockDataProvider) | `UUID.randomUUID()` | 바텀시트로 직접 추가한 측정 |
+| Samsung Health 자동 측정 | `${dp.uid}-${timestamp}` | Samsung 기기/연동 측정기에서 자동 기록 |
+
+ID 충돌 가능성 0. 단순 concat + `distinctBy { it.id }` 안전망 + `sortedByDescending { measuredAt }`.
+
+### Health Connect 영향
+- `HealthDataSource.getBloodGlucoseRecords` 가 default 구현(empty)이라 `HealthConnectDataSource` 무수정. HC 활성 시 혈당 데이터는 종전대로 MockDataProvider 만 표시
+- 추후 HC 가 혈당까지 지원하려면 HC 권한 set 에 `BloodGlucoseRecord` 추가 필요 — 기존 HC 흐름 변경이 동반되므로 별도 단계로 분리
+
+### 동작 시나리오
+| 사용자 행동 | 표시되는 데이터 |
+|------------|----------------|
+| 첫 진입 (Samsung 비활성, 입력 없음) | 빈 화면 |
+| 바텀시트로 측정 추가 | 사용자 입력만 표시 (현 동작 유지) |
+| LifestyleFragment 에서 Samsung 활성화 → Glucose 탭 진입 | Mock 입력 + Samsung 측정 병합 표시 |
+| Samsung 활성 중 새 측정 추가 | 양쪽 모두 즉시 표시 (Mock flow 가 자동 emit) |
+| 비-Galaxy 단말 / Samsung 미활성 | Mock 입력만 표시 (회귀 없음) |
+
+### 주요 결정 사항
+- **두 데이터 출처 병행 보존**: Samsung 은 READ-only 라 사용자 입력 기록을 Samsung 에 쓸 수 없음. 양쪽 보관소를 ViewModel 에서 병합하는 것이 손실 없는 최선
+- **default interface method 활용**: Kotlin interface default 구현으로 Mock/HC 양쪽 변경 없이 Samsung 만 override. HC 코드 무수정 보장
+- **90일 윈도우 단일 호출**: SamsungHealthDataSource 가 일별 7번 호출하지 않고 range 한 번에 — SDK 효율 + IPC 오버헤드 최소
+
+### 단말 테스트 시 확인 사항
+1. Galaxy 기기 + Samsung Health 개발자 모드 + Samsung Health 에 혈당 데이터 존재
+2. **LifestyleFragment** 진입 → 새로고침 → Samsung 권한 다이얼로그(6종) 허가
+3. **Glucose 탭** 이동 → 자동 측정 혈당이 차트/리스트에 표시되는지 확인
+4. 바텀시트로 새 측정 추가 → Mock+Samsung 양쪽 데이터가 함께 표시되는지 확인
+
+---
+
+## [2026-05-17] STEP 11 — 혈당 (BloodGlucose) read 메서드 신규 추가
+
+### 작업 내용
+본 앱 핵심 도메인인 혈당을 Samsung Health Data SDK 에서 직접 읽어올 수 있도록 read 메서드 + 매핑 추가. `DataTypes.BLOOD_GLUCOSE` 가 SDK 에 이미 존재하므로 단순 추가만으로 충분.
+
+### 수정 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `data/samsunghealth/HealthDataPermission.kt` | `BLOOD_GLUCOSE("혈당")` enum 항목 추가. 스테일된 `sdkConstant` placeholder 제거 — 실제 매핑은 `SamsungHealthRepository.toSdkDataType` 가 담당하므로 불필요 |
+| `data/samsunghealth/SamsungHealthMapper.kt` | `toGlucoseRecords(dataPoints)` 추가. SERIES_DATA(시리즈 측정) / GLUCOSE_LEVEL(단일 측정) 양 케이스 모두 평탄화. `MealStatus → MealTiming` 매핑 표 (FASTING/BEFORE_MEAL/AFTER_MEAL/BEFORE_SLEEP/OTHER) |
+| `data/samsunghealth/SamsungHealthRepository.kt` | `readBloodGlucose(date): List<GlucoseRecord>` 추가. `toSdkDataType` 에 BLOOD_GLUCOSE → DataTypes.BLOOD_GLUCOSE 매핑 |
+| `IMPLEMENTATION_LOG.md` | 본 항목 추가 |
+
+### MealStatus 매핑 정책
+SDK 의 `MealStatus` 는 14가지(FASTING/AFTER_BREAKFAST/BEFORE_LUNCH 등), 앱의 `MealTiming` 은 7가지(공복/식전/식후 30분/식후 1시간/식후 2시간/취침 전/임의). 정밀 시간차(30분/1시간)는 SDK 가 알려주지 않으므로 식후 계열은 모두 POST_MEAL_2H 로 보수적으로 매핑.
+
+| SDK MealStatus | App MealTiming |
+|----------------|---------------|
+| FASTING | FASTING |
+| BEFORE_BREAKFAST / BEFORE_LUNCH / BEFORE_DINNER / BEFORE_MEAL | PRE_MEAL |
+| AFTER_BREAKFAST / AFTER_LUNCH / AFTER_DINNER / AFTER_MEAL / AFTER_SNACK | POST_MEAL_2H |
+| BEFORE_SLEEP / AFTER_BED_TIME | BEFORE_SLEEP |
+| GENERAL / UNDEFINED / null | OTHER |
+
+### 주요 결정 사항
+- **HealthDataPermission.ALL 에 BLOOD_GLUCOSE 포함**: 기존 5종 사용자가 권한 재요청 다이얼로그를 보겠지만, 본 앱은 혈당이 1순위 도메인이라 정당화됨. 부분 허가 정책(1개라도 허가 → Samsung 활성화)은 그대로
+- **GlucoseFragment 통합은 보류**: 본 단계는 read 메서드 추가까지로 한정. GlucoseViewModel 이 MockDataProvider 대신 Samsung 데이터를 사용하도록 마이그레이션하려면 `HealthDataSource` 인터페이스 확장 + Mock/HealthConnect/Samsung 3개 구현체 보완이 필요 — 별도 단계로 분리
+- **dp.uid 가 platform-type non-null 로 추론됨**: Kotlin 컴파일러가 SDK 의 @NotNull 메타데이터를 신뢰. 방어적 `?: "shealth"` 제거하고 직접 사용
+
+### 단말 테스트 시 확인 사항
+1. Samsung Health 앱 → 설정 → **개발자 모드** 활성화 (코드로 못 함)
+2. Galaxy 기기 + API 29+ (Android 10+)
+3. Samsung Health 에 실제 혈당/운동/수면/식사/체중 데이터가 존재해야 read 가 의미 있음
+4. 진입 시 silent 시도는 권한 다이얼로그 X. 새로고침 버튼 누르면 6종 권한 다이얼로그 노출
+5. 부분 허가도 Samsung 소스로 활성화됨 — 허가 안 한 카테고리만 EmptyState
+
+### 다음 단계 (선택)
+- GlucoseFragment 가 SamsungHealthRepository.readBloodGlucose 를 사용하도록 마이그레이션 (HealthDataSource 인터페이스 확장 필요)
+- 실 단말 테스트 후 발견되는 미스매치 미세 조정
+
+---
+
+## [2026-05-17] STEP 11 — Samsung Health Data SDK read 메서드 실제 매핑
+
+### 작업 내용
+Phase 2-foundation 의 TODO 마커를 실 SDK 호출로 교체. `readExercise/readMeal/readSleep/readWeight` 가 실제로 데이터를 반환하도록 매핑 함수 작성.
+
+### 수정 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `data/samsunghealth/SamsungHealthMapper.kt` | `toExerciseSummary`, `toMealSummary`, `toSleepSummary`, `toLatestWeight` 매핑 함수 추가. 운동/식사 종류 한글화 표(WALKING→걷기, BIKING→자전거, BREAKFAST→아침 등). SDK `ExerciseSession`/`SleepSession` 과 앱 동명 모델 충돌은 import alias 로 분리 |
+| `data/samsunghealth/SamsungHealthRepository.kt` | `readExercise/readMeal/readSleep/readWeight` TODO 제거. `DataTypes.{EXERCISE,NUTRITION,SLEEP,BODY_COMPOSITION}.readDataRequestBuilder` + `LocalTimeFilter` + `Ordering` 으로 ReadDataRequest 구성. 응답을 `SamsungHealthMapper` 에 위임. 수면은 어젯밤 18:00 ~ 오늘 12:00, 체중은 30일 윈도우의 최신값 |
+| `data/health/SamsungHealthDataSource.kt` | `getWeeklyExerciseMinutes`/`getWeeklySleepHours` 도 일 7회 readExercise/readSleep 호출로 구현 (Health Connect 와 동일 패턴) |
+| `IMPLEMENTATION_LOG.md` | 본 항목 추가 |
+
+### SDK Field 매핑 표
+| 도메인 | DataType | Read Field | 매핑 출처 |
+|--------|----------|-----------|----------|
+| 운동 | EXERCISE | `SESSIONS: List<ExerciseSession>` | session.duration / session.calories / session.exerciseType |
+| 식사 | NUTRITION | `CALORIES`, `CARBOHYDRATE`, `PROTEIN`, `TOTAL_FAT`, `MEAL_TYPE`, `TITLE` | dataPoint Field 직접 추출 |
+| 수면 | SLEEP | `SESSIONS: List<SleepSession>`, `SLEEP_SCORE` | session.stages 의 StageType (DEEP/LIGHT/REM/AWAKE) 합산 |
+| 체중 | BODY_COMPOSITION | `WEIGHT: Float` | 최신 dataPoint 의 weight |
+
+### 주요 결정 사항
+- **import alias 로 이름 충돌 해소**: SDK 의 `entries.ExerciseSession` 과 앱의 `model.ExerciseSession` 동명 → `as SdkExerciseSession` 으로 alias. 향후 유지보수에 안전
+- **수면 stage 누락 시 추정 비율**: deep/light/rem 모두 0 일 때 20%/55%/25% 로 분배. Health Connect 와 동일 정책
+- **운동 종류 한글화 — 미커버 enum 은 fallback**: 명시 매핑 외엔 enum.name 을 보기 좋게 변환(`WEIGHT_MACHINE` → `Weight machine`). 위양성보다 미커버를 그대로 노출하는 게 안전
+- **체중은 30일 윈도우**: 매일 측정 안 하는 데이터라서 당일 한정 시 자주 EmptyState. Health Connect 와 다른 정책이지만 UX 우선
+
+### Phase 2 미완 / Follow-up
+- 실 Galaxy 단말 + 개발자 모드 활성화 테스트 후 미세 조정 (특히 ExerciseSession.duration nullable 처리, SleepSession.stages 가 빈 리스트일 때 추정값 적정성)
+- `readBloodGlucose` 신규 추가 — 본 앱 핵심 도메인 (단계 3)
+
+---
+
+## [2026-05-17] STEP 11 — LifestyleFragment Samsung 우선 와이어링
+
+### 작업 내용
+LifestyleFragment 에 Samsung Health Data SDK 우선 / Health Connect 차선 분기 추가. 진입 시 silent 시도, 새로고침 버튼은 명시적 시도(권한 다이얼로그 허용).
+
+### 수정 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `ui/lifestyle/LifestyleViewModel.kt` | `trySamsungHealthFirst(activity, requestPermissionIfNeeded): Boolean` suspend 함수 추가. ConnectionState 분기 후 권한 처리 → `activateSamsung()` private helper 에서 `HealthRepository.switchToSamsungHealth` + sync. 기존 `connectAndSync()` 무변경 |
+| `ui/lifestyle/LifestyleFragment.kt` | `onViewCreated` 에 `trySamsungSilent()` 추가(권한 다이얼로그 X). `btnRefresh` 핸들러를 `onRefreshClicked()` 로 교체 — Samsung 우선 시도 → 실패 시 기존 `startHealthConnectSync()` 호출. HC 코드는 helper 명 유지·내용 무변경 |
+| `IMPLEMENTATION_LOG.md` | 본 항목 추가 |
+
+### 동작 시나리오
+| 단말 / 상태 | 진입 시 | 새로고침 시 |
+|------------|---------|------------|
+| Galaxy + Samsung 권한 허가 완료 | Samsung 소스로 자동 전환 + 로드 | Samsung 시도 → 즉시 성공 (Toast: "삼성 헬스(직접 연동)...") |
+| Galaxy + Samsung 권한 미허가 | Mock 유지 (silent 실패) | Samsung 권한 다이얼로그 → 1개 이상 허가 시 Samsung 활성화 |
+| Galaxy + Samsung 권한 거부 | Mock 유지 | Samsung 실패 → HC fallback (기존 흐름) |
+| 비-Galaxy / Samsung Health 미설치 | Mock 유지 | Samsung 즉시 실패 → HC fallback (기존 흐름) |
+| API < 29 | Mock 유지 | Samsung 즉시 Unsupported → HC fallback |
+
+### 주요 결정 사항
+- **부분 권한 = Samsung 활성화**: 5종 중 하나라도 허가되면 전환 (UX 일관성 — HC 기존 동작과 동일)
+- **silent vs explicit 권한 요청**: 진입 시점 자동 다이얼로그는 invasive 하므로 `requestPermissionIfNeeded` 플래그로 분리. 사용자 명시적 액션(새로고침)에서만 다이얼로그 노출
+- **HC 코드 보존**: `startHealthConnectSync()` 본문 무변경, 새 `onRefreshClicked()` 가 한 단계 위에서 분기. 회귀 위험 최소화
+
+---
+
+## [2026-05-17] STEP 11 Phase 2-foundation — Samsung Health Data SDK v1.1.0 실연동
+
+### 배경
+개발자 모드 가정(Partner 승인 / SHA-256 등록 미고려) 하에 Samsung Health Data SDK 의 실제 호출 경로를 활성화. AAR(`samsung-health-data-api-1.1.0.aar`) 수령 후 Phase 1 스켈레톤을 실제 SDK 호출로 교체. 기존 Health Connect 흐름은 무손상 보존.
+
+### 신규 파일
+| 파일 | 설명 |
+|------|------|
+| `app/libs/samsung-health-data-api-1.1.0.aar` | Samsung Health Data SDK v1.1.0 라이브러리 |
+
+### 수정 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `app/build.gradle.kts` | `fileTree("libs")` AAR 의존성 활성화. parcelize/gson 은 실제 AAR 의존성에 없어 생략 |
+| `app/src/main/AndroidManifest.xml` | `xmlns:tools` 추가 + `<uses-sdk tools:overrideLibrary="com.samsung.android.sdk.health.data"/>` — AAR minSdk 29 vs 앱 26 충돌 해소. 런타임은 `SamsungHealthRepository.connect()` 의 SDK_INT 가드로 보호 |
+| `data/samsunghealth/SamsungHealthRepository.kt` | TODO(samsung-sdk) 마커 전체를 실 SDK 호출로 교체 — `HealthDataService.getStore` → `store.getGrantedPermissions` / `requestPermissions` / `aggregateData`. SDK 가 suspend native 라 Future 래퍼 불필요. 단말 API 29+ + Samsung + Samsung Health 설치 3중 가드 |
+| `data/health/SamsungHealthDataSource.kt` | stub → `SamsungHealthRepository` 위임 어댑터로 재작성. `HealthDataSource` 인터페이스 구현체로서 `HealthRepository` 가 활성 소스로 선택했을 때만 호출됨 |
+| `data/health/HealthRepository.kt` | `switchToSamsungHealth(samsungSource)` + `isConnectedToSamsungHealth()` 추가. 기존 `switchToHealthConnect` 와 동등한 분기. 두 소스 동시 활성화 불가 구조로 충돌 방지 |
+| `CheckDangApplication.kt` | `samsungHealthRepository` application-scope 싱글톤 보관소 추가 (BillingRepository 와 동일 패턴) |
+| `IMPLEMENTATION_LOG.md` | 본 항목 추가 |
+
+### 주요 결정 사항
+- **두 헬스 소스 공존 전략**: `HealthDataSource` interface + `HealthRepository.source` 단일 활성 소스 패턴 유지. Samsung / Health Connect 가 동시에 동일 데이터를 쿼리할 일이 없으므로 SDK 충돌이 구조적으로 차단됨
+- **minSdk 충돌**: AAR=29, 앱=26. `tools:overrideLibrary` 로 merger 통과 + 런타임 `Build.VERSION.SDK_INT < Q` 일 때 `ConnectionState.Unsupported` 반환
+- **Future 래퍼 불필요**: SDK v1.1.0 의 `HealthDataStore` 메서드가 `kotlin.coroutines.Continuation` 기반 suspend native — 코루틴에서 직접 호출 가능
+- **데이터 read 범위 (Phase 2-foundation)**: 연결/권한/걸음수(STEPS.TOTAL aggregate) 만 실 SDK 호출. Exercise/Meal/Sleep/Weight read 는 TODO 로 null 반환 — 실제 단말에서 응답 스키마 확인 후 다음 Phase 에서 매핑 작성
+- **권한 카테고리 매핑**: `HealthDataPermission.WEIGHT` → `DataTypes.BODY_COMPOSITION` (SDK 에는 standalone Weight 가 없고 BodyComposition 의 weight Field 로 노출됨)
+
+### 미완 / Follow-up
+- LifestyleFragment 에서 Samsung / Health Connect 우선순위 선택 UI/로직 추가
+- `SamsungHealthMapper.toExerciseSummary` 등 SDK Response → 도메인 모델 매핑 함수 작성 (실 단말 응답 확인 필요)
+- 본 앱 핵심 도메인인 혈당 — `DataTypes.BLOOD_GLUCOSE` 는 SDK 가 이미 지원하므로 별도 read 메서드(`readBloodGlucose`) 추가 검토
+
+---
+
 ## [2026-05-15] Health Connect 권한 자동 거부 버그 수정
 
 ### 작업 내용

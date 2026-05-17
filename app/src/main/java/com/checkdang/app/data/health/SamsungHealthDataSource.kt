@@ -1,55 +1,61 @@
 package com.checkdang.app.data.health
 
 import com.checkdang.app.data.model.ExerciseSummary
+import com.checkdang.app.data.model.GlucoseRecord
 import com.checkdang.app.data.model.LifestyleSummary
 import com.checkdang.app.data.model.MealSummary
 import com.checkdang.app.data.model.SleepSummary
+import com.checkdang.app.data.samsunghealth.ConnectionState
+import com.checkdang.app.data.samsunghealth.SamsungHealthRepository
+import java.time.LocalDate
 
 /**
- * Samsung Health SDK 직접 연동 stub (미래 구현 예정).
+ * Samsung Health Data SDK 어댑터.
  *
- * 현재는 Android Health Connect(HealthConnectDataSource)가 실질적인 삼성 헬스 연동 역할을 한다.
- * Samsung Health SDK 직접 연동이 필요한 경우(예: Health Connect 미지원 기능):
+ * 통합 [HealthDataSource] 인터페이스 뒤로 [SamsungHealthRepository] 의 SDK 호출을 위임한다.
+ * 두 헬스 소스(Samsung Health Data SDK, Health Connect)는 [HealthRepository] 가 런타임에
+ * 하나만 활성화하므로 동시 호출이 발생하지 않는다.
  *
- * 1. 삼성 개발자 포털에서 SDK 다운로드: developer.samsung.com/health
- * 2. app/libs/ 에 AAR 배치 후 build.gradle.kts에 추가
- *      implementation(fileTree("libs") { include("*.aar") })
- * 3. AndroidManifest.xml에 권한 선언
- *      <uses-permission android:name=
- *          "com.samsung.android.providers.context.permission.WRITE_USE_APP_FEATURE_SURVEY"/>
- * 4. SHealthManager.init(context)로 초기화
- * 5. HealthRepository.switchTo(SamsungHealthDataSource()) 호출
- *
- * 데이터 타입 매핑:
- *   운동 → HealthConstants.Exercise (EXERCISE_TYPE, DURATION, CALORIE, START_TIME)
- *   수면 → HealthConstants.Sleep + SleepStage (STAGE_TYPE: DEEP=4, LIGHT=1/2, REM=5)
- *   식사 → HealthConstants.Nutrition (CALORIE, CARBOHYDRATE, PROTEIN, FAT, MEAL_TYPE)
+ * 데이터 read 가 아직 Phase 2-foundation 단계라서 운동/식사/수면 항목은 null 을 반환한다.
+ * UI 는 기존 EmptyState 처리를 그대로 따른다.
  */
-class SamsungHealthDataSource : HealthDataSource {
+class SamsungHealthDataSource(
+    private val repo: SamsungHealthRepository
+) : HealthDataSource {
 
-    override fun isConnected(): Boolean {
-        // TODO(samsung-health): SHealthManager.isFeatureEnabled(SHEALTH_FEATURE) && store.isConnected
-        return false
+    override fun isConnected(): Boolean =
+        repo.state.value is ConnectionState.Connected
+
+    override suspend fun getExerciseSummary(): ExerciseSummary? =
+        repo.readExercise(LocalDate.now())
+
+    override suspend fun getMealSummary(): MealSummary? =
+        repo.readMeal(LocalDate.now())
+
+    override suspend fun getSleepSummary(): SleepSummary? =
+        repo.readSleep(LocalDate.now())
+
+    override suspend fun getWeeklyExerciseMinutes(): List<Int> {
+        val today = LocalDate.now()
+        return (6 downTo 0).map { ago ->
+            repo.readExercise(today.minusDays(ago.toLong()))?.totalMinutes ?: 0
+        }
     }
 
-    override suspend fun getExerciseSummary(): ExerciseSummary? {
-        // TODO(samsung-health): HealthConstants.Exercise.HEALTH_DATA_TYPE 쿼리
-        return null
+    override suspend fun getWeeklySleepHours(): List<Float> {
+        val today = LocalDate.now()
+        return (6 downTo 0).map { ago ->
+            repo.readSleep(today.minusDays(ago.toLong()))?.totalHours ?: 0f
+        }
     }
 
-    override suspend fun getMealSummary(): MealSummary? {
-        // TODO(samsung-health): HealthConstants.Nutrition.HEALTH_DATA_TYPE 쿼리
-        return null
+    override suspend fun getBloodGlucoseRecords(days: Int): List<GlucoseRecord> {
+        val today = LocalDate.now()
+        return repo.readBloodGlucoseRange(
+            start        = today.minusDays((days - 1).toLong()),
+            endExclusive = today.plusDays(1)
+        )
     }
-
-    override suspend fun getSleepSummary(): SleepSummary? {
-        // TODO(samsung-health): HealthConstants.SleepStage.HEALTH_DATA_TYPE 쿼리
-        return null
-    }
-
-    override suspend fun getWeeklyExerciseMinutes(): List<Int> = emptyList()
-
-    override suspend fun getWeeklySleepHours(): List<Float> = emptyList()
 
     override suspend fun getLifestyleSummary(): LifestyleSummary? {
         val ex    = getExerciseSummary() ?: return null

@@ -71,6 +71,18 @@ class LifestyleFragment : Fragment() {
         setupHeader()
         setupClickListeners()
         observeData()
+        trySamsungSilent()
+    }
+
+    /**
+     * 진입 시 Samsung Health Data SDK 우선 시도(권한 다이얼로그는 띄우지 않음).
+     * 이미 허가된 경우에만 Samsung 소스로 전환된다. 실패해도 기존 Health Connect 흐름은
+     * 사용자가 새로고침 버튼으로 트리거 가능.
+     */
+    private fun trySamsungSilent() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.trySamsungHealthFirst(requireActivity(), requestPermissionIfNeeded = false)
+        }
     }
 
     private fun setupHeader() {
@@ -159,7 +171,7 @@ class LifestyleFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
-        binding.btnRefresh.setOnClickListener { startHealthConnectSync() }
+        binding.btnRefresh.setOnClickListener { onRefreshClicked() }
         binding.cardExercise.setOnClickListener {
             startActivity(Intent(requireContext(), ExerciseDetailActivity::class.java))
         }
@@ -172,7 +184,28 @@ class LifestyleFragment : Fragment() {
     }
 
     /**
-     * 삼성 헬스 연동 버튼 플로우:
+     * 새로고침 버튼 플로우 — Samsung 우선, Health Connect 차선.
+     *
+     * 1. Samsung Health Data SDK 시도 (필요 시 권한 다이얼로그 노출)
+     *    → 성공하면 그대로 종료
+     * 2. 실패/미설치/미지원 시 기존 Health Connect 흐름으로 fallback
+     */
+    private fun onRefreshClicked() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val activated = viewModel.trySamsungHealthFirst(
+                activity = requireActivity(),
+                requestPermissionIfNeeded = true
+            )
+            if (activated) {
+                Toast.makeText(requireContext(), "삼성 헬스(직접 연동)에서 데이터를 가져왔어요.", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            startHealthConnectSync()
+        }
+    }
+
+    /**
+     * Health Connect fallback 플로우 (기존 로직, 내용 무변경):
      * 1. Health Connect 설치 여부 확인
      * 2. 권한 보유 여부 확인
      * 3. 권한 없으면 요청 → 허가 시 connectAndSync() 자동 호출

@@ -35,6 +35,8 @@ class GlucoseFragment : Fragment() {
         setupViewPager()
         setupClickListeners()
         observeStats()
+        // Samsung 활성 시 매 진입마다 혈당 재조회. 비활성이면 자동으로 빈 리스트 → Mock 만 표시.
+        viewModel.refresh()
     }
 
     private fun setupViewPager() {
