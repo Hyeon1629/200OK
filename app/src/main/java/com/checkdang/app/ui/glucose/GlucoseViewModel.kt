@@ -1,10 +1,12 @@
 package com.checkdang.app.ui.glucose
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.checkdang.app.data.health.HealthRepository
 import com.checkdang.app.data.mock.MockDataProvider
 import com.checkdang.app.data.model.GlucoseRecord
+import com.checkdang.app.data.remote.HealthSyncApiClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -67,7 +69,19 @@ class GlucoseViewModel : ViewModel() {
      */
     fun refresh() {
         viewModelScope.launch {
-            _samsungRecords.value = HealthRepository.getBloodGlucoseRecords(days = 90)
+            val fetched = HealthRepository.getBloodGlucoseRecords(days = 90)
+            _samsungRecords.value = fetched
+            pushGlucoseToServer(fetched)
         }
+    }
+
+    /**
+     * 외부 헬스 소스에서 가져온 혈당 기록을 백엔드 DB 로 push.
+     * 실패해도 UI 흐름은 유지되도록 runCatching 으로 감싼다.
+     */
+    private suspend fun pushGlucoseToServer(records: List<GlucoseRecord>) {
+        if (records.isEmpty()) return
+        runCatching { HealthSyncApiClient.pushGlucose(records) }
+            .onFailure { Log.w("GlucoseViewModel", "pushGlucoseToServer failed: ${it.message}") }
     }
 }

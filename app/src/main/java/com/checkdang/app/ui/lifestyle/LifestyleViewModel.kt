@@ -13,6 +13,7 @@ import com.checkdang.app.data.health.SamsungHealthDataSource
 import com.checkdang.app.data.model.ExerciseSummary
 import com.checkdang.app.data.model.MealSummary
 import com.checkdang.app.data.model.SleepSummary
+import com.checkdang.app.data.remote.HealthSyncApiClient
 import com.checkdang.app.data.samsunghealth.ConnectionState
 import com.checkdang.app.data.samsunghealth.SamsungHealthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,6 +47,7 @@ class LifestyleViewModel(app: Application) : AndroidViewModel(app) {
             _exercise.value  = HealthRepository.getExerciseSummary()
             _meal.value      = HealthRepository.getMealSummary()
             _sleep.value     = HealthRepository.getSleepSummary()
+            pushLifestyleToServer(source = currentSourceLabel())
             _isSyncing.value = false
         }
     }
@@ -64,6 +66,7 @@ class LifestyleViewModel(app: Application) : AndroidViewModel(app) {
                 _meal.value     = HealthRepository.getMealSummary()
                 _sleep.value    = HealthRepository.getSleepSummary()
             }
+            pushLifestyleToServer(source = "health_connect")
             _isSyncing.value = false
         }
     }
@@ -118,7 +121,29 @@ class LifestyleViewModel(app: Application) : AndroidViewModel(app) {
         _meal.value     = HealthRepository.getMealSummary()
         _sleep.value    = HealthRepository.getSleepSummary()
         Log.i(TAG, "activateSamsung: done — ex=${_exercise.value != null}, meal=${_meal.value != null}, sleep=${_sleep.value != null}")
+        pushLifestyleToServer(source = "samsung_health")
         _isSyncing.value = false
+    }
+
+    /**
+     * 동기화 완료 후 백엔드 DB 로 라이프스타일 데이터를 전송한다.
+     * 실패해도 화면 표시 흐름을 막지 않도록 runCatching 으로 감싸 로그만 남긴다.
+     */
+    private suspend fun pushLifestyleToServer(source: String) {
+        runCatching {
+            HealthSyncApiClient.pushLifestyle(
+                exercise = _exercise.value,
+                meal     = _meal.value,
+                sleep    = _sleep.value,
+                source   = source
+            )
+        }.onFailure { Log.w(TAG, "pushLifestyleToServer failed: ${it.message}") }
+    }
+
+    private fun currentSourceLabel(): String = when {
+        HealthRepository.isConnectedToSamsungHealth() -> "samsung_health"
+        HealthRepository.isConnectedToHealthConnect() -> "health_connect"
+        else -> "mock"
     }
 
     companion object {

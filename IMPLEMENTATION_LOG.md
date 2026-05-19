@@ -4,6 +4,35 @@
 
 ---
 
+## [2026-05-19] 백엔드 Base URL 교체 + 라이프스타일/혈당 DB 저장 API 호출 추가
+
+### 작업 내용
+1. 백엔드 Base URL 을 render 임시 서버(`https://two00ok-u15n.onrender.com`) 에서 운영 도메인(`https://api.checkdang.xyz`) 으로 일괄 교체.
+2. Health Connect / Samsung Health Data SDK 로부터 동기화된 라이프스타일·혈당 데이터를 실제로 백엔드 DB 에 저장하도록 push 호출을 추가. 기존에는 동기화가 "외부 헬스 → 앱 메모리" 에서 끝나고 서버 전송이 없었음.
+
+### 신규 파일
+| 파일 | 역할 |
+|------|------|
+| `data/remote/HealthSyncApiClient.kt` | 라이프스타일(`POST /api/health/lifestyle`) / 혈당(`POST /api/health/glucose`) DB 저장 전용 클라이언트. AuthApiClient 와 동일하게 HttpURLConnection + JSONObject 사용. `SessionHolder.accessToken` 을 `Authorization: Bearer` 헤더에 자동 부착 |
+
+### 수정 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `data/remote/AuthApiClient.kt` | `BASE_URL` 을 `https://api.checkdang.xyz` 로 교체 |
+| `ui/lifestyle/LifestyleViewModel.kt` | `sync()` / `connectAndSync()` / `activateSamsung()` 마지막에 `pushLifestyleToServer(source)` 호출. 활성 소스(`samsung_health`/`health_connect`/`mock`) 라벨 동봉. 호출은 `runCatching` 으로 감싸 실패해도 UI 흐름 보존 |
+| `ui/glucose/GlucoseViewModel.kt` | `refresh()` 에서 Samsung 혈당 가져온 직후 `pushGlucoseToServer(records)` 호출. 빈 리스트면 skip, 실패는 silent 로깅 |
+
+### 설계 결정
+- **endpoint 명**: 백엔드 명세가 공개되지 않아 RESTful 컨벤션에 따라 `/api/health/lifestyle`, `/api/health/glucose` 로 가정. 실제 명세 확인 후 클라이언트 함수의 path 문자열만 수정하면 됨
+- **실패 처리 전략**: 모든 push 호출은 호출 측에서 `runCatching` + `Log.w` 패턴으로 감싸 네트워크 실패가 화면 갱신이나 동기화 상태(`_isSyncing`) 를 막지 않도록 함. 기존 기능 무손상 보장
+- **인증 헤더**: `SessionHolder.accessToken` 이 null 일 수 있는 게스트 모드를 고려해 토큰 존재 시에만 헤더 부착
+- **payload 직렬화**: 외부 의존성 추가 금지 제약 준수 위해 `JSONObject`/`JSONArray` 수동 직렬화
+
+### 빌드 검증
+`./gradlew compileDebugKotlin` → BUILD SUCCESSFUL
+
+---
+
 ## [2026-05-17] STEP 11 — 실 단말 테스트 완료 + 진단 로그 정리
 
 ### 테스트 결과 (Galaxy / Android 15 / SDK 35)
