@@ -4,6 +4,7 @@ import android.util.Log
 import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.model.ExerciseSession
 import com.checkdang.app.data.model.GlucoseRecord
+import com.checkdang.app.data.model.HeartRateSample
 import com.checkdang.app.data.model.MealItem
 import com.checkdang.app.data.model.SleepSummary
 import com.checkdang.app.util.MealTiming
@@ -101,6 +102,56 @@ object HealthSyncApiClient {
                 }
                 post("/blood-glucose/$userId?date=$dateKst", body)
             }.onFailure { Log.w(TAG, "pushGlucose record ${r.id} failed: ${it.message}") }
+        }
+    }
+
+    // ── FastAPI: 일별 걸음 + 활동 칼로리 ─────────────────────────────────────
+
+    /**
+     * 하루 1건의 step_calorie record 송신.
+     * timestamp 는 측정 시각(현재 시각 또는 해당 일의 끝)으로 채운다.
+     */
+    suspend fun pushStepCalorie(
+        date: java.time.LocalDate,
+        stepCount: Int,
+        calorie: Double,
+        deviceId: String
+    ) = withContext(Dispatchers.IO) {
+        val userId = SessionHolder.userId ?: return@withContext
+        val nowKst = java.time.LocalDateTime.now(KST).toString()
+        val body = JSONObject().apply {
+            put("user_date",  date.toString())
+            put("timestamp",  nowKst)
+            put("step_count", stepCount)
+            put("calorie",    calorie)
+            put("device_id",  deviceId)
+        }
+        post("/step-calorie/$userId", body)
+    }
+
+    // ── FastAPI: 심박수 시계열 (샘플 별 POST) ────────────────────────────────
+
+    /**
+     * 심박수 샘플을 1건씩 송신. 한 record 실패가 다음 record 송신을 막지 않도록 record 별 runCatching.
+     */
+    suspend fun pushHeartRates(
+        date: java.time.LocalDate,
+        samples: List<HeartRateSample>,
+        deviceId: String
+    ) = withContext(Dispatchers.IO) {
+        val userId = SessionHolder.userId ?: return@withContext
+        if (samples.isEmpty()) return@withContext
+        samples.forEach { s ->
+            runCatching {
+                val ts = Instant.ofEpochMilli(s.timestamp).atZone(KST).toLocalDateTime().toString()
+                val body = JSONObject().apply {
+                    put("user_date", date.toString())
+                    put("timestamp", ts)
+                    put("bpm",       s.bpm)
+                    put("device_id", deviceId)
+                }
+                post("/heart-rate/$userId", body)
+            }.onFailure { Log.w(TAG, "pushHeartRate(ts=${s.timestamp}) failed: ${it.message}") }
         }
     }
 

@@ -7,6 +7,7 @@ import androidx.health.connect.client.HealthConnectClient
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.checkdang.app.CheckDangApplication
+import com.checkdang.app.data.device.DeviceIdProvider
 import com.checkdang.app.data.health.HealthConnectDataSource
 import com.checkdang.app.data.health.HealthRepository
 import com.checkdang.app.data.health.SamsungHealthDataSource
@@ -14,6 +15,7 @@ import com.checkdang.app.data.model.ExerciseSummary
 import com.checkdang.app.data.model.MealSummary
 import com.checkdang.app.data.model.SleepSummary
 import com.checkdang.app.data.remote.HealthSyncApiClient
+import java.time.LocalDate
 import com.checkdang.app.data.samsunghealth.ConnectionState
 import com.checkdang.app.data.samsunghealth.SamsungHealthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -149,6 +151,25 @@ class LifestyleViewModel(app: Application) : AndroidViewModel(app) {
         sl?.let { sleep ->
             runCatching { HealthSyncApiClient.pushSleep(sleep) }
                 .onFailure { Log.w(TAG, "pushSleep failed: ${it.message}") }
+        }
+
+        // FastAPI: step_calorie / heart_rate — Samsung Health 활성 시에만 데이터 제공
+        if (HealthRepository.isConnectedToSamsungHealth()) {
+            val today    = LocalDate.now()
+            val deviceId = DeviceIdProvider.get(getApplication())
+
+            val steps = HealthRepository.getStepCount(today)
+            if (steps != null && steps > 0) {
+                val calorie = ex?.totalCalories?.toDouble() ?: 0.0
+                runCatching { HealthSyncApiClient.pushStepCalorie(today, steps, calorie, deviceId) }
+                    .onFailure { Log.w(TAG, "pushStepCalorie failed: ${it.message}") }
+            }
+
+            val heartRates = HealthRepository.getHeartRates(today)
+            if (heartRates.isNotEmpty()) {
+                runCatching { HealthSyncApiClient.pushHeartRates(today, heartRates, deviceId) }
+                    .onFailure { Log.w(TAG, "pushHeartRates failed: ${it.message}") }
+            }
         }
     }
 

@@ -12,7 +12,8 @@ enum class HealthDataPermission(val labelKr: String) {
     NUTRITION("식사"),
     SLEEP("수면"),
     WEIGHT("체중"),
-    BLOOD_GLUCOSE("혈당");
+    BLOOD_GLUCOSE("혈당"),
+    HEART_RATE("심박수");
 
     companion object {
         val ALL: List<HealthDataPermission> = values().toList()

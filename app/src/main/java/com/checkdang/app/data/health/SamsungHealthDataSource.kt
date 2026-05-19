@@ -2,6 +2,7 @@ package com.checkdang.app.data.health
 
 import com.checkdang.app.data.model.ExerciseSummary
 import com.checkdang.app.data.model.GlucoseRecord
+import com.checkdang.app.data.model.HeartRateSample
 import com.checkdang.app.data.model.LifestyleSummary
 import com.checkdang.app.data.model.MealSummary
 import com.checkdang.app.data.model.SleepSummary
@@ -56,6 +57,12 @@ class SamsungHealthDataSource(
             endExclusive = today.plusDays(1)
         )
     }
+
+    override suspend fun getStepCount(date: LocalDate): Int? =
+        repo.readSteps(date)
+
+    override suspend fun getHeartRates(date: LocalDate): List<HeartRateSample> =
+        repo.readHeartRate(date)
 
     override suspend fun getLifestyleSummary(): LifestyleSummary? {
         val ex    = getExerciseSummary() ?: return null

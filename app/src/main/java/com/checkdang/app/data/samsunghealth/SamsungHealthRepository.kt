@@ -7,6 +7,7 @@ import android.os.Build
 import android.util.Log
 import com.checkdang.app.data.model.ExerciseSummary
 import com.checkdang.app.data.model.GlucoseRecord
+import com.checkdang.app.data.model.HeartRateSample
 import com.checkdang.app.data.model.MealSummary
 import com.checkdang.app.data.model.SleepSummary
 import com.samsung.android.sdk.health.data.HealthDataService
@@ -248,6 +249,26 @@ class SamsungHealthRepository(private val appContext: Context) {
     }
 
     /**
+     * 일별 심박수 시계열 — DataTypes.HEART_RATE read.
+     * SERIES_DATA 필드에서 각 샘플을 펼쳐 [HeartRateSample] 리스트로 변환.
+     * 권한 없음 / 데이터 없음 / 오류 시 빈 리스트.
+     */
+    suspend fun readHeartRate(date: LocalDate): List<HeartRateSample> {
+        val s = store ?: run { Log.w(TAG, "readHeartRate: store null"); return emptyList() }
+        return runCatching {
+            val request = DataTypes.HEART_RATE.readDataRequestBuilder
+                .setLocalTimeFilter(date.toFullDayLocalTimeFilter())
+                .setOrdering(Ordering.DESC)
+                .build()
+            val response = s.readData(request)
+            Log.i(TAG, "readHeartRate[$date]: ${response.dataList.size} dataPoints")
+            val samples = SamsungHealthMapper.toHeartRateSamples(response.dataList)
+            Log.i(TAG, "readHeartRate[$date]: mapped → ${samples.size} samples")
+            samples
+        }.onFailure { Log.e(TAG, "readHeartRate failed", it) }.getOrDefault(emptyList())
+    }
+
+    /**
      * 최신 체중 (kg) — DataTypes.BODY_COMPOSITION read.
      * 지정 일 ± 30일 범위에서 가장 최근 측정값 반환.
      */
@@ -301,6 +322,7 @@ class SamsungHealthRepository(private val appContext: Context) {
         HealthDataPermission.SLEEP         -> DataTypes.SLEEP
         HealthDataPermission.WEIGHT        -> DataTypes.BODY_COMPOSITION
         HealthDataPermission.BLOOD_GLUCOSE -> DataTypes.BLOOD_GLUCOSE
+        HealthDataPermission.HEART_RATE    -> DataTypes.HEART_RATE
     }
 
     companion object {

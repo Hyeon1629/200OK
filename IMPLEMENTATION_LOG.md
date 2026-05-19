@@ -4,6 +4,50 @@
 
 ---
 
+## [2026-05-19] FastAPI step_calorie / heart_rate 연동 추가
+
+### 배경
+백엔드 팀 회신 — "현재 heart_rate 와 step_calorie 가 안 받아와지는 듯하다" 확인 요청. 분석 결과:
+- **step_calorie**: SDK 의 `readSteps()` 는 이미 존재하지만 `SamsungHealthDataSource` 어댑터에 노출 안 되어 있어 ViewModel 까지 도달하지 못함. push 함수도 누락
+- **heart_rate**: `HealthDataPermission` enum 자체에 HEART_RATE 없어 권한 요청 미발생. SDK read 메서드/매퍼 모두 부재
+
+### 작업 내용
+| 항목 | 변경 |
+|------|------|
+| 권한 enum | `HealthDataPermission.HEART_RATE` 추가 |
+| SDK 매핑 | `SamsungHealthRepository.toSdkDataType` 에 `HEART_RATE → DataTypes.HEART_RATE` 추가 |
+| SDK read | `SamsungHealthRepository.readHeartRate(date): List<HeartRateSample>` 신규. 빈 데이터/오류 시 emptyList |
+| 데이터 모델 | `data/model/HeartRateSample.kt` 신규 (timestamp Long + bpm Int) |
+| 매퍼 | `SamsungHealthMapper.toHeartRateSamples` — SERIES_DATA / HEART_RATE Field 양쪽 처리. SdkHeartRate.startTime, heartRate 속성 사용 (javap 으로 SDK 클래스 정의 확인) |
+| 인터페이스 | `HealthDataSource` 에 `getStepCount(date)`, `getHeartRates(date)` default 메서드 추가 (Mock/HC → null/emptyList) |
+| 어댑터 | `SamsungHealthDataSource` 가 두 메서드 override |
+| Repository | `HealthRepository` pass-through 메서드 추가 |
+| device_id | `data/device/DeviceIdProvider.kt` 신규 — `Settings.Secure.ANDROID_ID` 기반 안정 식별자. 더미값(`9774d56d682e549c`) 대응 fallback 포함 |
+| Push | `HealthSyncApiClient.pushStepCalorie`, `pushHeartRates` 추가. heart_rate 는 sample 별 POST, runCatching 으로 sample 단위 실패 격리 |
+| 호출 시점 | `LifestyleViewModel.pushLifestyleToServer` 가 Samsung Health 활성 시에만 step/heart push 추가 호출 |
+
+### 주요 결정
+- step_calorie 의 `calorie` 필드: `ExerciseSummary.totalCalories` (운동 세션 기반 소모 칼로리) 사용. step 기반 활동 칼로리와 의미 차이가 있을 수 있어 백엔드와 추가 확인 필요
+- heart_rate sample 수: SDK 가 반환한 모든 샘플 송신. 데이터 폭주 우려 시 batch endpoint / 샘플링 정책 협의 필요
+- HEART_RATE 권한 추가로 사용자가 다음 진입 시 Samsung Health 권한 다이얼로그 1회 재노출됨 (정상 동작)
+
+### 수정 파일
+- `data/samsunghealth/HealthDataPermission.kt`
+- `data/samsunghealth/SamsungHealthRepository.kt`
+- `data/samsunghealth/SamsungHealthMapper.kt`
+- `data/model/HeartRateSample.kt` (신규)
+- `data/health/HealthDataSource.kt`
+- `data/health/SamsungHealthDataSource.kt`
+- `data/health/HealthRepository.kt`
+- `data/device/DeviceIdProvider.kt` (신규)
+- `data/remote/HealthSyncApiClient.kt`
+- `ui/lifestyle/LifestyleViewModel.kt`
+
+### 빌드 검증
+`./gradlew compileDebugKotlin` → BUILD SUCCESSFUL
+
+---
+
 ## [2026-05-19] 백엔드 답변 반영 — 혈당 API 3가지 정정
 
 ### 작업 내용

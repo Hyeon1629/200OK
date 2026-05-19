@@ -3,6 +3,7 @@ package com.checkdang.app.data.samsunghealth
 import com.checkdang.app.data.model.ExerciseSession
 import com.checkdang.app.data.model.ExerciseSummary
 import com.checkdang.app.data.model.GlucoseRecord
+import com.checkdang.app.data.model.HeartRateSample
 import com.checkdang.app.data.model.MealItem
 import com.checkdang.app.data.model.MealSummary
 import com.checkdang.app.data.model.SleepSummary
@@ -10,6 +11,7 @@ import com.checkdang.app.util.MealTiming
 import com.samsung.android.sdk.health.data.data.HealthDataPoint
 import com.samsung.android.sdk.health.data.data.entries.BloodGlucose as SdkBloodGlucose
 import com.samsung.android.sdk.health.data.data.entries.ExerciseSession as SdkExerciseSession
+import com.samsung.android.sdk.health.data.data.entries.HeartRate as SdkHeartRate
 import com.samsung.android.sdk.health.data.data.entries.SleepSession as SdkSleepSession
 import com.samsung.android.sdk.health.data.request.DataType
 import java.time.Instant
@@ -219,6 +221,37 @@ object SamsungHealthMapper {
                 )
             }
         }.sortedByDescending { it.measuredAt }
+    }
+
+    /**
+     * 심박수: DataTypes.HEART_RATE read 결과 → List&lt;HeartRateSample&gt;.
+     *
+     * 각 HealthDataPoint 는 SERIES_DATA Field (시계열 다중 샘플) 또는 단일 HEART_RATE Field 중
+     * 한 형태로 데이터를 담는다. SERIES_DATA 가 있으면 펼치고, 없으면 평균값을 1개 샘플로 사용.
+     */
+    fun toHeartRateSamples(dataPoints: List<HealthDataPoint>): List<HeartRateSample> {
+        if (dataPoints.isEmpty()) return emptyList()
+        return dataPoints.flatMap { dp ->
+            val series: List<SdkHeartRate> =
+                dp.getValue(DataType.HeartRateType.SERIES_DATA) ?: emptyList()
+            if (series.isNotEmpty()) {
+                series.map { s ->
+                    HeartRateSample(
+                        timestamp = s.startTime.toEpochMilli(),
+                        bpm       = s.heartRate.toInt()
+                    )
+                }
+            } else {
+                val avg = dp.getValue(DataType.HeartRateType.HEART_RATE)
+                if (avg == null || avg <= 0f) emptyList()
+                else listOf(
+                    HeartRateSample(
+                        timestamp = dp.startTime.toEpochMilli(),
+                        bpm       = avg.toInt()
+                    )
+                )
+            }
+        }.sortedByDescending { it.timestamp }
     }
 
     private fun koreanMealTiming(

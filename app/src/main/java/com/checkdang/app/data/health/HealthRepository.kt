@@ -2,9 +2,11 @@ package com.checkdang.app.data.health
 
 import com.checkdang.app.data.model.ExerciseSummary
 import com.checkdang.app.data.model.GlucoseRecord
+import com.checkdang.app.data.model.HeartRateSample
 import com.checkdang.app.data.model.LifestyleSummary
 import com.checkdang.app.data.model.MealSummary
 import com.checkdang.app.data.model.SleepSummary
+import java.time.LocalDate
 
 /**
  * 활성 HealthDataSource를 관리하는 싱글톤.
@@ -54,4 +56,12 @@ object HealthRepository {
      */
     suspend fun getBloodGlucoseRecords(days: Int): List<GlucoseRecord> =
         source.getBloodGlucoseRecords(days)
+
+    /** 일별 총 걸음 수 (Samsung Health 소스 활성 시에만 실 데이터). */
+    suspend fun getStepCount(date: LocalDate): Int? =
+        source.getStepCount(date)
+
+    /** 일별 심박수 시계열 샘플 (Samsung Health 소스 활성 시에만 실 데이터). */
+    suspend fun getHeartRates(date: LocalDate): List<HeartRateSample> =
+        source.getHeartRates(date)
 }
