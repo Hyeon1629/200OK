@@ -4,6 +4,57 @@
 
 ---
 
+## [2026-05-19] 백엔드 답변 반영 — 혈당 API 3가지 정정
+
+### 작업 내용
+백엔드(kgh) 가 보내준 답변 HTML(2026-05-19) 기반. 라이프스타일(운동/식사/수면)은 그대로 통과, 혈당 API 만 3가지 정정.
+
+### 라이프스타일 — 변경 없음 (백엔드 확인 완료)
+- `duration` 분 단위 OK
+- `quality` 0~100 백분율 OK
+- `stages` 빈 배열 허용 (`@NotNull` 검증만)
+- `calories` 1식 단위 OK
+
+### 혈당 API 정정 (`POST /blood-glucose/{user_id}`)
+| 항목 | Before | After |
+|------|--------|-------|
+| URL | `/blood-glucose/{user_id}` | `/blood-glucose/{user_id}?date=YYYY-MM-DD` |
+| 수치 필드 | `value` | `level` |
+| 타이밍 필드 | `timing` | `meal_timing` |
+| 측정시각 필드 | `measured_at` (ISO Instant) | `timestamp` (LocalDateTime KST, no Z) |
+| 메모 | `memo` | `memo` (그대로) |
+
+**date 쿼리가 필수인 이유**: DynamoDB PK 가 `{user_id}#{date}` 구조.
+
+### MealTiming enum 매핑 (우리 7종 → 백엔드 4종)
+| 우리 (`MealTiming`) | 백엔드 (`meal_timing`) |
+|---|---|
+| FASTING | FASTING |
+| PRE_MEAL | BEFORE_MEAL |
+| POST_MEAL_30M / POST_MEAL_1H / POST_MEAL_2H | AFTER_MEAL |
+| BEFORE_SLEEP | BEDTIME |
+| OTHER | FASTING (임시 — 백엔드에 대응 값 없음) |
+
+### FastAPI 인증 — 변경 없음
+현재 FastAPI 는 토큰 검증 미실행. Bearer 헤더 부착 상태 유지 (출시 전 JWT 미들웨어 추가 예정으로 미리 대비).
+
+### 추가 권장 사항 (선택, 향후 작업)
+백엔드가 권장한 두 필드는 현재 데이터 모델에 없어 미적용:
+- `sourceId` (Samsung Health record 고유 ID) — 백엔드 중복 검사용. 누락 시 매 sync 마다 새 row 쌓일 위험. SamsungHealthDataSource 가 raw record ID 를 보유하도록 리팩토링 필요
+- `dataSource` ("SAMSUNG_HEALTH" | "MANUAL") — AI 분석/통계 구분용
+
+→ 별도 작업으로 분리
+
+### 수정 파일
+| 파일 | 변경 |
+|------|------|
+| `data/remote/HealthSyncApiClient.kt` | `pushGlucose` 본문 필드 3개 rename, date query 추가, KST LocalDateTime 으로 timestamp 포맷, `mapMealTiming` 헬퍼 추가 |
+
+### 빌드 검증
+`./gradlew compileDebugKotlin` → BUILD SUCCESSFUL (18s)
+
+---
+
 ## [2026-05-19] 백엔드 Swagger 명세 반영 — endpoint/스키마 재정렬
 
 ### 작업 내용

@@ -6,6 +6,7 @@ import com.checkdang.app.data.model.ExerciseSession
 import com.checkdang.app.data.model.GlucoseRecord
 import com.checkdang.app.data.model.MealItem
 import com.checkdang.app.data.model.SleepSummary
+import com.checkdang.app.util.MealTiming
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -81,18 +82,37 @@ object HealthSyncApiClient {
 
     // ── FastAPI: 혈당 (record 별 POST) ───────────────────────────────────────
 
+    /**
+     * DynamoDB PK 가 `{user_id}#{date}` 라서 date 는 path query 로 분리해 보낸다.
+     * 본문 필드: level / meal_timing / timestamp / memo  (FastAPI 측 명세에 맞춤)
+     */
     suspend fun pushGlucose(records: List<GlucoseRecord>) = withContext(Dispatchers.IO) {
         val userId = SessionHolder.userId ?: return@withContext
         records.forEach { r ->
-            val body = JSONObject().apply {
-                put("value",       r.value)
-                put("timing",      r.timing.name)
-                put("measured_at", Instant.ofEpochMilli(r.measuredAt).toString())
-                r.memo?.let { put("memo", it) }
-            }
-            runCatching { post("/blood-glucose/$userId", body) }
-                .onFailure { Log.w(TAG, "pushGlucose record ${r.id} failed: ${it.message}") }
+            runCatching {
+                val zoned = Instant.ofEpochMilli(r.measuredAt).atZone(KST)
+                val dateKst      = zoned.toLocalDate().toString()        // 2026-05-19
+                val timestampKst = zoned.toLocalDateTime().toString()    // 2026-05-19T11:36:59
+                val body = JSONObject().apply {
+                    put("level",       r.value)
+                    put("meal_timing", mapMealTiming(r.timing))
+                    put("timestamp",   timestampKst)
+                    r.memo?.let { put("memo", it) }
+                }
+                post("/blood-glucose/$userId?date=$dateKst", body)
+            }.onFailure { Log.w(TAG, "pushGlucose record ${r.id} failed: ${it.message}") }
         }
+    }
+
+    /** 우리 7종 MealTiming → 백엔드 4종 enum 매핑. OTHER 는 백엔드에 대응 값 없어 FASTING 으로 임시. */
+    private fun mapMealTiming(timing: MealTiming): String = when (timing) {
+        MealTiming.FASTING        -> "FASTING"
+        MealTiming.PRE_MEAL       -> "BEFORE_MEAL"
+        MealTiming.POST_MEAL_30M,
+        MealTiming.POST_MEAL_1H,
+        MealTiming.POST_MEAL_2H   -> "AFTER_MEAL"
+        MealTiming.BEFORE_SLEEP   -> "BEDTIME"
+        MealTiming.OTHER          -> "FASTING"
     }
 
     // ── 변환 헬퍼 ─────────────────────────────────────────────────────────────
