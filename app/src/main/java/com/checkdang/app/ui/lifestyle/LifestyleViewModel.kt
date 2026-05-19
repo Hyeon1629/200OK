@@ -127,17 +127,29 @@ class LifestyleViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * 동기화 완료 후 백엔드 DB 로 라이프스타일 데이터를 전송한다.
-     * 실패해도 화면 표시 흐름을 막지 않도록 runCatching 으로 감싸 로그만 남긴다.
+     * - 운동: POST /api/samsung-health/exercises (ExerciseSyncRequest[])
+     * - 식사: POST /api/samsung-health/diets    (DietSyncRequest[])
+     * - 수면: POST /api/samsung-health/sleeps   (SleepSyncRequest[1])
+     * 각 호출 실패는 개별적으로 silent 로깅하여 다른 카테고리 송신을 막지 않는다.
      */
     private suspend fun pushLifestyleToServer(source: String) {
-        runCatching {
-            HealthSyncApiClient.pushLifestyle(
-                exercise = _exercise.value,
-                meal     = _meal.value,
-                sleep    = _sleep.value,
-                source   = source
-            )
-        }.onFailure { Log.w(TAG, "pushLifestyleToServer failed: ${it.message}") }
+        val ex = _exercise.value
+        val ml = _meal.value
+        val sl = _sleep.value
+        Log.i(TAG, "pushLifestyleToServer[$source]: ex=${ex?.sessions?.size ?: 0}, meals=${ml?.meals?.size ?: 0}, sleep=${sl != null}")
+
+        ex?.sessions?.takeIf { it.isNotEmpty() }?.let { sessions ->
+            runCatching { HealthSyncApiClient.pushExercises(sessions) }
+                .onFailure { Log.w(TAG, "pushExercises failed: ${it.message}") }
+        }
+        ml?.meals?.takeIf { it.isNotEmpty() }?.let { meals ->
+            runCatching { HealthSyncApiClient.pushDiets(meals) }
+                .onFailure { Log.w(TAG, "pushDiets failed: ${it.message}") }
+        }
+        sl?.let { sleep ->
+            runCatching { HealthSyncApiClient.pushSleep(sleep) }
+                .onFailure { Log.w(TAG, "pushSleep failed: ${it.message}") }
+        }
     }
 
     private fun currentSourceLabel(): String = when {

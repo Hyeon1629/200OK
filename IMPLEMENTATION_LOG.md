@@ -4,6 +4,52 @@
 
 ---
 
+## [2026-05-19] 백엔드 Swagger 명세 반영 — endpoint/스키마 재정렬
+
+### 작업 내용
+백엔드 팀에서 받은 Swagger 명세(Spring Boot ALB + FastAPI) 를 분석해 `HealthSyncApiClient` 의 path / payload / 인증 방식을 실제 명세에 맞춰 재작성. 라이프스타일은 Spring, 혈당은 FastAPI 로 라우팅된다.
+
+### 도메인 라우팅 (테스트로 확인)
+- `https://api.checkdang.xyz` 단일 base URL 에서 path 기반으로 두 서비스 분기
+  - `/api/*` → Spring Boot (302 응답 — Spring Security)
+  - `/heart-rate`, `/step-calorie`, `/blood-glucose` 등 → FastAPI (422 응답 — pydantic validation)
+- ALB 도메인(`checkdang-alb-...elb.amazonaws.com`) 직접 호출 불필요
+
+### endpoint 매핑
+| 우리 데이터 | 실제 endpoint | Body | 인증 |
+|------------|-------------|------|-----|
+| `ExerciseSession[]` | `POST /api/samsung-health/exercises` | Array of `ExerciseSyncRequest` | Bearer JWT |
+| `MealItem[]` | `POST /api/samsung-health/diets` | Array of `DietSyncRequest` | Bearer JWT |
+| `SleepSummary` | `POST /api/samsung-health/sleeps` | Array (1 element) of `SleepSyncRequest` | Bearer JWT |
+| `GlucoseRecord` (record 별) | `POST /blood-glucose/{user_id}` | object | (명세상 비어있음, 헤더는 송신) |
+
+### 신규 변환 헬퍼 (HealthSyncApiClient 내부)
+- `mealTypeToEnum`: "아침/점심/저녁/간식" → BREAKFAST/LUNCH/DINNER/SNACK/UNKNOWN
+- `koreanClockToIso` / `anyClockToIso`: "오전 7:30" 또는 "23:42" → 오늘 KST 기준 ISO 8601 date-time. 수면 취침 시각은 전날(shiftDay=-1) 로 보정
+
+### 호출 불가(데이터 미보유) — Skip
+- `/heart-rate/{user_id}` — bpm/device_id 데이터 미수집
+- `/step-calorie/{user_id}` — step_count 미추적
+
+### 수정 파일
+| 파일 | 변경 |
+|------|------|
+| `data/remote/HealthSyncApiClient.kt` | 단일 `pushLifestyle` → `pushExercises`/`pushDiets`/`pushSleep` 3분할. Spring 측 Array body 직렬화. `pushGlucose` 는 record 별 POST 로 재구성. KST ISO 변환 헬퍼 추가. `instanceFollowRedirects = false` 로 Spring Security 302 가 silent 성공으로 잘못 잡히는 것 방지 |
+| `ui/lifestyle/LifestyleViewModel.kt` | `pushLifestyleToServer` 가 3종 카테고리를 각각 runCatching 으로 호출 (한 종류 실패가 다른 종류를 막지 않음) |
+
+### ⚠️ 백엔드 재확인 필요 항목
+- `ExerciseSyncRequest.duration` 단위 (현재 분 단위로 송신 — ms / sec 여부 확인)
+- `DietSyncRequest.calories` 가 1식 단위인지 (현재 1식별로 분해 송신)
+- `SleepSyncRequest.quality` 가 0~100 인지 0.0~1.0 인지 (현재 efficiency 0~100 값 송신)
+- `SleepSyncRequest.stages` 가 required 인데 우리는 stage 단위 시각 데이터 없음 → 빈 배열 송신
+- FastAPI `/blood-glucose/{user_id}` body 스키마가 OpenAPI 에 비어있음 (`{value, timing, measured_at, memo}` 형태로 시도)
+- FastAPI 호출에 Bearer 토큰 필요한지 (현재 동일 토큰 송신, 불필요하면 무시될 것)
+
+### 빌드 검증
+`./gradlew compileDebugKotlin` → BUILD SUCCESSFUL
+
+---
+
 ## [2026-05-19] 백엔드 Base URL 교체 + 라이프스타일/혈당 DB 저장 API 호출 추가
 
 ### 작업 내용
