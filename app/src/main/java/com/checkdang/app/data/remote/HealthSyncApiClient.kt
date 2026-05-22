@@ -86,24 +86,31 @@ object HealthSyncApiClient {
     /**
      * DynamoDB PK 가 `{user_id}#{date}` 라서 date 는 path query 로 분리해 보낸다.
      * 본문 필드: level / meal_timing / timestamp / memo  (FastAPI 측 명세에 맞춤)
+     *
+     * @return 전송에 성공한 record 목록. 호출 측이 [GlucoseSyncStore.markPushed] 로
+     *         재전송 방지 기록을 남기는 데 사용한다.
      */
-    suspend fun pushGlucose(records: List<GlucoseRecord>) = withContext(Dispatchers.IO) {
-        val userId = SessionHolder.userId ?: return@withContext
-        records.forEach { r ->
-            runCatching {
-                val zoned = Instant.ofEpochMilli(r.measuredAt).atZone(KST)
-                val dateKst      = zoned.toLocalDate().toString()        // 2026-05-19
-                val timestampKst = zoned.toLocalDateTime().toString()    // 2026-05-19T11:36:59
-                val body = JSONObject().apply {
-                    put("level",       r.value)
-                    put("meal_timing", mapMealTiming(r.timing))
-                    put("timestamp",   timestampKst)
-                    r.memo?.let { put("memo", it) }
-                }
-                post("/blood-glucose/$userId?date=$dateKst", body)
-            }.onFailure { Log.w(TAG, "pushGlucose record ${r.id} failed: ${it.message}") }
+    suspend fun pushGlucose(records: List<GlucoseRecord>): List<GlucoseRecord> =
+        withContext(Dispatchers.IO) {
+            val userId = SessionHolder.userId ?: return@withContext emptyList()
+            val sent = mutableListOf<GlucoseRecord>()
+            records.forEach { r ->
+                runCatching {
+                    val zoned = Instant.ofEpochMilli(r.measuredAt).atZone(KST)
+                    val dateKst      = zoned.toLocalDate().toString()        // 2026-05-19
+                    val timestampKst = zoned.toLocalDateTime().toString()    // 2026-05-19T11:36:59
+                    val body = JSONObject().apply {
+                        put("level",       r.value)
+                        put("meal_timing", mapMealTiming(r.timing))
+                        put("timestamp",   timestampKst)
+                        r.memo?.let { put("memo", it) }
+                    }
+                    post("/blood-glucose/$userId?date=$dateKst", body)
+                }.onSuccess { sent += r }
+                    .onFailure { Log.w(TAG, "pushGlucose record ${r.id} failed: ${it.message}") }
+            }
+            sent
         }
-    }
 
     // ── FastAPI: 일별 걸음 + 활동 칼로리 ─────────────────────────────────────
 

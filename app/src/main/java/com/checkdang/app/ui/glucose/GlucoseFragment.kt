@@ -59,6 +59,7 @@ class GlucoseFragment : Fragment() {
         binding.fabAdd.setOnClickListener {
             val sheet = GlucoseInputBottomSheet()
             sheet.onRecordSaved = { record ->
+                viewModel.pushManualRecord(record)
                 val statusColor = GlucoseEvaluator.getColor(record.status, requireContext())
                 Snackbar.make(binding.root, "기록이 저장되었어요", Snackbar.LENGTH_SHORT)
                     .setBackgroundTint(statusColor)

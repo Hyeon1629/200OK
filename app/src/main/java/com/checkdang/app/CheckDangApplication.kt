@@ -5,6 +5,7 @@ import android.util.Log
 import com.checkdang.app.data.billing.BillingRepository
 import com.checkdang.app.data.mock.MockDataProvider
 import com.checkdang.app.data.mock.UserStore
+import com.checkdang.app.data.remote.GlucoseSyncStore
 import com.checkdang.app.data.samsunghealth.SamsungHealthRepository
 import com.kakao.sdk.common.KakaoSdk
 import com.kakao.sdk.common.util.Utility
@@ -28,6 +29,7 @@ class CheckDangApplication : Application() {
         Log.d("KakaoKeyHash", Utility.getKeyHash(this))
         UserStore.init(this)
         MockDataProvider.init(this)
+        GlucoseSyncStore.init(this)
 
         billingRepository = BillingRepository(this)
         billingRepository.startConnection()

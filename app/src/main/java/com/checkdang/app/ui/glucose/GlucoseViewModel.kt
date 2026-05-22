@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.checkdang.app.data.health.HealthRepository
 import com.checkdang.app.data.mock.MockDataProvider
 import com.checkdang.app.data.model.GlucoseRecord
+import com.checkdang.app.data.remote.GlucoseSyncStore
 import com.checkdang.app.data.remote.HealthSyncApiClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -59,29 +60,40 @@ class GlucoseViewModel : ViewModel() {
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, WeeklyStats(0, 0, 0))
 
-    init { refresh() }
-
     fun setFilter(days: Int) { _filterDays.value = days }
 
     /**
      * 외부 헬스 소스(Samsung Health)에서 최근 90일 혈당을 재조회.
      * 비활성 소스면 빈 리스트 반환 → Mock 기록만 표시됨.
+     * 이미 전송한 record 는 [GlucoseSyncStore] 로 걸러 중복 전송을 막는다.
      */
     fun refresh() {
         viewModelScope.launch {
             val fetched = HealthRepository.getBloodGlucoseRecords(days = 90)
             _samsungRecords.value = fetched
-            pushGlucoseToServer(fetched)
+            pushGlucoseToServer(GlucoseSyncStore.filterUnsent(fetched))
         }
     }
 
     /**
-     * 외부 헬스 소스에서 가져온 혈당 기록을 백엔드 DB 로 push.
+     * 사용자가 바텀시트로 직접 입력한 혈당 1건을 백엔드 DB 로 push.
+     * 삼성헬스 자동 측정(refresh)과 별개로, 입력 즉시 단건 전송한다.
+     * 게스트(userId == null)는 HealthSyncApiClient.pushGlucose 가 스킵한다.
+     */
+    fun pushManualRecord(record: GlucoseRecord) {
+        viewModelScope.launch { pushGlucoseToServer(listOf(record)) }
+    }
+
+    /**
+     * 혈당 기록을 백엔드 DB 로 push 하고, 전송에 성공한 record 를
+     * [GlucoseSyncStore] 에 기록해 이후 재전송을 막는다.
      * 실패해도 UI 흐름은 유지되도록 runCatching 으로 감싼다.
      */
     private suspend fun pushGlucoseToServer(records: List<GlucoseRecord>) {
         if (records.isEmpty()) return
-        runCatching { HealthSyncApiClient.pushGlucose(records) }
+        val sent = runCatching { HealthSyncApiClient.pushGlucose(records) }
             .onFailure { Log.w("GlucoseViewModel", "pushGlucoseToServer failed: ${it.message}") }
+            .getOrDefault(emptyList())
+        GlucoseSyncStore.markPushed(sent)
     }
 }

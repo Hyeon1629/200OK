@@ -4,6 +4,75 @@
 
 ---
 
+## [2026-05-22] 혈당 push 중복 전송 억제 — GlucoseSyncStore
+
+### 배경
+실 단말 테스트 logcat 분석 결과, 혈당 탭에 진입할 때마다 `refresh()` 가 삼성헬스 90일치를
+통째로 재전송했다. 서버는 매 요청을 `201 Created` 로 새 row 생성 → 측정값 7건이 ~15초 안에
+4회 중복 전송돼 약 28 row 로 누적. 백엔드 멱등 처리(`sourceId` upsert) 가 근본 해결책이나,
+답변 대기 동안 앱 측에서 선제적으로 차단.
+
+### 작업 내용
+| 항목 | 변경 |
+|------|------|
+| GlucoseSyncStore | `data/remote/GlucoseSyncStore.kt` 신규 — push 완료한 record ID 를 SharedPreferences 에 영속 기록. `userId` 별 키 네임스페이스 분리(`pushed_ids_{userId}`) |
+| HealthSyncApiClient | `pushGlucose` 가 `Unit` → `List<GlucoseRecord>`(전송 성공분) 반환. `runCatching.onSuccess` 로 성공 record 수집 |
+| GlucoseViewModel | `refresh()` 가 `GlucoseSyncStore.filterUnsent()` 로 미전송 record 만 push. `pushGlucoseToServer` 가 전송 성공분을 `markPushed()` 로 기록 |
+| CheckDangApplication | `GlucoseSyncStore.init(this)` 호출 추가 |
+
+### 주요 결정
+- **영속 dedup (SharedPreferences)** — 앱 재시작 후에도 record 당 평생 1회만 전송. Room 금지 제약(CLAUDE.md) 하에서 기존 UserStore/MockDataProvider 와 동일 패턴
+- **userId 별 키 분리** — 한 단말에서 계정 전환 시, 삼성헬스 record ID(`{uid}-{timestamp}`)가 단말 공통이라 다른 사용자 기록까지 "전송됨"으로 잘못 걸러지는 것 방지
+- **성공분만 기록** — `pushGlucose` 가 전송 성공 record 만 반환 → 실패 record 는 다음 진입 시 재시도됨
+- **앱 측 임시 방어막** — 근본 해결은 백엔드 `/blood-glucose` 멱등화. 백엔드 답변 후 `sourceId` body 필드 추가 예정
+
+### 수정 파일
+- `data/remote/GlucoseSyncStore.kt` (신규)
+- `data/remote/HealthSyncApiClient.kt`
+- `ui/glucose/GlucoseViewModel.kt`
+- `CheckDangApplication.kt`
+
+### 빌드 검증
+`./gradlew assembleDebug` → BUILD SUCCESSFUL (1m 33s)
+
+---
+
+## [2026-05-22] 수동 입력 혈당 백엔드 push 연결
+
+### 배경
+백엔드 팀 피드백 — "삼성헬스 관련은 다 정상작동하는데 혈당필드가 서버에 업데이트가 안됐어서 정상작동 되는지 테스트 부탁". 점검 결과, 혈당 push 경로에 갭 발견:
+- `GlucoseInputBottomSheet` 의 바텀시트 직접 입력 혈당은 `MockDataProvider.addRecord()` 로 로컬 저장만 되고 `/blood-glucose` 호출이 전혀 없었다.
+- `GlucoseViewModel.refresh()` 의 `pushGlucoseToServer` 는 `HealthRepository.getBloodGlucoseRecords()`(= 삼성헬스 데이터)만 push.
+- 결과: 삼성헬스에 혈당 데이터가 있을 때만 서버 전송 발생. 수동 입력은 미전송.
+
+### 작업 내용
+| 항목 | 변경 |
+|------|------|
+| GlucoseViewModel | `pushManualRecord(record)` public 메서드 추가 — `viewModelScope` 에서 단건 `pushGlucoseToServer` 호출. ViewModel scope 라 바텀시트 dismiss 후에도 전송 유지 |
+| GlucoseFragment | `onRecordSaved` 콜백에서 `viewModel.pushManualRecord(record)` 호출 |
+| GlucoseViewModel | `init { refresh() }` 제거 — `GlucoseFragment.onViewCreated` 가 이미 `refresh()` 호출. 첫 진입 시 ViewModel init + onViewCreated 가 동시에 refresh 를 호출해 90일치 혈당이 2개 스레드로 중복 전송되던 문제 제거 |
+
+### 주요 결정
+- **단건 즉시 전송** — 삼성헬스 자동 측정(refresh, 90일 일괄)과 별개로 입력 즉시 push. 입력→서버 반영 지연 최소화
+- **게스트는 자동 스킵** — `HealthSyncApiClient.pushGlucose` 가 `SessionHolder.userId == null` 일 때 early return. 별도 분기 불필요
+- **ViewModel scope 사용** — 바텀시트 `lifecycleScope` 는 `dismiss()` 시 취소되므로, 전송은 살아남는 `GlucoseViewModel.viewModelScope` 에서 수행
+
+### 테스트 결과 (실 단말 logcat)
+- ✅ 수동 입력 / 삼성헬스 자동 측정 모두 `POST /blood-glucose/{user_id}?date=...` → **201 Created**
+- ⚠️ **중복 전송 잔존** — 혈당 탭 진입마다 `refresh()` 가 삼성헬스 90일치를 통째로 재전송. 서버가 `201 Created` 로 매번 새 row 생성 → 중복 누적. `init` 제거로 첫 진입 2배 호출은 해소했으나, 진입별 재전송은 백엔드 멱등 처리(`sourceId` 기반 upsert) 필요. [2026-05-19] 로그에서 예고된 항목
+
+### 미해결 / 후속
+- `POST /blood-glucose` 멱등화 — 앱이 record 고유 ID(`${uid}-${timestamp}` / 수동은 UUID)를 body 에 실어 보내고 백엔드가 upsert. 백엔드 협의 후 별도 STEP
+
+### 수정 파일
+- `ui/glucose/GlucoseViewModel.kt`
+- `ui/glucose/GlucoseFragment.kt`
+
+### 빌드 검증
+`./gradlew compileDebugKotlin` → BUILD SUCCESSFUL
+
+---
+
 ## [2026-05-22] 앱 아이콘 — 확정 시안 Adaptive Icon 통합
 
 ### 배경
