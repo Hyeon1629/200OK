@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,10 +20,10 @@ public class InsulinRecordController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<InsulinRecordResponse>> save(
-            @AuthenticationPrincipal UserDetails userDetails,
+            @AuthenticationPrincipal Jwt jwt,
             @RequestBody InsulinRecordRequest request) {
 
-        InsulinRecordResponse response = insulinRecordService.save(userDetails.getUsername(), request);
+        InsulinRecordResponse response = insulinRecordService.save(jwt.getClaimAsString("email"), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
     }
 }

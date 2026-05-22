@@ -14,7 +14,7 @@ import com.checkdang.service.KakaoPayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,19 +30,19 @@ public class PaymentController {
     // 결제 준비: 카카오 결제 페이지 URL 발급
     @PostMapping("/kakao/ready")
     public ResponseEntity<ApiResponse<KakaoPayReadyResponse>> kakaoReady(
-            @AuthenticationPrincipal UserDetails userDetails,
+            @AuthenticationPrincipal Jwt jwt,
             @RequestBody KakaoPayReadyRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(
-                kakaoPayService.ready(userDetails.getUsername(), request)));
+                kakaoPayService.ready(jwt.getClaimAsString("email"), request)));
     }
 
     // 결제 승인: 카카오 결제 완료 후 최종 확정
     @PostMapping("/kakao/approve")
     public ResponseEntity<ApiResponse<KakaoPayApproveResponse>> kakaoApprove(
-            @AuthenticationPrincipal UserDetails userDetails,
+            @AuthenticationPrincipal Jwt jwt,
             @RequestBody KakaoPayApproveRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(
-                kakaoPayService.approve(userDetails.getUsername(), request)));
+                kakaoPayService.approve(jwt.getClaimAsString("email"), request)));
     }
 
     // 결제 취소: 카카오 결제 페이지에서 취소 시 리다이렉트
@@ -60,18 +60,18 @@ public class PaymentController {
     // 결제 이력 조회
     @GetMapping("/history")
     public ResponseEntity<ApiResponse<List<PaymentRecord>>> getHistory(
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(ApiResponse.ok(
-                kakaoPayService.getHistory(userDetails.getUsername())));
+                kakaoPayService.getHistory(jwt.getClaimAsString("email"))));
     }
 
     // Google Play: Android 앱이 구매 완료 후 purchaseToken 전송 → 검증 후 프리미엄 부여
     @PostMapping("/google/verify")
     public ResponseEntity<ApiResponse<GooglePlayVerifyResponse>> googleVerify(
-            @AuthenticationPrincipal UserDetails userDetails,
+            @AuthenticationPrincipal Jwt jwt,
             @RequestBody GooglePlayVerifyRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(
-                googlePlayBillingService.verify(userDetails.getUsername(), request)));
+                googlePlayBillingService.verify(jwt.getClaimAsString("email"), request)));
     }
 
     // Google Play: Pub/Sub RTDN 수신 — 구독 갱신/취소/만료 등 상태 변화 처리 (JWT 불필요)

@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -53,7 +53,7 @@ public class GeminiReportController {
 
     @GetMapping("/health")
     public ResponseEntity<AiHealthReportResponse> getHealthReport(
-            @AuthenticationPrincipal UserDetails principal,
+            @AuthenticationPrincipal Jwt jwt,
             @RequestParam(defaultValue = "7") int days,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
@@ -63,7 +63,7 @@ public class GeminiReportController {
         LocalDateTime reportTo = to == null ? LocalDateTime.now() : to;
         LocalDateTime reportFrom = from == null ? reportTo.minusDays(Math.max(1, Math.min(days, 30))) : from;
 
-        User user = userRepository.findByEmail(principal.getUsername())
+        User user = userRepository.findByEmail(jwt.getClaimAsString("email"))
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
 
         List<Diet> diets = dietRepository

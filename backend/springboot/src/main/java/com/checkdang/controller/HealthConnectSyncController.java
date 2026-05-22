@@ -16,7 +16,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -33,56 +33,55 @@ public class HealthConnectSyncController {
 
     @PostMapping("/diets")
     public ResponseEntity<SyncResponse> syncDiets(
-            @AuthenticationPrincipal UserDetails principal,
+            @AuthenticationPrincipal Jwt jwt,
             @RequestBody @Valid List<DietSyncRequest> requests) {
-        // principal.getUsername()은 이메일 반환 (UserService.loadUserByUsername 참고)
-        String userEmail = principal.getUsername();
+        String userEmail = jwt.getClaimAsString("email");
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(dietService.syncFromSamsungHealth(userEmail, requests));
     }
 
     @GetMapping("/diets")
     public ResponseEntity<List<DietResponse>> getDiets(
-            @AuthenticationPrincipal UserDetails principal,
+            @AuthenticationPrincipal Jwt jwt,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
-        String userEmail = principal.getUsername();
+        String userEmail = jwt.getClaimAsString("email");
         return ResponseEntity.ok(dietService.getDiets(userEmail, from, to));
     }
 
     @PostMapping("/sleeps")
     public ResponseEntity<SyncResponse> syncSleeps(
-            @AuthenticationPrincipal UserDetails principal,
+            @AuthenticationPrincipal Jwt jwt,
             @RequestBody @Valid List<SleepSyncRequest> requests) {
-        String userEmail = principal.getUsername();
+        String userEmail = jwt.getClaimAsString("email");
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(sleepService.syncFromSamsungHealth(userEmail, requests));
     }
 
     @GetMapping("/sleeps")
     public ResponseEntity<List<SleepResponse>> getSleeps(
-            @AuthenticationPrincipal UserDetails principal,
+            @AuthenticationPrincipal Jwt jwt,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
-        String userEmail = principal.getUsername();
+        String userEmail = jwt.getClaimAsString("email");
         return ResponseEntity.ok(sleepService.getSleeps(userEmail, from, to));
     }
 
     @PostMapping("/exercises")
     public ResponseEntity<SyncResponse> syncExercises(
-            @AuthenticationPrincipal UserDetails principal,
+            @AuthenticationPrincipal Jwt jwt,
             @RequestBody @Valid List<ExerciseSyncRequest> requests) {
-        String userEmail = principal.getUsername();
+        String userEmail = jwt.getClaimAsString("email");
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(exerciseService.syncFromSamsungHealth(userEmail, requests));
     }
 
     @GetMapping("/exercises")
     public ResponseEntity<List<ExerciseResponse>> getExercises(
-            @AuthenticationPrincipal UserDetails principal,
+            @AuthenticationPrincipal Jwt jwt,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
-        String userEmail = principal.getUsername();
+        String userEmail = jwt.getClaimAsString("email");
         return ResponseEntity.ok(exerciseService.getExercises(userEmail, from, to));
     }
 }
