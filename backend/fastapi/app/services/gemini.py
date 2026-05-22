@@ -1,8 +1,11 @@
+import logging
 import os
 from typing import Any
 
 from dotenv import load_dotenv
 from google import genai
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -36,6 +39,15 @@ def _generate_text(prompt: str, max_output_tokens: int) -> str:
             "max_output_tokens": max_output_tokens,
         },
     )
+    candidates = response.candidates or []
+    if candidates:
+        finish_reason = getattr(candidates[0], "finish_reason", None)
+        if finish_reason is not None and "MAX_TOKENS" in str(finish_reason).upper():
+            logger.warning(
+                "Gemini 응답이 잘렸습니다 (finish_reason=MAX_TOKENS, max_output_tokens=%d). "
+                "max_output_tokens 증가를 검토하세요.",
+                max_output_tokens,
+            )
     return response.text or ""
 
 
@@ -104,7 +116,7 @@ def analyze_diet(diets: list[dict[str, Any]]) -> str:
 식단 데이터:
 {diets}
 """
-    return _generate_text(prompt, max_output_tokens=600)
+    return _generate_text(prompt, max_output_tokens=1500)
 
 
 def analyze_health_report(data: dict[str, Any]) -> str:

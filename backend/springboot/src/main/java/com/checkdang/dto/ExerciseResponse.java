@@ -19,8 +19,6 @@ public class ExerciseResponse {
     private Integer sets;
     private Integer reps;
     private Double weightKg;
-    private String aiResult;
-    private String aiRecommendation;
     private Exercise.DataSource dataSource;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -36,8 +34,6 @@ public class ExerciseResponse {
                 .sets(exercise.getSets())
                 .reps(exercise.getReps())
                 .weightKg(exercise.getWeightKg())
-                .aiResult(exercise.getAiResult())
-                .aiRecommendation(exercise.getAiRecommendation())
                 .dataSource(exercise.getDataSource())
                 .createdAt(exercise.getCreatedAt())
                 .updatedAt(exercise.getUpdatedAt())

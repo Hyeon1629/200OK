@@ -41,12 +41,6 @@ public class Exercise {
     @Column(name = "weight_kg")
     private Double weightKg;
 
-    @Column(name = "ai_result", columnDefinition = "TEXT")
-    private String aiResult;
-
-    @Column(name = "ai_recommendation", columnDefinition = "TEXT")
-    private String aiRecommendation;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private DataSource dataSource;

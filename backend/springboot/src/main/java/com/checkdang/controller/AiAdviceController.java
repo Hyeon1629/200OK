@@ -1,8 +1,12 @@
 package com.checkdang.controller;
 
+import com.checkdang.domain.AiAnalysis;
+import com.checkdang.domain.User;
 import com.checkdang.dto.AiAdviceResponse;
 import com.checkdang.dto.DietResponse;
+import com.checkdang.repository.UserRepository;
 import com.checkdang.service.AiAnalysisClient;
+import com.checkdang.service.AiAnalysisService;
 import com.checkdang.service.DietService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -15,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/ai")
@@ -23,6 +28,8 @@ public class AiAdviceController {
 
     private final DietService dietService;
     private final AiAnalysisClient aiAnalysisClient;
+    private final UserRepository userRepository;
+    private final AiAnalysisService aiAnalysisService;
 
     @GetMapping("/diet-advice")
     public AiAdviceResponse getDietAdvice(
@@ -31,9 +38,18 @@ public class AiAdviceController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to
     ) {
         String userEmail = principal.getUsername();
-        List<DietResponse> diets = dietService.getDiets(userEmail, from, to);
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        String userId = String.valueOf(user.getId());
 
+        Optional<String> cached = aiAnalysisService.findCached(userId, AiAnalysis.AnalysisType.DIET_ADVICE, from, to);
+        if (cached.isPresent()) {
+            return new AiAdviceResponse(cached.get());
+        }
+
+        List<DietResponse> diets = dietService.getDiets(userEmail, from, to);
         String answer = aiAnalysisClient.analyzeDiet(diets);
+        aiAnalysisService.save(userId, AiAnalysis.AnalysisType.DIET_ADVICE, from, to, answer);
         return new AiAdviceResponse(answer);
     }
 

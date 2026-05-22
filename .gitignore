@@ -1,0 +1,7 @@
+claude_plan/
+.idea/
+backup-archives/
+tatus
+report.md
+deploy-fastapi.sh
+backend/docs/

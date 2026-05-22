@@ -1,5 +1,6 @@
 package com.checkdang.controller;
 
+import com.checkdang.domain.AiAnalysis;
 import com.checkdang.domain.Diet;
 import com.checkdang.domain.Exercise;
 import com.checkdang.domain.Sleep;
@@ -9,6 +10,7 @@ import com.checkdang.repository.ExerciseRepository;
 import com.checkdang.repository.SleepRepository;
 import com.checkdang.repository.UserRepository;
 import com.checkdang.service.AiAnalysisClient;
+import com.checkdang.service.AiAnalysisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/ai/reports")
@@ -36,6 +39,7 @@ public class GeminiReportController {
     private final SleepRepository sleepRepository;
     private final ExerciseRepository exerciseRepository;
     private final AiAnalysisClient aiAnalysisClient;
+    private final AiAnalysisService aiAnalysisService;
 
     @GetMapping("/health")
     public ResponseEntity<AiHealthReportResponse> getHealthReport(
@@ -51,25 +55,37 @@ public class GeminiReportController {
 
         User user = userRepository.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
+        String userId = String.valueOf(user.getId());
+
+        Optional<String> cached = aiAnalysisService.findCached(
+                userId, AiAnalysis.AnalysisType.HEALTH_REPORT, reportFrom, reportTo);
+        if (cached.isPresent()) {
+            return ResponseEntity.ok(new AiHealthReportResponse(
+                    reportFrom, reportTo,
+                    new AiReportSourceCount(0, 0, 0),
+                    cached.get()
+            ));
+        }
 
         List<Diet> diets = dietRepository
-                .findByUserIdAndRecordedAtBetweenOrderByRecordedAtDesc(String.valueOf(user.getId()), reportFrom, reportTo)
+                .findByUserIdAndRecordedAtBetweenOrderByRecordedAtDesc(userId, reportFrom, reportTo)
                 .stream()
                 .limit(MAX_ROWS_PER_SECTION)
                 .toList();
         List<Sleep> sleeps = sleepRepository
-                .findWithStagesByUserIdAndRange(String.valueOf(user.getId()), reportFrom, reportTo)
+                .findWithStagesByUserIdAndRange(userId, reportFrom, reportTo)
                 .stream()
                 .limit(MAX_ROWS_PER_SECTION)
                 .toList();
         List<Exercise> exercises = exerciseRepository
-                .findByUserIdAndRecordedAtBetweenOrderByRecordedAtDesc(String.valueOf(user.getId()), reportFrom, reportTo)
+                .findByUserIdAndRecordedAtBetweenOrderByRecordedAtDesc(userId, reportFrom, reportTo)
                 .stream()
                 .limit(MAX_ROWS_PER_SECTION)
                 .toList();
 
         Map<String, Object> reportData = buildReportData(user, reportFrom, reportTo, diets, sleeps, exercises);
         String report = aiAnalysisClient.analyzeHealthReport(reportData);
+        aiAnalysisService.save(userId, AiAnalysis.AnalysisType.HEALTH_REPORT, reportFrom, reportTo, report);
 
         return ResponseEntity.ok(new AiHealthReportResponse(
                 reportFrom,
