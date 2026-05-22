@@ -4,6 +4,83 @@
 
 ---
 
+## [2026-05-22] 비회원 데이터 영속화 — 콜드 스타트 후에도 유지
+
+### 배경
+비회원(`SocialProvider.NONE`)으로 진입한 사용자는 앱 종료 시 모든 상태가 휘발되어,
+다음 실행 때 다시 LoginActivity 부터 시작하고 입력했던 혈당/통증 기록도 사라졌다.
+원인은 세 군데에 흩어진 in-memory 전용 상태:
+1. `SessionHolder` (게스트 플래그/프로필) — 디스크 미저장
+2. `MockDataProvider._records` / `_painRecords` — 직접 입력 기록 휘발
+3. `ProfileViewModel.save` — `provider==NONE` 일 때 디스크 저장 의도적 차단
+
+### 작업 내용
+| 항목 | 변경 |
+|------|------|
+| UserStore | `markGuestSession` / `isGuestSession` / `clearGuestSession` / `clearAllForProvider` 추가. 게스트도 `SocialProvider.NONE` 네임스페이스로 프로필 영속화 |
+| MockDataProvider | `init(context)` + JSON 직렬화로 혈당·통증 기록 SharedPreferences 저장. `clearAllUserData()` — 회원탈퇴/게스트 wipe 용. 가족 구성원은 PAID 전용 + in-memory 유지 |
+| CheckDangApplication | `MockDataProvider.init(this)` 호출 — `UserStore.init` 옆에 배치 |
+| SplashActivity | `UserStore.isGuestSession()` 이면 `SessionHolder` 복원 후 `MainActivity` 로 바로 진입. 그 외는 기존 동작(`LoginActivity`) |
+| OnboardingActivity | 게스트 분기에서 `UserStore.saveProfile(NONE, ...)` + `markRegistered(NONE)` + `markGuestSession()` |
+| ProfileViewModel | `save()` 의 NONE 차단 제거 — 게스트도 프로필 편집/저장 영속화 |
+| MenuFragment | 로그인 버튼 클릭 시 `clearGuestSession()` (자동 게스트 진입 해제). 회원탈퇴 시 `clearAllForProvider` + `MockDataProvider.clearAllUserData` + 게스트면 `clearGuestSession` |
+
+### 주요 결정
+- **게스트 → 로그인 전환 시 기록은 보존** — 같은 디바이스에서 게스트로 다시 돌아올 수 있으므로 `MockDataProvider` 데이터를 지우지 않음. 진짜 삭제는 "회원 탈퇴" 만 수행
+- **JSON 기반 직렬화 (org.json)** — Room/DB 도입 제약(CLAUDE.md) 준수. 기록 수가 수백 건을 넘어가면 SQLite 로 마이그레이션 필요 (현재는 적정 수준)
+- **MockDataProvider 영속화는 게스트/로그인 사용자 모두에게 적용** — 본 작업 범위는 게스트지만, 분기를 두면 로그인 사용자가 입력한 직접입력 혈당도 백엔드 push 와 별개로 휘발되어 UX 가 깨짐. 통합 영속화가 단순/안전
+- **게스트 진단 정보 push 안 함** — `accessToken == null` 이라 `HealthSyncApiClient` 의 Bearer 가 빠지며, FastAPI `userId` 도 null → `pushGlucose` 가 일찍 return. 백엔드 송신은 영향 없음
+
+### 수정 파일
+- `data/mock/UserStore.kt`
+- `data/mock/MockDataProvider.kt`
+- `CheckDangApplication.kt`
+- `ui/splash/SplashActivity.kt`
+- `ui/auth/onboarding/OnboardingActivity.kt`
+- `ui/profile/ProfileViewModel.kt`
+- `ui/menu/MenuFragment.kt`
+
+### 빌드 검증
+`./gradlew compileDebugKotlin` → BUILD SUCCESSFUL (17s)
+
+---
+
+## [2026-05-22] 환자 프로필 관리 화면 + 알림 설정 라우팅
+
+### 배경
+메뉴 화면의 "환자 프로필 관리" / "알림 설정" 항목이 "준비 중" Toast 만 띄우던 상태. 두 항목을 실제로 동작하도록 연결.
+
+### 작업 내용
+| 항목 | 변경 |
+|------|------|
+| 데이터 모델 | `PatientProfile` 에 `diabetesType` / `diagnosedAt` / `fastingTargetMgdl` / `postMealTargetMgdl` 필드 추가. `DiabetesType` enum 신규 (NONE/TYPE_1/TYPE_2/GESTATIONAL/PRE) |
+| 영속화 | `UserStore.saveProfile` / `getProfile` 가 새 필드 4종을 SharedPreferences 에 직렬화. enum 역직렬화 실패 시 NONE 으로 fallback |
+| 화면 신규 | `ui/profile/ProfileActivity` + `ProfileViewModel` + `activity_profile.xml`. 기본정보(닉네임/생년월일/성별) / 신체정보(키/체중) / 당뇨정보(유형/진단시점) / 혈당목표(공복/식후) 4섹션 |
+| ViewModel | StateFlow 기반 — 초기값은 `UserStore` → `SessionHolder.currentProfile` → 빈 객체 순으로 로드. 닉네임만 필수 검증 |
+| 라우팅 | `MenuFragment` 의 `menuProfile.root` 클릭 → `ProfileActivity` 시작. 기존 "준비 중" Toast 그룹에서 분리 |
+| 알림 설정 | `menuNotification.root` 클릭 → `Settings.ACTION_APP_NOTIFICATION_SETTINGS` 인텐트로 시스템 앱 알림 설정 화면 이동. 실패 시 `ACTION_APPLICATION_DETAILS_SETTINGS` fallback |
+| Manifest | `ProfileActivity` 등록 (`parentActivityName=MainActivity`, `windowSoftInputMode=adjustResize`) |
+
+### 주요 결정
+- **혈당 목표치는 선택 입력** — 비워두면 `GlucoseEvaluator` 가 기본 가이드라인(공복 70-99 / 식후 <140) 사용. 현 단계에서는 evaluator 와 결합하지 않고 모델/영속화만 준비 (목표치 기반 평가 로직은 후속 작업)
+- **알림 설정은 인앱이 아닌 시스템 화면** — 푸시/알림 채널 미구현 상태이므로 OS 의 앱별 알림 설정으로 위임. minSdk=26 이라 `ACTION_APP_NOTIFICATION_SETTINGS` 항상 가용
+- **비회원(`authProvider == NONE`) 저장** — `SessionHolder.currentProfile` 메모리에만 반영, `UserStore` 디스크 저장은 스킵 (provider 키가 없어 다음 로그인 사용자와 섞이는 것을 방지)
+- **닉네임만 필수** — 다른 필드는 빈 값(0/empty) 허용. 0/empty 는 "미입력" 으로 해석
+
+### 수정 파일
+- `data/model/PatientProfile.kt`
+- `data/mock/UserStore.kt`
+- `ui/profile/ProfileActivity.kt` (신규)
+- `ui/profile/ProfileViewModel.kt` (신규)
+- `res/layout/activity_profile.xml` (신규)
+- `ui/menu/MenuFragment.kt`
+- `AndroidManifest.xml`
+
+### 빌드 검증
+`./gradlew compileDebugKotlin` → BUILD SUCCESSFUL (50s)
+
+---
+
 ## [2026-05-19] FastAPI step_calorie / heart_rate 연동 추가
 
 ### 배경

@@ -2,7 +2,9 @@ package com.checkdang.app.ui.menu
 
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,8 +15,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.checkdang.app.R
+import com.checkdang.app.data.mock.MockDataProvider
 import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.mock.SocialProvider
+import com.checkdang.app.data.mock.UserStore
 import com.checkdang.app.data.mock.UserTier
 import com.checkdang.app.databinding.FragmentMenuBinding
 import com.checkdang.app.databinding.ItemMenuRowBinding
@@ -22,6 +26,7 @@ import com.checkdang.app.data.remote.AuthApiClient
 import com.checkdang.app.ui.auth.login.LoginActivity
 import com.checkdang.app.ui.family.FamilyActivity
 import com.checkdang.app.ui.menu.subscription.SubscriptionActivity
+import com.checkdang.app.ui.profile.ProfileActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 
@@ -49,6 +54,9 @@ class MenuFragment : Fragment() {
         }
 
         binding.btnLoginFromMenu.setOnClickListener {
+            // 게스트 → 로그인 전환: 다음 콜드 스타트에서 자동 게스트 진입이 일어나지 않도록
+            // 세션 플래그만 해제. 게스트가 입력한 기록은 보존(추후 같은 게스트로 돌아오면 유지).
+            UserStore.clearGuestSession()
             SessionHolder.reset()
             startActivity(
                 Intent(requireContext(), LoginActivity::class.java).apply {
@@ -140,7 +148,6 @@ class MenuFragment : Fragment() {
 
     private fun refreshLockedItems(tier: UserTier) {
         val isPaid = tier == UserTier.PAID
-        applyLock(binding.menuBackup, locked = !isPaid)
         applyLock(binding.menuFamily, locked = !isPaid)
     }
 
@@ -155,16 +162,13 @@ class MenuFragment : Fragment() {
         // 섹션 1: 내 정보
         configRow(binding.menuProfile,      R.drawable.ic_person, "환자 프로필 관리")
         configRow(binding.menuNotification, R.drawable.ic_bell,   "알림 설정")
-        configRow(binding.menuUnit,         R.drawable.ic_unit,   "단위 설정 (mg/dL)")
 
         // 섹션 2: 데이터
         configRow(binding.menuExport, R.drawable.ic_export, "데이터 내보내기 (PDF/CSV)")
-        configRow(binding.menuBackup, R.drawable.ic_backup, "데이터 백업")
         configRow(binding.menuFamily, R.drawable.ic_group,  "가족 공유")
 
         // 섹션 3: 고객센터
         configRow(binding.menuFaq,     R.drawable.ic_help,     "자주 묻는 질문")
-        configRow(binding.menuSupport, R.drawable.ic_chat,     "1:1 문의")
         configRow(binding.menuTerms,   R.drawable.ic_document, "이용약관")
         configRow(binding.menuPrivacy, R.drawable.ic_shield,   "개인정보처리방침")
         configRow(binding.menuVersion, R.drawable.ic_info,     "앱 버전",
@@ -185,19 +189,43 @@ class MenuFragment : Fragment() {
                 showPremiumDialog()
             }
         }
-        binding.menuBackup.root.setOnClickListener {
-            if (SessionHolder.tier != UserTier.PAID) showPremiumDialog()
-        }
         binding.menuLogout.root.setOnClickListener   { showLogoutDialog() }
         binding.menuWithdraw.root.setOnClickListener { showWithdrawDialog() }
 
+        binding.menuProfile.root.setOnClickListener {
+            startActivity(Intent(requireContext(), ProfileActivity::class.java))
+        }
+        binding.menuNotification.root.setOnClickListener {
+            openAppNotificationSettings()
+        }
+
         listOf(
-            binding.menuProfile, binding.menuNotification, binding.menuUnit,
-            binding.menuExport, binding.menuFaq, binding.menuSupport,
+            binding.menuExport, binding.menuFaq,
             binding.menuTerms, binding.menuPrivacy
         ).forEach { row ->
             row.root.setOnClickListener {
                 Toast.makeText(requireContext(), "${row.tvMenuTitle.text} (준비 중)", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    /**
+     * 시스템의 앱별 알림 설정 화면으로 이동.
+     * - API 26+ : ACTION_APP_NOTIFICATION_SETTINGS (앱 minSdk=26 이므로 항상 가용)
+     * - 실패 시 앱 정보 화면으로 fallback
+     */
+    private fun openAppNotificationSettings() {
+        val context = requireContext()
+        val pkg = context.packageName
+        val primary = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(Settings.EXTRA_APP_PACKAGE, pkg)
+        }
+        runCatching { startActivity(primary) }.onFailure {
+            val fallback = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.fromParts("package", pkg, null)
+            }
+            runCatching { startActivity(fallback) }.onFailure {
+                Toast.makeText(context, "설정 화면을 열 수 없어요", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -271,6 +299,13 @@ class MenuFragment : Fragment() {
             .setTitle("회원 탈퇴")
             .setMessage("탈퇴하면 모든 데이터가 삭제돼요.\n정말 탈퇴하시겠어요?")
             .setPositiveButton("탈퇴") { _, _ ->
+                // 현재 사용자(게스트 포함)의 영속 데이터를 모두 삭제.
+                val provider = SessionHolder.authProvider
+                UserStore.clearAllForProvider(provider)
+                if (provider == SocialProvider.NONE || SessionHolder.isGuest) {
+                    UserStore.clearGuestSession()
+                }
+                MockDataProvider.clearAllUserData()
                 SessionHolder.reset()
                 startActivity(
                     Intent(requireContext(), LoginActivity::class.java).apply {

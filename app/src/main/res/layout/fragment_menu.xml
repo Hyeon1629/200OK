@@ -178,14 +178,6 @@
                     android:id="@+id/menu_notification"
                     android:layout_width="match_parent"
                     android:layout_height="56dp" />
-
-                <View android:layout_width="match_parent" android:layout_height="1dp"
-                    android:layout_marginStart="56dp" android:background="@color/divider" />
-
-                <include layout="@layout/item_menu_row"
-                    android:id="@+id/menu_unit"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -215,14 +207,6 @@
 
                 <include layout="@layout/item_menu_row"
                     android:id="@+id/menu_export"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp" />
-
-                <View android:layout_width="match_parent" android:layout_height="1dp"
-                    android:layout_marginStart="56dp" android:background="@color/divider" />
-
-                <include layout="@layout/item_menu_row"
-                    android:id="@+id/menu_backup"
                     android:layout_width="match_parent"
                     android:layout_height="56dp" />
 
@@ -262,14 +246,6 @@
 
                 <include layout="@layout/item_menu_row"
                     android:id="@+id/menu_faq"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp" />
-
-                <View android:layout_width="match_parent" android:layout_height="1dp"
-                    android:layout_marginStart="56dp" android:background="@color/divider" />
-
-                <include layout="@layout/item_menu_row"
-                    android:id="@+id/menu_support"
                     android:layout_width="match_parent"
                     android:layout_height="56dp" />
 

@@ -108,6 +108,10 @@ class OnboardingActivity : AppCompatActivity() {
             SessionHolder.isGuest    = true
             SessionHolder.isLoggedIn = false
             SessionHolder.tier       = UserTier.GUEST
+            // 비회원도 다음 콜드 스타트에서 LoginActivity 를 건너뛰도록 디스크에 영속화.
+            UserStore.saveProfile(SocialProvider.NONE, profile)
+            UserStore.markRegistered(SocialProvider.NONE)
+            UserStore.markGuestSession()
         } else {
             // isLoggedIn / tier / 토큰은 LoginActivity.callSocialLoginApi()에서 이미 설정됨
             UserStore.saveProfile(SessionHolder.authProvider, profile)

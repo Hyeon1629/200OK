@@ -1,5 +1,8 @@
 package com.checkdang.app.data.mock
 
+import android.content.Context
+import android.content.SharedPreferences
+import android.util.Log
 import com.checkdang.app.data.model.AIAnalysisResult
 import com.checkdang.app.data.model.BodyPart
 import com.checkdang.app.data.model.Correlation
@@ -17,8 +20,35 @@ import com.checkdang.app.util.MealTiming
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.json.JSONArray
+import org.json.JSONObject
 
+/**
+ * 사용자가 직접 입력한 기록(혈당/통증)의 in-memory + SharedPreferences 영속 저장소.
+ *
+ * Room/DB 도입 제약(CLAUDE.md) 하에서 게스트·로그인 사용자 모두 앱 재시작 후에도
+ * 본인이 입력한 기록을 유지하기 위한 최소 구현. 직렬화는 [org.json] 사용 (앱 내 다른
+ * 모듈과 동일한 라이브러리).
+ */
 object MockDataProvider {
+
+    private const val TAG = "MockDataProvider"
+    private const val PREFS_NAME = "mock_data_store"
+    private const val KEY_GLUCOSE_RECORDS = "glucose_records"
+    private const val KEY_PAIN_RECORDS    = "pain_records"
+
+    private var prefs: SharedPreferences? = null
+
+    /**
+     * Application.onCreate() 에서 [UserStore.init] 와 함께 호출. 디스크의 기록을 메모리로 로드.
+     * 컨텍스트가 주입되기 전까지는 메모리 전용으로 동작 (테스트/프리뷰 보호).
+     */
+    fun init(context: Context) {
+        prefs = context.applicationContext
+            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        restoreGlucose()
+        restorePain()
+    }
 
     // ── Glucose Records ──────────────────────────────────────────────────────
 
@@ -39,9 +69,45 @@ object MockDataProvider {
     fun addRecord(record: GlucoseRecord) {
         _records.add(record)
         _recordsFlow.value = _records.sortedByDescending { it.measuredAt }
+        persistGlucose()
     }
 
-    // TODO(backend): 실제 API 연동 시 서버에서 레코드를 로드하여 _records에 주입
+    private fun restoreGlucose() {
+        val raw = prefs?.getString(KEY_GLUCOSE_RECORDS, null) ?: return
+        runCatching {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<GlucoseRecord>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                list += GlucoseRecord(
+                    id         = o.getString("id"),
+                    value      = o.getInt("value"),
+                    timing     = MealTiming.valueOf(o.getString("timing")),
+                    measuredAt = o.getLong("measuredAt"),
+                    memo       = if (o.isNull("memo")) null else o.optString("memo")
+                )
+            }
+            _records.clear()
+            _records.addAll(list)
+            _recordsFlow.value = _records.sortedByDescending { it.measuredAt }
+            Log.i(TAG, "restoreGlucose: loaded ${list.size} records")
+        }.onFailure { Log.w(TAG, "restoreGlucose failed: ${it.message}") }
+    }
+
+    private fun persistGlucose() {
+        val store = prefs ?: return
+        val arr = JSONArray()
+        _records.forEach { r ->
+            arr.put(JSONObject().apply {
+                put("id",         r.id)
+                put("value",      r.value)
+                put("timing",     r.timing.name)
+                put("measuredAt", r.measuredAt)
+                if (r.memo != null) put("memo", r.memo) else put("memo", JSONObject.NULL)
+            })
+        }
+        store.edit().putString(KEY_GLUCOSE_RECORDS, arr.toString()).apply()
+    }
 
     // ── Summary / Lifestyle ──────────────────────────────────────────────────
 
@@ -75,6 +141,63 @@ object MockDataProvider {
     fun addPainRecord(record: PainRecord) {
         _painRecords.add(record)
         _painRecordsFlow.value = _painRecords.sortedByDescending { it.recordedAt }
+        persistPain()
+    }
+
+    private fun restorePain() {
+        val raw = prefs?.getString(KEY_PAIN_RECORDS, null) ?: return
+        runCatching {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<PainRecord>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                val typesArr = o.getJSONArray("painTypes")
+                val types = (0 until typesArr.length()).mapNotNull { idx ->
+                    runCatching { PainType.valueOf(typesArr.getString(idx)) }.getOrNull()
+                }
+                list += PainRecord(
+                    id         = o.getString("id"),
+                    bodyPart   = BodyPart.valueOf(o.getString("bodyPart")),
+                    intensity  = o.getInt("intensity"),
+                    painTypes  = types,
+                    recordedAt = o.getLong("recordedAt")
+                )
+            }
+            _painRecords.clear()
+            _painRecords.addAll(list)
+            _painRecordsFlow.value = _painRecords.sortedByDescending { it.recordedAt }
+            Log.i(TAG, "restorePain: loaded ${list.size} records")
+        }.onFailure { Log.w(TAG, "restorePain failed: ${it.message}") }
+    }
+
+    private fun persistPain() {
+        val store = prefs ?: return
+        val arr = JSONArray()
+        _painRecords.forEach { p ->
+            arr.put(JSONObject().apply {
+                put("id",         p.id)
+                put("bodyPart",   p.bodyPart.name)
+                put("intensity",  p.intensity)
+                put("recordedAt", p.recordedAt)
+                put("painTypes",  JSONArray().apply { p.painTypes.forEach { put(it.name) } })
+            })
+        }
+        store.edit().putString(KEY_PAIN_RECORDS, arr.toString()).apply()
+    }
+
+    /**
+     * 게스트 회원탈퇴 등으로 사용자 직접 입력 기록을 일괄 삭제.
+     * 가족 구성원은 in-memory 전용이라 별도 삭제 불필요.
+     */
+    fun clearAllUserData() {
+        _records.clear()
+        _painRecords.clear()
+        _recordsFlow.value = emptyList()
+        _painRecordsFlow.value = emptyList()
+        prefs?.edit()
+            ?.remove(KEY_GLUCOSE_RECORDS)
+            ?.remove(KEY_PAIN_RECORDS)
+            ?.apply()
     }
 
     // TODO(backend): 실제 AI 분석 API로 교체 — 현재는 부위/유형 기반 규칙 기반 목 분석
