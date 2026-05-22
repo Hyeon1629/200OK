@@ -1,10 +1,7 @@
 package com.checkdang.config;
 
+import com.checkdang.security.GuestIdentityFilter;
 import com.checkdang.security.RateLimitFilter;
-import com.checkdang.security.jwt.JwtAuthenticationFilter;
-import com.checkdang.security.jwt.JwtTokenProvider;
-import com.checkdang.security.oauth2.CustomOAuth2UserService;
-import com.checkdang.security.oauth2.OAuth2SuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,21 +9,18 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import software.amazon.awssdk.services.cognitoidentity.CognitoIdentityClient;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final CustomOAuth2UserService customOAuth2UserService;
-    private final OAuth2SuccessHandler oAuth2SuccessHandler;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final UserDetailsService userDetailsService;
+    private final CognitoIdentityClient cognitoIdentityClient;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -35,55 +29,40 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 인증 없이 접근 가능
+                        // 어드민 전용 (permitAll보다 먼저 선언해야 /api/auth/** 와 충돌 안 함)
+                        .requestMatchers("/api/auth/internal/**").hasRole("ADMIN")
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/actuator/health",
-                                "/oauth2/**",
-                                "/login/oauth2/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
                                 "/api/payment/kakao/cancel",
                                 "/api/payment/kakao/fail",
-                                "/api/payment/google/rtdn"  // Pub/Sub은 JWT 없이 호출
+                                "/api/payment/google/rtdn"
                         ).permitAll()
-                        // 비회원(GUEST) + 일반 회원 모두 접근 가능 (홈 화면)
-                        .requestMatchers(
-                                "/api/home/**"
-                        ).hasAnyRole("GUEST", "PATIENT", "CAREGIVER", "ADMIN")
-                        // 인슐린 기록은 로그인 회원만
-                        .requestMatchers(
-                                "/api/records/insulin/**"
-                        ).hasAnyRole("PATIENT", "CAREGIVER", "ADMIN")
-                        // 나머지는 정식 회원만
+                        .requestMatchers("/api/home/**")
+                                .hasAnyRole("GUEST", "PATIENT", "CAREGIVER", "ADMIN")
+                        .requestMatchers("/api/records/insulin/**")
+                                .hasAnyRole("PATIENT", "CAREGIVER", "ADMIN")
                         .anyRequest().hasAnyRole("PATIENT", "CAREGIVER", "ADMIN")
                 )
-                .oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService))
-                        .successHandler(oAuth2SuccessHandler)
-                )
-                // Cognito ID Token 검증 (소셜 로그인 경로)
-                // 자체 HS256 JWT(로컬 로그인)는 JwtAuthenticationFilter가 먼저 처리하므로
-                // Cognito RS256 JWT가 온 경우에만 이 검증기가 동작
+                // Cognito User Pool RS256 JWT 검증
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(cognitoJwtConverter()))
                 )
+                // RateLimit → GuestIdentity → Cognito RS256 순서로 처리
+                .addFilterBefore(new RateLimitFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(
-                        new RateLimitFilter(),
-                        UsernamePasswordAuthenticationFilter.class
-                )
-                .addFilterBefore(
-                        new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService),
+                        new GuestIdentityFilter(cognitoIdentityClient),
                         UsernamePasswordAuthenticationFilter.class
                 );
 
         return http.build();
     }
 
-    // Cognito JWT의 cognito:groups 클레임을 Spring Security ROLE_xxx 권한으로 변환
-    // cognito:groups가 없는 경우(소셜 로그인 일반 사용자)는 기본 ROLE_PATIENT 부여
+    // Cognito JWT의 cognito:groups 클레임 → Spring Security ROLE_xxx 변환
+    // cognito:groups 없으면 기본 ROLE_PATIENT 부여 (소셜 로그인 일반 사용자)
     @Bean
     public JwtAuthenticationConverter cognitoJwtConverter() {
         JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();

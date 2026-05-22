@@ -1,7 +1,6 @@
 package com.checkdang.config;
 
 import com.checkdang.domain.PaymentRecord;
-import com.checkdang.domain.RefreshToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,9 +31,6 @@ public class DynamoDbConfig {
     @Value("${aws.dynamodb.endpoint:}")
     private String endpoint;
 
-    @Value("${aws.dynamodb.refresh-token-table-name}")
-    private String refreshTokenTableName;
-
     @Value("${aws.dynamodb.payment-table-name}")
     private String paymentTableName;
 
@@ -57,32 +53,6 @@ public class DynamoDbConfig {
         return DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(dynamoDbClient)
                 .build();
-    }
-
-    @Bean
-    public DynamoDbTable<RefreshToken> refreshTokenTable(DynamoDbEnhancedClient enhancedClient) {
-        StaticTableSchema<RefreshToken> schema = StaticTableSchema.builder(RefreshToken.class)
-                .newItemSupplier(RefreshToken::new)
-                .addAttribute(String.class, a -> a
-                        .name("token")
-                        .getter(RefreshToken::getToken)
-                        .setter(RefreshToken::setToken)
-                        .tags(StaticAttributeTags.primaryPartitionKey()))
-                .addAttribute(String.class, a -> a
-                        .name("userId")
-                        .getter(RefreshToken::getUserId)
-                        .setter(RefreshToken::setUserId))
-                .addAttribute(Long.class, a -> a
-                        .name("expiresAt")
-                        .getter(RefreshToken::getExpiresAt)
-                        .setter(RefreshToken::setExpiresAt))
-                .addAttribute(String.class, a -> a
-                        .name("createdAt")
-                        .getter(RefreshToken::getCreatedAt)
-                        .setter(RefreshToken::setCreatedAt))
-                .build();
-
-        return enhancedClient.table(refreshTokenTableName, schema);
     }
 
     @Bean
