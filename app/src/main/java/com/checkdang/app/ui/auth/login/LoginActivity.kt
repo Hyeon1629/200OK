@@ -24,6 +24,7 @@ import com.checkdang.app.data.remote.AuthApiClient
 import com.checkdang.app.databinding.ActivityLoginBinding
 import com.checkdang.app.databinding.DialogSocialLoadingBinding
 import com.checkdang.app.ui.auth.onboarding.OnboardingActivity
+import com.checkdang.app.ui.legal.TermsActivity
 import com.checkdang.app.ui.main.MainActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -253,19 +254,26 @@ class LoginActivity : AppCompatActivity() {
         val green = ContextCompat.getColor(this, R.color.brand_green)
         val span  = SpannableString(full)
 
-        fun applySpan(word: String) {
+        fun applySpan(word: String, onClick: () -> Unit) {
             val start = full.indexOf(word).takeIf { it >= 0 } ?: return
             val end   = start + word.length
             span.setSpan(ForegroundColorSpan(green), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             span.setSpan(object : ClickableSpan() {
-                override fun onClick(widget: View) {
-                    Toast.makeText(this@LoginActivity, "$word (준비 중)", Toast.LENGTH_SHORT).show()
-                }
+                override fun onClick(widget: View) = onClick()
             }, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
 
-        applySpan("이용약관")
-        applySpan("개인정보처리방침")
+        applySpan("이용약관") {
+            startActivity(
+                Intent(this, TermsActivity::class.java).apply {
+                    putExtra(TermsActivity.EXTRA_MODE, TermsActivity.MODE_VIEW)
+                }
+            )
+        }
+        applySpan("개인정보처리방침") {
+            // TODO(legal): PrivacyPolicyActivity 구현 후 동일 패턴으로 연결
+            Toast.makeText(this, "개인정보처리방침 (준비 중)", Toast.LENGTH_SHORT).show()
+        }
 
         binding.tvTermsNotice.text           = span
         binding.tvTermsNotice.movementMethod = LinkMovementMethod.getInstance()

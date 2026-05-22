@@ -64,6 +64,10 @@ dependencies {
     // Google Play Billing — 인앱 구독 결제 (STEP 10)
     implementation("com.android.billingclient:billing-ktx:7.1.1")
 
+    // === Markwon — Markdown 렌더링 (이용약관/개인정보처리방침 등 정적 문서) ===
+    implementation("io.noties.markwon:core:4.6.2")
+    implementation("io.noties.markwon:linkify:4.6.2")
+
     // === Samsung Health Data SDK (STEP 11 — Phase 2 활성화) ===
     // app/libs/samsung-health-data-api-1.1.0.aar — 개발자 모드 가정.
     // SDK 가 Kotlin coroutines suspend API 를 네이티브로 노출하므로 별도 래퍼 불필요.

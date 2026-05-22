@@ -4,6 +4,101 @@
 
 ---
 
+## [2026-05-22] 앱 아이콘 — 확정 시안 Adaptive Icon 통합
+
+### 배경
+기존 `mipmap-mdpi` 에 placeholder adaptive-icon (단색 2개 `brand_green_light` + `brand_green`) 만 존재. 디자이너 확정 SVG 시안(물방울 + 광택 + 체크) 을 Android Adaptive Icon 으로 통합.
+
+### 작업 내용
+| 항목 | 변경 |
+|------|------|
+| Background vector | `res/drawable/ic_launcher_background.xml` 신규 — 단색 `#F1F8E9` (모서리는 OS 마스킹) |
+| Foreground vector | `res/drawable/ic_launcher_foreground.xml` 신규 — 그라데이션 물방울 + 회전 group(광택) + stroke 체크. `xmlns:aapt` 로 gradient 컴파일 |
+| Adaptive-icon 정의 | `mipmap-anydpi-v26/ic_launcher.xml` + `ic_launcher_round.xml` 신규 |
+| Placeholder 정리 | `mipmap-mdpi/` 디렉토리 + placeholder 2개 파일 삭제 |
+| 시안 원본 보관 | `docs/assets/checkdang-icon.svg` 신규 — 변경 이력/참조용 |
+| AndroidManifest | `android:icon` / `android:roundIcon` 기 등록 상태 확인 — 변경 없음 |
+
+### 주요 결정 (Plan 단계 사용자 승인)
+- **Q1 좌표 표현 → 소수값 정확 사용** — 시안 픽셀 일치 우선
+- **Q2 Legacy fallback → 생성 안 함** — minSdk=26 이라 Android 7.1 이하 설치 불가, raster mipmap 은 죽은 자산
+- **원안 좌표 일부 산술 오차 보정** — `44.742→44.738`, `45.156→45.141`, `51.914→51.891`, `62.453→62.438` (× 0.2109375 정확 재계산). 시각 차이 약 0.02% (육안 식별 불가) 이나 "정확" 선언과 일치하도록 보정
+- **광택 ellipse 회전** — Vector Drawable 의 `<ellipse>` 자체 회전 미지원 → `<group rotation>` 로 우회
+- **물방울 path 는 SVG 그대로** — 시안 변경 금지 원칙. 상단 마진 3 (safe zone 경계 근접) 은 시각 검증에서 모니터링
+
+### 산출물 / 삭제 파일
+- 신규: `res/drawable/ic_launcher_background.xml`, `res/drawable/ic_launcher_foreground.xml`, `res/mipmap-anydpi-v26/ic_launcher.xml`, `res/mipmap-anydpi-v26/ic_launcher_round.xml`, `docs/assets/checkdang-icon.svg`, `docs/STEP_app_icon.md`
+- 삭제: `res/mipmap-mdpi/ic_launcher.xml`, `res/mipmap-mdpi/ic_launcher_round.xml` (+ 빈 디렉토리)
+- 수정: `CLAUDE.md` ("앱 아이콘" 섹션 신규)
+
+### 자가 검증 (9/9 통과)
+1. `./gradlew assembleDebug` → BUILD SUCCESSFUL (14s)
+2. adaptive icon 4종 파일 모두 존재
+3. 시안 색상 `#F1F8E9` / `#66BB6A` / `#388E3C` 모두 hit
+4. 그라데이션 수직 — `startX==endX==54`, `startY=21.094 < endY=86.484`
+5. 체크 stroke 4속성 — `strokeColor=#FFFFFF`, `strokeWidth=4.641`, `strokeLineCap=round`, `strokeLineJoin=round`
+6. 광택 회전 — `rotation=-32`, `pivotX=44.738`, `pivotY=45.984`
+7. 금기 컬러(red/orange 계열) 0건
+8. Manifest 에 `android:icon`, `android:roundIcon` 둘 다 `@mipmap/ic_launcher*` 참조
+9. `xmlns:aapt` foreground 에 hit (gradient 컴파일 필수)
+
+---
+
+## [2026-05-22] 이용약관 화면 + 약관 원문 (v1.0)
+
+### 배경
+메뉴 "이용약관"·"개인정보처리방침" 및 로그인 화면 캡션의 "이용약관"·"개인정보처리방침" SpannableString 이 모두 `"준비 중"` Toast 만 노출하던 상태. v1.0 약관 본문 확보 후 약관 조회 화면 신규 구현.
+
+### 작업 내용
+| 항목 | 변경 |
+|------|------|
+| 약관 원문 | `res/raw/terms_of_service.md` 신규 — v1.0 마크다운 원본 (221줄, UTF-8) |
+| 의존성 | `io.noties.markwon:core:4.6.2` + `linkify:4.6.2` 추가 (~250KB) |
+| Activity | `ui/legal/TermsActivity` 신규 — `MODE_VIEW` / `MODE_AGREEMENT` 분기. Markwon + LinkifyPlugin 으로 본문 렌더링 |
+| 레이아웃 | `activity_terms.xml` — Toolbar + 메타 카드 + 본문 `TextView`(textIsSelectable) + 옵션 footer(`동의하기` 버튼) |
+| Manifest | `TermsActivity` 등록 (`parentActivityName=MainActivity`) |
+| MenuFragment | 이용약관 메뉴 → `TermsActivity(MODE_VIEW)`. 개인정보처리방침은 Toast 유지 |
+| LoginActivity | 캡션 SpannableString — "이용약관" 클릭 시 `TermsActivity(MODE_VIEW)` 진입. `applySpan` 시그니처를 `(String, () -> Unit)` 으로 변경해 항목별 핸들러 주입 |
+| CLAUDE.md | "약관 관리" 섹션 추가 — 원문 위치, 버전 변경 절차, 법무 검토 TODO |
+
+### 주요 결정
+- **Markwon 채택** — `WebView` 대비 가볍고 표준 `TextView` 위에서 동작. 다른 옵션(긴 strings.xml, HTML+WebView)대비 가독성/유지보수성 우수
+- **TermsViewModel 미생성** — 화면이 read-only 라 상태가 없음. 빈 ViewModel 불필요 (원안에서 변경, Plan 단계에서 명시)
+- **개인정보처리방침은 본 STEP 범위 아님** — 본문 미확보. 후속 STEP 에서 동일 패턴(`PrivacyPolicyActivity`)으로 추가
+- **회원가입 흐름 약관 동의 강제는 별도 STEP** — `MODE_AGREEMENT` 코드 경로는 미리 깔아둠 (Activity 분기 + footer XML). `OnboardingActivity` 연결은 후속 작업
+- **다크 모드 미지원** — 앱 전체 라이트 전용 정책 유지, 야간 리소스 미작성
+
+### 자가 검증 (8/8 통과)
+1. `./gradlew assembleDebug` → BUILD SUCCESSFUL (56s)
+2. Markwon 의존성 2건 hit
+3. 약관 원문 221줄 (≥100줄)
+4. `MODE_VIEW`/`MODE_AGREEMENT` + `footerAgreement.visibility` 분기 모두 존재
+5. `activity_terms.xml:79 textIsSelectable="true"` hit
+6. Manifest 등록 + `parentActivityName` 존재
+7. `TermsActivity::class` 참조 2건 (MenuFragment, LoginActivity)
+8. 면책 키워드 "의료기기"·"의학적 진단"·"119" 모두 hit
+
+### 시각 검증 (수동, 사용자 확인 필요)
+- 메뉴 → 이용약관 진입, 마크다운 렌더링
+- 로그인 캡션 "이용약관" 클릭 → 진입
+- 본문 길게 누름 → 선택/복사
+- `support@checkdang.com` 탭 → 이메일 앱
+- 뒤로가기 → 진입 화면 복귀
+- 가독성: `lineSpacing 1.4`
+
+### 수정 파일
+- `docs/STEP_terms.md` (신규 — Plan 단계 설계서)
+- `app/build.gradle.kts`
+- `res/raw/terms_of_service.md` (신규)
+- `res/layout/activity_terms.xml` (신규)
+- `ui/legal/TermsActivity.kt` (신규)
+- `AndroidManifest.xml`
+- `ui/menu/MenuFragment.kt`
+- `ui/auth/login/LoginActivity.kt`
+- `CLAUDE.md`
+
+---
+
 ## [2026-05-22] 비회원 데이터 영속화 — 콜드 스타트 후에도 유지
 
 ### 배경

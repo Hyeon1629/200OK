@@ -103,6 +103,32 @@ data/samsunghealth/
 - (현재) Galaxy 기기 + Samsung Health 설정 → Health Platform → "Health Connect와 동기화" 활성화
 - (Partner 승인 후) Samsung Health Data SDK 로 직접 조회 (Steps/Exercise/Nutrition/Sleep/Weight)
 
+## 앱 아이콘
+
+- **확정 시안**: 물방울 + 좌상단 광택 + 흰색 체크 (참조: `docs/assets/checkdang-icon.svg`)
+- **구조**: Adaptive Icon (Background 단색 + Foreground vector). 원형/스퀴클/사각형 마스킹은 OS 가 처리
+- **파일**:
+  - `res/drawable/ic_launcher_background.xml` — 단색 `#F1F8E9`
+  - `res/drawable/ic_launcher_foreground.xml` — gradient 물방울 + ellipse 광택(group rotation -32°) + stroke 체크
+  - `res/mipmap-anydpi-v26/ic_launcher{,_round}.xml` — adaptive-icon 정의
+- **색상 변경 금지**: `#F1F8E9` / `#66BB6A` / `#388E3C` / `#FFFFFF`
+- **IMPORTANT: 체크 path 의 `strokeLineCap=round` 는 시각 일관성의 핵심. 변경 금지.**
+- **IMPORTANT: 광택의 회전 각도 -32° 는 디자이너 의도. 변경 시 시안 재승인 필요.**
+- 좌표는 viewBox 512 → 108 으로 변환 (× 0.2109375). foreground 의 그라데이션 컴파일에 `xmlns:aapt` 필수
+- Legacy mipmap raster 미생성 — minSdk=26 이라 Android 8.0+ 만 지원 (adaptive icon 항상 적용)
+- TODO(icon): Android 13+ Themed Icon (monochrome 레이어) 별도 STEP
+
+## 약관 관리
+
+- **약관 원문 위치**: `app/src/main/res/raw/terms_of_service.md` (UTF-8 마크다운)
+- **렌더링**: `TermsActivity` 가 Markwon 으로 표시 (`io.noties.markwon:core` + `linkify`)
+- **버전 변경 시**:
+  1. 약관 본문 상단의 `시행일` / `최종 수정일` / `버전` 갱신
+  2. 부칙 섹션에 변경 이력 한 줄 추가
+  3. **사용자 재동의가 필요할 수 있음** — 변경 범위에 따라 법무 검토 후 진행
+- TODO(legal): 현 v1.0 약관은 형식 템플릿이며, 출시 전 법무 검토 필요
+- TODO(legal): 개인정보처리방침은 본문 확보 후 동일 패턴(`PrivacyPolicyActivity`)으로 구현 예정
+
 ## Implementation Log 규칙
 
 **작업 완료 후 반드시 `IMPLEMENTATION_LOG.md`를 업데이트해야 한다.**

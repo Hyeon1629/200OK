@@ -110,6 +110,11 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
+            android:name=".ui.legal.TermsActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.main.MainActivity" />
+
+        <activity
             android:name=".ui.menu.subscription.SubscriptionActivity"
             android:exported="false"
             android:parentActivityName=".ui.main.MainActivity" />

@@ -25,6 +25,7 @@ import com.checkdang.app.databinding.ItemMenuRowBinding
 import com.checkdang.app.data.remote.AuthApiClient
 import com.checkdang.app.ui.auth.login.LoginActivity
 import com.checkdang.app.ui.family.FamilyActivity
+import com.checkdang.app.ui.legal.TermsActivity
 import com.checkdang.app.ui.menu.subscription.SubscriptionActivity
 import com.checkdang.app.ui.profile.ProfileActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -198,10 +199,17 @@ class MenuFragment : Fragment() {
         binding.menuNotification.root.setOnClickListener {
             openAppNotificationSettings()
         }
+        binding.menuTerms.root.setOnClickListener {
+            startActivity(
+                Intent(requireContext(), TermsActivity::class.java).apply {
+                    putExtra(TermsActivity.EXTRA_MODE, TermsActivity.MODE_VIEW)
+                }
+            )
+        }
 
         listOf(
             binding.menuExport, binding.menuFaq,
-            binding.menuTerms, binding.menuPrivacy
+            binding.menuPrivacy
         ).forEach { row ->
             row.root.setOnClickListener {
                 Toast.makeText(requireContext(), "${row.tvMenuTitle.text} (준비 중)", Toast.LENGTH_SHORT).show()

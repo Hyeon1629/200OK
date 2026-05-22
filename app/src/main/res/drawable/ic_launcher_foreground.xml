@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    체크당 런처 아이콘 foreground.
+    원본 SVG (viewBox 512x512) 를 108x108 으로 변환 (× 0.2109375).
+    레이어: 1) 그라데이션 물방울  2) 좌상단 광택 (회전 -32°)  3) 흰색 체크 stroke
+    색상/형태/회전 변경 금지 — CLAUDE.md "앱 아이콘" 섹션 참조.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 물방울 본체 -->
+    <path
+        android:pathData="M54,21.094
+                          C67.5,37.969 79.313,48.516 79.313,61.172
+                          A25.313,25.313 0 1,1 28.688,61.172
+                          C28.688,48.516 40.5,37.969 54,21.094 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="54"
+                android:startY="21.094"
+                android:endX="54"
+                android:endY="86.484"
+                android:startColor="#66BB6A"
+                android:endColor="#388E3C" />
+        </aapt:attr>
+    </path>
+
+    <!-- 좌상단 광택 — 회전 -32°. ellipse 의 회전은 group 의 rotation 으로 처리 -->
+    <group
+        android:name="highlight"
+        android:pivotX="44.738"
+        android:pivotY="45.984"
+        android:rotation="-32">
+        <path
+            android:pathData="M39.254,45.984
+                              a5.484,2.953 0 1,0 10.969,0
+                              a5.484,2.953 0 1,0 -10.969,0 Z"
+            android:fillColor="#FFFFFF"
+            android:fillAlpha="0.35" />
+    </group>
+
+    <!-- 체크 표시 — stroke 기반 폴리라인 -->
+    <path
+        android:pathData="M45.141,62.438 L51.891,69.609 L64.125,56.531"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.641"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>
