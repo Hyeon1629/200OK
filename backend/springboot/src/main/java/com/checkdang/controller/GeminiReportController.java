@@ -1,5 +1,6 @@
 package com.checkdang.controller;
 
+import com.checkdang.domain.AiAnalysis;
 import com.checkdang.domain.Diet;
 import com.checkdang.domain.Exercise;
 import com.checkdang.domain.Sleep;
@@ -8,8 +9,9 @@ import com.checkdang.repository.DietRepository;
 import com.checkdang.repository.ExerciseRepository;
 import com.checkdang.repository.SleepRepository;
 import com.checkdang.repository.UserRepository;
+import com.checkdang.service.AiAnalysisClient;
+import com.checkdang.service.AiAnalysisService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,18 +21,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/ai/reports")
@@ -38,18 +33,13 @@ import java.util.regex.Pattern;
 public class GeminiReportController {
 
     private static final int MAX_ROWS_PER_SECTION = 30;
-    private static final Pattern GEMINI_TEXT_PATTERN = Pattern.compile("\"text\"\\s*:\\s*\"((?:\\\\.|[^\"\\\\])*)\"");
 
     private final UserRepository userRepository;
     private final DietRepository dietRepository;
     private final SleepRepository sleepRepository;
     private final ExerciseRepository exerciseRepository;
-
-    @Value("${GEMINI_API_KEY:}")
-    private String geminiApiKey;
-
-    @Value("${GEMINI_MODEL:gemini-1.5-flash}")
-    private String geminiModel;
+    private final AiAnalysisClient aiAnalysisClient;
+    private final AiAnalysisService aiAnalysisService;
 
     @GetMapping("/health")
     public ResponseEntity<AiHealthReportResponse> getHealthReport(
@@ -65,25 +55,37 @@ public class GeminiReportController {
 
         User user = userRepository.findByEmail(jwt.getClaimAsString("email"))
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
+        String userId = String.valueOf(user.getId());
+
+        Optional<String> cached = aiAnalysisService.findCached(
+                userId, AiAnalysis.AnalysisType.HEALTH_REPORT, reportFrom, reportTo);
+        if (cached.isPresent()) {
+            return ResponseEntity.ok(new AiHealthReportResponse(
+                    reportFrom, reportTo,
+                    new AiReportSourceCount(0, 0, 0),
+                    cached.get()
+            ));
+        }
 
         List<Diet> diets = dietRepository
-                .findByUserIdAndRecordedAtBetweenOrderByRecordedAtDesc(String.valueOf(user.getId()), reportFrom, reportTo)
+                .findByUserIdAndRecordedAtBetweenOrderByRecordedAtDesc(userId, reportFrom, reportTo)
                 .stream()
                 .limit(MAX_ROWS_PER_SECTION)
                 .toList();
         List<Sleep> sleeps = sleepRepository
-                .findWithStagesByUserIdAndRange(String.valueOf(user.getId()), reportFrom, reportTo)
+                .findWithStagesByUserIdAndRange(userId, reportFrom, reportTo)
                 .stream()
                 .limit(MAX_ROWS_PER_SECTION)
                 .toList();
         List<Exercise> exercises = exerciseRepository
-                .findByUserIdAndRecordedAtBetweenOrderByRecordedAtDesc(String.valueOf(user.getId()), reportFrom, reportTo)
+                .findByUserIdAndRecordedAtBetweenOrderByRecordedAtDesc(userId, reportFrom, reportTo)
                 .stream()
                 .limit(MAX_ROWS_PER_SECTION)
                 .toList();
 
-        String prompt = buildPrompt(user, reportFrom, reportTo, diets, sleeps, exercises);
-        String report = requestGeminiReport(prompt);
+        Map<String, Object> reportData = buildReportData(user, reportFrom, reportTo, diets, sleeps, exercises);
+        String report = aiAnalysisClient.analyzeHealthReport(reportData);
+        aiAnalysisService.save(userId, AiAnalysis.AnalysisType.HEALTH_REPORT, reportFrom, reportTo, report);
 
         return ResponseEntity.ok(new AiHealthReportResponse(
                 reportFrom,
@@ -93,7 +95,7 @@ public class GeminiReportController {
         ));
     }
 
-    private String buildPrompt(
+    private Map<String, Object> buildReportData(
             User user,
             LocalDateTime from,
             LocalDateTime to,
@@ -101,178 +103,62 @@ public class GeminiReportController {
             List<Sleep> sleeps,
             List<Exercise> exercises) {
 
-        StringBuilder prompt = new StringBuilder();
-        prompt.append("""
-                You are the health data analysis assistant for CheckDang, a diabetes and lifestyle management app.
-                Write the report in Korean Markdown for direct frontend rendering.
-                Use only the database values below as evidence.
-                Do not provide a definitive medical diagnosis. If there are warning signs, recommend consulting a medical professional.
-
-                Follow this exact structure:
-                ## Summary
-                - 2 or 3 key changes
-                ## Diet Analysis
-                - Analyze carbohydrates, sugar, calories, protein, sodium, and meal timing
-                ## Sleep Analysis
-                - Analyze sleep duration and quality
-                ## Exercise Analysis
-                - Analyze exercise volume and recovery
-                ## Recommended Actions
-                - 3 concrete actions the user can try today
-
-                """);
-
-        prompt.append("User: ").append(nullToDash(user.getName())).append(" / ").append(nullToDash(user.getEmail())).append("\n");
-        prompt.append("Analysis period: ").append(from).append(" ~ ").append(to).append("\n\n");
-
-        prompt.append("[Diet records]\n");
-        if (diets.isEmpty()) {
-            prompt.append("- none\n");
-        } else {
-            diets.forEach(diet -> prompt.append("- ")
-                    .append(diet.getRecordedAt()).append(", ")
-                    .append(diet.getMealType()).append(", ")
-                    .append(nullToDash(diet.getFoodName()))
-                    .append(", calories=").append(nullToDash(diet.getCalories()))
-                    .append(", carbohydrate=").append(nullToDash(diet.getCarbohydrate()))
-                    .append(", protein=").append(nullToDash(diet.getProtein()))
-                    .append(", sugar=").append(nullToDash(diet.getSugar()))
-                    .append(", sodium=").append(nullToDash(diet.getSodium()))
-                    .append("\n"));
-        }
-
-        prompt.append("\n[Sleep records]\n");
-        if (sleeps.isEmpty()) {
-            prompt.append("- none\n");
-        } else {
-            sleeps.forEach(sleep -> prompt.append("- ")
-                    .append("sleepTime=").append(sleep.getSleepTime())
-                    .append(", wakeTime=").append(sleep.getWakeTime())
-                    .append(", durationMinutes=").append(nullToDash(sleep.getDuration()))
-                    .append(", quality=").append(nullToDash(sleep.getQuality()))
-                    .append("\n"));
-        }
-
-        prompt.append("\n[Exercise records]\n");
-        if (exercises.isEmpty()) {
-            prompt.append("- none\n");
-        } else {
-            exercises.forEach(exercise -> prompt.append("- ")
-                    .append(exercise.getRecordedAt()).append(", ")
-                    .append(nullToDash(exercise.getExerciseName()))
-                    .append(", durationMinutes=").append(nullToDash(exercise.getDuration()))
-                    .append(", sets=").append(nullToDash(exercise.getSets()))
-                    .append(", reps=").append(nullToDash(exercise.getReps()))
-                    .append(", weightKg=").append(nullToDash(exercise.getWeightKg()))
-                    .append("\n"));
-        }
-
-        return prompt.toString();
+        Map<String, Object> request = new LinkedHashMap<>();
+        request.put("user", userToMap(user));
+        request.put("from", from.toString());
+        request.put("to", to.toString());
+        request.put("diets", diets.stream().map(this::dietToMap).toList());
+        request.put("sleeps", sleeps.stream().map(this::sleepToMap).toList());
+        request.put("exercises", exercises.stream().map(this::exerciseToMap).toList());
+        return request;
     }
 
-    private String requestGeminiReport(String prompt) {
-        if (geminiApiKey == null || geminiApiKey.isBlank()) {
-            throw new IllegalStateException("GEMINI_API_KEY is not configured.");
-        }
-
-        String encodedModel = URLEncoder.encode(geminiModel, StandardCharsets.UTF_8);
-        String encodedKey = URLEncoder.encode(geminiApiKey, StandardCharsets.UTF_8);
-        URI uri = URI.create("https://generativelanguage.googleapis.com/v1beta/models/"
-                + encodedModel + ":generateContent?key=" + encodedKey);
-
-        String body = """
-                {
-                  "contents": [
-                    {
-                      "role": "user",
-                      "parts": [
-                        { "text": "%s" }
-                      ]
-                    }
-                  ],
-                  "generationConfig": {
-                    "temperature": 0.4,
-                    "maxOutputTokens": 1200
-                  }
-                }
-                """.formatted(jsonEscape(prompt));
-
-        HttpRequest request = HttpRequest.newBuilder(uri)
-                .timeout(Duration.ofSeconds(30))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
-                .build();
-
-        try {
-            HttpResponse<String> response = HttpClient.newHttpClient()
-                    .send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
-            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new IllegalStateException("Gemini API request failed: HTTP "
-                        + response.statusCode() + " / " + response.body());
-            }
-
-            String text = extractGeminiText(response.body());
-            if (text.isBlank()) {
-                throw new IllegalStateException("Gemini API response did not include report text.");
-            }
-            return text;
-        } catch (IOException e) {
-            throw new IllegalStateException("Gemini API connection failed.", e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Gemini API request was interrupted.", e);
-        }
+    private Map<String, Object> userToMap(User user) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        putIfPresent(map, "name", user.getName());
+        putIfPresent(map, "email", user.getEmail());
+        return map;
     }
 
-    private String extractGeminiText(String responseBody) {
-        Matcher matcher = GEMINI_TEXT_PATTERN.matcher(responseBody);
-        StringBuilder text = new StringBuilder();
-        while (matcher.find()) {
-            text.append(jsonUnescape(matcher.group(1)));
+    private Map<String, Object> dietToMap(Diet diet) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        putIfPresent(map, "recordedAt", diet.getRecordedAt());
+        putIfPresent(map, "mealType", diet.getMealType());
+        putIfPresent(map, "foodName", diet.getFoodName());
+        putIfPresent(map, "calories", diet.getCalories());
+        putIfPresent(map, "carbohydrate", diet.getCarbohydrate());
+        putIfPresent(map, "protein", diet.getProtein());
+        putIfPresent(map, "totalFat", diet.getTotalFat());
+        putIfPresent(map, "sugar", diet.getSugar());
+        putIfPresent(map, "dietaryFiber", diet.getDietaryFiber());
+        putIfPresent(map, "sodium", diet.getSodium());
+        return map;
+    }
+
+    private Map<String, Object> sleepToMap(Sleep sleep) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        putIfPresent(map, "sleepTime", sleep.getSleepTime());
+        putIfPresent(map, "wakeTime", sleep.getWakeTime());
+        putIfPresent(map, "durationMinutes", sleep.getDuration());
+        putIfPresent(map, "quality", sleep.getQuality());
+        return map;
+    }
+
+    private Map<String, Object> exerciseToMap(Exercise exercise) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        putIfPresent(map, "recordedAt", exercise.getRecordedAt());
+        putIfPresent(map, "exerciseName", exercise.getExerciseName());
+        putIfPresent(map, "durationMinutes", exercise.getDuration());
+        putIfPresent(map, "sets", exercise.getSets());
+        putIfPresent(map, "reps", exercise.getReps());
+        putIfPresent(map, "weightKg", exercise.getWeightKg());
+        return map;
+    }
+
+    private void putIfPresent(Map<String, Object> map, String key, Object value) {
+        if (value != null) {
+            map.put(key, value.toString());
         }
-        return text.toString().trim();
-    }
-
-    private String jsonEscape(String value) {
-        return value
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\r", "\\r")
-                .replace("\n", "\\n")
-                .replace("\t", "\\t");
-    }
-
-    private String jsonUnescape(String value) {
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < value.length(); i++) {
-            char current = value.charAt(i);
-            if (current != '\\' || i + 1 >= value.length()) {
-                result.append(current);
-                continue;
-            }
-
-            char next = value.charAt(++i);
-            switch (next) {
-                case 'n' -> result.append('\n');
-                case 'r' -> result.append('\r');
-                case 't' -> result.append('\t');
-                case '"' -> result.append('"');
-                case '\\' -> result.append('\\');
-                case 'u' -> {
-                    if (i + 4 < value.length()) {
-                        result.append((char) Integer.parseInt(value.substring(i + 1, i + 5), 16));
-                        i += 4;
-                    }
-                }
-                default -> result.append(next);
-            }
-        }
-        return result.toString();
-    }
-
-    private String nullToDash(Object value) {
-        return value == null ? "-" : String.valueOf(value);
     }
 
     public record AiHealthReportResponse(

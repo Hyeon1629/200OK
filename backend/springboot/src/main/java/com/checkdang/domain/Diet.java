@@ -45,12 +45,6 @@ public class Diet {
 
     private String sourceId;
 
-    @Column(name = "ai_result", columnDefinition = "TEXT")
-    private String aiResult;
-
-    @Column(name = "ai_recommendation", columnDefinition = "TEXT")
-    private String aiRecommendation;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private DataSource dataSource;
