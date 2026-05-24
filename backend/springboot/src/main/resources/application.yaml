@@ -61,9 +61,10 @@ management:
     web:
       exposure:
         include: health
-  ai:
+
+ai:
   server-url: ${AI_SERVER_URL:http://localhost:8000}
 
- gemini:
-   api-key: ${GEMINI_API_KEY:}
-   model: ${GEMINI_MODEL:gemini-2.5-flash}
+gemini:
+  api-key: ${GEMINI_API_KEY:}
+  model: ${GEMINI_MODEL:gemini-2.5-flash}
