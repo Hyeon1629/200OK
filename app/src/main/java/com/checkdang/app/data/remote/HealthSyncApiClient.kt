@@ -84,8 +84,8 @@ object HealthSyncApiClient {
     // ── FastAPI: 혈당 (record 별 POST) ───────────────────────────────────────
 
     /**
-     * DynamoDB PK 가 `{user_id}#{date}` 라서 date 는 path query 로 분리해 보낸다.
-     * 본문 필드: level / meal_timing / timestamp / memo  (FastAPI 측 명세에 맞춤)
+     * DynamoDB PK 가 `{user_id}#{date}`, SK 가 `source_id` 로 변경(2026-05-24 백엔드).
+     * date 는 path query, source_id 는 body. 같은 source_id 재전송은 putItem upsert 로 1건 유지.
      *
      * @return 전송에 성공한 record 목록. 호출 측이 [GlucoseSyncStore.markPushed] 로
      *         재전송 방지 기록을 남기는 데 사용한다.
@@ -100,6 +100,7 @@ object HealthSyncApiClient {
                     val dateKst      = zoned.toLocalDate().toString()        // 2026-05-19
                     val timestampKst = zoned.toLocalDateTime().toString()    // 2026-05-19T11:36:59
                     val body = JSONObject().apply {
+                        put("source_id",   r.id)
                         put("level",       r.value)
                         put("meal_timing", mapMealTiming(r.timing))
                         put("timestamp",   timestampKst)
@@ -117,6 +118,9 @@ object HealthSyncApiClient {
     /**
      * 하루 1건의 step_calorie record 송신.
      * timestamp 는 측정 시각(현재 시각 또는 해당 일의 끝)으로 채운다.
+     *
+     * DynamoDB PK `{user_id}#{date}` + SK `source_id` (2026-05-24 백엔드).
+     * source_id 는 `"{deviceId}-{date}"` — 한 단말이 하루에 1건만 가지므로 재전송도 upsert.
      */
     suspend fun pushStepCalorie(
         date: java.time.LocalDate,
@@ -127,19 +131,23 @@ object HealthSyncApiClient {
         val userId = SessionHolder.userId ?: return@withContext
         val nowKst = java.time.LocalDateTime.now(KST).toString()
         val body = JSONObject().apply {
-            put("user_date",  date.toString())
+            put("source_id",  "$deviceId-$date")
             put("timestamp",  nowKst)
             put("step_count", stepCount)
             put("calorie",    calorie)
             put("device_id",  deviceId)
         }
-        post("/step-calorie/$userId", body)
+        post("/step-calorie/$userId?date=$date", body)
     }
 
     // ── FastAPI: 심박수 시계열 (샘플 별 POST) ────────────────────────────────
 
     /**
      * 심박수 샘플을 1건씩 송신. 한 record 실패가 다음 record 송신을 막지 않도록 record 별 runCatching.
+     *
+     * DynamoDB PK `{user_id}#{date}` + SK `source_id` (2026-05-24 백엔드).
+     * source_id 는 `"{deviceId}-{timestamp_millis}"` — 같은 단말이 같은 epoch ms 의 샘플을
+     * 재전송해도 upsert 로 1건 유지(서버 멱등).
      */
     suspend fun pushHeartRates(
         date: java.time.LocalDate,
@@ -152,12 +160,12 @@ object HealthSyncApiClient {
             runCatching {
                 val ts = Instant.ofEpochMilli(s.timestamp).atZone(KST).toLocalDateTime().toString()
                 val body = JSONObject().apply {
-                    put("user_date", date.toString())
+                    put("source_id", "$deviceId-${s.timestamp}")
                     put("timestamp", ts)
                     put("bpm",       s.bpm)
                     put("device_id", deviceId)
                 }
-                post("/heart-rate/$userId", body)
+                post("/heart-rate/$userId?date=$date", body)
             }.onFailure { Log.w(TAG, "pushHeartRate(ts=${s.timestamp}) failed: ${it.message}") }
         }
     }
@@ -212,16 +220,20 @@ object HealthSyncApiClient {
             .atTime(LocalTime.of(h, m)).atZone(KST).toInstant().toString()
     }.getOrElse { Instant.now().toString() }
 
-    // ── HTTP (Spring Bearer JWT 자동 부착, FastAPI 도 동일 헤더 송신 — 불필요 시 무시됨) ──
+    // ── HTTP (Cognito ID Token Bearer 자동 부착. 게스트는 X-Guest-Identity-Id) ──
 
     private fun post(path: String, body: Any) {
         val conn = (URL("$BASE_URL$path").openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             setRequestProperty("Content-Type", "application/json")
             setRequestProperty("Accept", "application/json")
+            // 로그인 사용자: Cognito ID Token. 게스트: identityId 헤더(백엔드 GuestIdentityFilter).
             SessionHolder.accessToken?.let {
                 setRequestProperty("Authorization", "Bearer $it")
             }
+            SessionHolder.guestIdentityId
+                ?.takeIf { SessionHolder.isGuest }
+                ?.let { setRequestProperty("X-Guest-Identity-Id", it) }
             connectTimeout = 15_000
             readTimeout    = 15_000
             doOutput       = true

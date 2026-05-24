@@ -8,6 +8,7 @@ import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.mock.SocialProvider
 import com.checkdang.app.data.mock.UserStore
 import com.checkdang.app.data.mock.UserTier
+import com.checkdang.app.data.remote.CognitoGuestSession
 import com.checkdang.app.databinding.ActivitySplashBinding
 import com.checkdang.app.ui.auth.login.LoginActivity
 import com.checkdang.app.ui.main.MainActivity
@@ -27,6 +28,8 @@ class SplashActivity : AppCompatActivity() {
             delay(1500L)
             val target = if (UserStore.isGuestSession()) {
                 restoreGuestSession()
+                // 게스트 보호 API 호출에 필요한 Cognito Identity ID 를 미리 확보(2026-05-24).
+                CognitoGuestSession.ensureIdentityId()
                 MainActivity::class.java
             } else {
                 LoginActivity::class.java

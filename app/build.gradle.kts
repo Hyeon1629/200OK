@@ -74,4 +74,11 @@ dependencies {
     // minSdk: AAR=29, 앱=26 → AndroidManifest 의 tools:overrideLibrary 로 merger 통과,
     //        런타임은 Build.VERSION.SDK_INT >= 29 가드(SamsungHealthRepository.connect)로 보호.
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
+
+    // === AWS Amplify Auth (Cognito) — 백엔드 인증 단일화 (2026-05-24) ===
+    // 자체 OAuth+JWT 구조에서 Cognito User Pool + Identity Pool 로 전환.
+    // Hosted UI 로 Google·Kakao Federated Sign-In, ID Token / 게스트 Identity ID 직접 발급.
+    // core-kotlin: suspend 코루틴 facade. amplifyconfiguration.json 은 res/raw 에 위치.
+    implementation("com.amplifyframework:core-kotlin:2.19.1")
+    implementation("com.amplifyframework:aws-auth-cognito:2.19.1")
 }

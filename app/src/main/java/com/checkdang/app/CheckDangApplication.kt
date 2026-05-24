@@ -2,6 +2,9 @@ package com.checkdang.app
 
 import android.app.Application
 import android.util.Log
+import com.amplifyframework.AmplifyException
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
+import com.amplifyframework.core.Amplify
 import com.checkdang.app.data.billing.BillingRepository
 import com.checkdang.app.data.mock.MockDataProvider
 import com.checkdang.app.data.mock.UserStore
@@ -30,6 +33,16 @@ class CheckDangApplication : Application() {
         UserStore.init(this)
         MockDataProvider.init(this)
         GlucoseSyncStore.init(this)
+
+        // AWS Amplify Auth (Cognito) — Hosted UI 로 Google/Kakao Federated Sign-In + 게스트 Identity Pool.
+        // configure 1회만. 실패 시 Log.e 만 남기고 앱은 정상 부팅(콜드 스타트가 인증 실패로 멈추지 않도록).
+        try {
+            Amplify.addPlugin(AWSCognitoAuthPlugin())
+            Amplify.configure(applicationContext)
+            Log.i("Amplify", "configured")
+        } catch (e: AmplifyException) {
+            Log.e("Amplify", "configure failed: ${e.message}", e)
+        }
 
         billingRepository = BillingRepository(this)
         billingRepository.startConnection()

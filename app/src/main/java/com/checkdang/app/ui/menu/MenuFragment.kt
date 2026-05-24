@@ -22,7 +22,7 @@ import com.checkdang.app.data.mock.UserStore
 import com.checkdang.app.data.mock.UserTier
 import com.checkdang.app.databinding.FragmentMenuBinding
 import com.checkdang.app.databinding.ItemMenuRowBinding
-import com.checkdang.app.data.remote.AuthApiClient
+import com.amplifyframework.kotlin.core.Amplify
 import com.checkdang.app.ui.auth.login.LoginActivity
 import com.checkdang.app.ui.family.FamilyActivity
 import com.checkdang.app.ui.legal.TermsActivity
@@ -281,19 +281,11 @@ class MenuFragment : Fragment() {
     }
 
     private fun performLogout() {
-        val token = SessionHolder.refreshToken
-
+        // Cognito 전환(2026-05-24): 백엔드 logout 엔드포인트 제거. Amplify.signOut 만 호출하면
+        // Cognito 가 refresh 토큰을 invalidate 한다.
         viewLifecycleOwner.lifecycleScope.launch {
-            // 1. refreshToken이 있으면 백엔드 로그아웃 호출
-            if (!token.isNullOrEmpty() && token != "mock_refresh_token") {
-                runCatching { AuthApiClient.logout(token) }
-                // 성공/실패 무관하게 로컬 로그아웃 진행
-            }
-
-            // 2. 로컬 세션 삭제
+            runCatching { Amplify.Auth.signOut() }
             SessionHolder.reset()
-
-            // 3. 로그인 화면으로 이동
             startActivity(
                 Intent(requireContext(), LoginActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -314,12 +306,15 @@ class MenuFragment : Fragment() {
                     UserStore.clearGuestSession()
                 }
                 MockDataProvider.clearAllUserData()
-                SessionHolder.reset()
-                startActivity(
-                    Intent(requireContext(), LoginActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    }
-                )
+                viewLifecycleOwner.lifecycleScope.launch {
+                    runCatching { Amplify.Auth.signOut() }
+                    SessionHolder.reset()
+                    startActivity(
+                        Intent(requireContext(), LoginActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        }
+                    )
+                }
             }
             .setNegativeButton("취소", null)
             .show()

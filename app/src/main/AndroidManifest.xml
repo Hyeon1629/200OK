@@ -133,6 +133,20 @@
             </intent-filter>
         </activity>
 
+        <!-- AWS Cognito Hosted UI 리다이렉트 처리 (Amplify Auth)
+             TODO(auth-redirect-uri): backend(kgh)에 Cognito App Client 의 Callback/Logout URLs 로
+             checkdang://signin/ 와 checkdang://signout/ 등록 요청 필요. 미등록 시 OAuth 콜백 미수신. -->
+        <activity
+            android:name="com.amplifyframework.auth.cognito.activities.HostedUIRedirectActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="checkdang" />
+            </intent-filter>
+        </activity>
+
     </application>
 
 </manifest>

@@ -11,126 +11,140 @@ import android.text.style.ForegroundColorSpan
 import android.view.View
 import android.view.Window
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.amplifyframework.auth.AuthProvider
+import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
+import com.amplifyframework.kotlin.core.Amplify
 import com.checkdang.app.R
 import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.mock.SocialProvider
 import com.checkdang.app.data.mock.UserStore
 import com.checkdang.app.data.mock.UserTier
 import com.checkdang.app.data.remote.AuthApiClient
+import com.checkdang.app.data.remote.CognitoGuestSession
 import com.checkdang.app.databinding.ActivityLoginBinding
 import com.checkdang.app.databinding.DialogSocialLoadingBinding
 import com.checkdang.app.ui.auth.onboarding.OnboardingActivity
 import com.checkdang.app.ui.legal.TermsActivity
 import com.checkdang.app.ui.main.MainActivity
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
-import com.kakao.sdk.auth.model.OAuthToken
-import com.kakao.sdk.user.UserApiClient
 import kotlinx.coroutines.launch
 
+/**
+ * Cognito Hosted UI 로 Google·Kakao Federated Sign-In(2026-05-24 백엔드 회신 반영).
+ *
+ * 기존 Google Sign-In SDK / Kakao SDK 직접 호출 경로는 제거. Amplify 가 Hosted UI(브라우저)
+ * 로 IdP 인증을 위임하고 Cognito 가 발급한 ID Token 을 받아 백엔드 `/api/auth/social-login`
+ * 호출에 Bearer 헤더로 사용한다. 백엔드는 더 이상 자체 access/refresh JWT 를 발급하지 않는다.
+ *
+ * mock 토큰 fallback 제거 — 실패는 곧 로그인 실패. 사용자는 재시도 가능 상태로 유지된다.
+ */
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
-    private lateinit var googleSignInClient: GoogleSignInClient
     private var loadingDialog: Dialog? = null
-
-    private val googleLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        try {
-            val account = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-                .getResult(ApiException::class.java)
-            val idToken = account.idToken
-            if (idToken == null) {
-                setButtonsEnabled(true)
-                Toast.makeText(this, "Google idToken을 가져오지 못했어요", Toast.LENGTH_SHORT).show()
-                return@registerForActivityResult
-            }
-            callSocialLoginApi(
-                provider = "GOOGLE",
-                idToken  = idToken,
-                email    = account.email,
-                nickname = account.displayName
-            )
-        } catch (e: ApiException) {
-            dismissLoadingDialog()
-            setButtonsEnabled(true)
-            Toast.makeText(this, "Google 로그인 실패 (코드: ${e.statusCode})", Toast.LENGTH_SHORT).show()
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupGoogle()
-        binding.btnGoogleLogin.setOnClickListener { startGoogleLogin() }
-        binding.btnKakaoLogin.setOnClickListener  { startKakaoLogin() }
+        binding.btnGoogleLogin.setOnClickListener { startSocialLogin(SocialProvider.GOOGLE) }
+        binding.btnKakaoLogin.setOnClickListener  { startSocialLogin(SocialProvider.KAKAO) }
         binding.btnGuestStart.setOnClickListener  { startGuestFlow() }
         setupTermsNotice()
     }
 
-    // ── Google ──────────────────────────────────────────────────────────────
+    // ── Cognito Hosted UI 로 Google·Kakao Federated Sign-In ───────────────────
 
-    private fun setupGoogle() {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestEmail()
-            .requestProfile()
-            .requestIdToken("1060017596857-ma0noia4ll2fb00msospc7aut1o84n1q.apps.googleusercontent.com")
-            .build()
-        googleSignInClient = GoogleSignIn.getClient(this, gso)
-    }
-
-    private fun startGoogleLogin() {
+    private fun startSocialLogin(provider: SocialProvider) {
         setButtonsEnabled(false)
-        showLoadingDialog("Google에 연결 중…")
-        googleSignInClient.signOut().addOnCompleteListener {
+        showLoadingDialog("${provider.labelKr}에 연결 중…")
+
+        val authProvider = when (provider) {
+            SocialProvider.GOOGLE -> AuthProvider.google()
+            // 백엔드(kgh) 회신: Cognito 에 `KakaoOIDC` 라는 custom IdP 로 등록됨.
+            SocialProvider.KAKAO  -> AuthProvider.custom("KakaoOIDC")
+            else -> error("Guest 는 Hosted UI 로 진입하지 않음")
+        }
+
+        lifecycleScope.launch {
+            // 1. Hosted UI 로 IdP 인증
+            val signInResult = runCatching {
+                Amplify.Auth.signInWithSocialWebUI(authProvider, this@LoginActivity)
+            }
+            if (signInResult.isFailure) {
+                onLoginFailed("${provider.labelKr} 로그인", signInResult.exceptionOrNull())
+                return@launch
+            }
+
+            // 2. 현 세션의 Cognito ID Token 추출
+            val idToken = runCatching {
+                val session = Amplify.Auth.fetchAuthSession() as AWSCognitoAuthSession
+                session.userPoolTokensResult.value?.idToken ?: error("Cognito ID Token 누락")
+            }
+            if (idToken.isFailure) {
+                onLoginFailed("토큰 획득", idToken.exceptionOrNull())
+                runCatching { Amplify.Auth.signOut() }
+                return@launch
+            }
+            SessionHolder.accessToken = idToken.getOrThrow()
+
+            // 3. 백엔드 /api/auth/social-login (body 없음, Bearer 만)
+            val apiResult = runCatching { AuthApiClient.socialLogin() }
+            if (apiResult.isFailure) {
+                SessionHolder.accessToken = null
+                runCatching { Amplify.Auth.signOut() }
+                onLoginFailed("백엔드 등록", apiResult.exceptionOrNull())
+                return@launch
+            }
+
+            // 4. 세션 상태 갱신 + 네비게이션
+            val info = apiResult.getOrThrow()
+            SessionHolder.userId         = info.userId
+            SessionHolder.socialEmail    = info.email
+            SessionHolder.socialNickname = info.name
+            SessionHolder.authProvider   = provider
+            SessionHolder.isLoggedIn     = true
+            SessionHolder.isGuest        = false
+            SessionHolder.tier           = if (info.isPremium) UserTier.PAID else UserTier.FREE
+            // 백엔드가 자체 refresh 토큰을 발급하지 않음 (Cognito 가 관리)
+            SessionHolder.refreshToken   = null
+
+            android.util.Log.d("SocialLogin", "✅ Cognito + 백엔드 등록 | userId=${info.userId}")
+
             dismissLoadingDialog()
-            googleLauncher.launch(googleSignInClient.signInIntent)
+            navigateAfterLogin(provider)
         }
     }
 
-    // ── Kakao ───────────────────────────────────────────────────────────────
+    private fun onLoginFailed(stage: String, e: Throwable?) {
+        android.util.Log.w("SocialLogin", "$stage 실패: ${e?.message}", e)
+        dismissLoadingDialog()
+        setButtonsEnabled(true)
+        Toast.makeText(
+            this,
+            "$stage 실패: ${e?.message ?: "알 수 없는 오류"}",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
 
-    private fun startKakaoLogin() {
-        setButtonsEnabled(false)
-
-        val callback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
-            if (error != null) {
-                setButtonsEnabled(true)
-                Toast.makeText(this, "카카오 로그인 실패: ${error.message}", Toast.LENGTH_SHORT).show()
-            } else if (token != null) {
-                fetchKakaoUserInfo(token.accessToken)
-            }
-        }
-
-        if (UserApiClient.instance.isKakaoTalkLoginAvailable(this)) {
-            showLoadingDialog("카카오에 연결 중…")
-            UserApiClient.instance.loginWithKakaoTalk(this, callback = callback)
+    private fun navigateAfterLogin(provider: SocialProvider) {
+        if (!UserStore.isRegistered(provider)) {
+            startActivity(
+                Intent(this, OnboardingActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    putExtra(OnboardingActivity.EXTRA_IS_GUEST, false)
+                    putExtra(OnboardingActivity.EXTRA_AUTH_PROVIDER, provider.name)
+                }
+            )
         } else {
-            UserApiClient.instance.loginWithKakaoAccount(this, callback = callback)
-        }
-    }
-
-    private fun fetchKakaoUserInfo(accessToken: String) {
-        UserApiClient.instance.me { user, error ->
-            if (error != null || user == null) {
-                setButtonsEnabled(true)
-                Toast.makeText(this, "카카오 사용자 정보를 불러오지 못했어요", Toast.LENGTH_SHORT).show()
-                return@me
-            }
-            callSocialLoginApi(
-                provider   = "KAKAO",
-                kakaoToken = accessToken,
-                email      = user.kakaoAccount?.email,
-                nickname   = user.kakaoAccount?.profile?.nickname
+            SessionHolder.currentProfile = UserStore.getProfile(provider)
+            startActivity(
+                Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
             )
         }
     }
@@ -141,6 +155,8 @@ class LoginActivity : AppCompatActivity() {
         SessionHolder.authProvider = SocialProvider.NONE
         SessionHolder.isGuest      = true
         SessionHolder.tier         = UserTier.GUEST
+        // 게스트 Identity Pool ID 발급은 백그라운드로 진행(2026-05-24). 온보딩 진행을 막지 않음.
+        lifecycleScope.launch { CognitoGuestSession.ensureIdentityId() }
         startActivity(
             Intent(this, OnboardingActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -148,75 +164,6 @@ class LoginActivity : AppCompatActivity() {
                 putExtra(OnboardingActivity.EXTRA_AUTH_PROVIDER, SocialProvider.NONE.name)
             }
         )
-    }
-
-    // ── 소셜 로그인 처리 ─────────────────────────────────────────────────────
-
-    private fun callSocialLoginApi(
-        provider: String,
-        idToken: String? = null,      // Google
-        kakaoToken: String? = null,   // Kakao
-        email: String?,
-        nickname: String?
-    ) {
-        showLoadingDialog("로그인 중…")
-        setButtonsEnabled(false)
-
-        val socialProvider = if (provider == "GOOGLE") SocialProvider.GOOGLE else SocialProvider.KAKAO
-
-        lifecycleScope.launch {
-            // ── 실제 API 호출 시도 ──────────────────────────────────────────
-            val apiResult = runCatching {
-                AuthApiClient.socialLogin(
-                    provider    = provider,
-                    idToken     = idToken,
-                    accessToken = kakaoToken
-                )
-            }
-
-            // API 성공: 실제 토큰 저장 / 실패: Mock 토큰으로 유지 (기존 동작 보장)
-            if (apiResult.isSuccess) {
-                val result = apiResult.getOrThrow()
-                SessionHolder.accessToken    = result.accessToken
-                SessionHolder.refreshToken   = result.refreshToken
-                SessionHolder.userId         = result.userId
-                SessionHolder.socialEmail    = result.email ?: email
-                SessionHolder.socialNickname = result.name  ?: nickname
-                android.util.Log.d("SocialLogin", "✅ API 성공 | userId=${result.userId} | token=${result.accessToken.take(20)}…")
-            } else {
-                SessionHolder.accessToken    = "mock_access_token"
-                SessionHolder.refreshToken   = "mock_refresh_token"
-                SessionHolder.userId         = "mock_user_id"
-                SessionHolder.socialEmail    = email
-                SessionHolder.socialNickname = nickname
-                android.util.Log.d("SocialLogin", "⚠️ API 실패 → Mock 사용 | 원인: ${apiResult.exceptionOrNull()?.message}")
-            }
-
-            // ── 아래 네비게이션 로직은 기존과 동일 ──────────────────────────
-            SessionHolder.authProvider = socialProvider
-            SessionHolder.isLoggedIn   = true
-            SessionHolder.isGuest      = false
-            SessionHolder.tier         = UserTier.FREE
-
-            dismissLoadingDialog()
-
-            if (!UserStore.isRegistered(socialProvider)) {
-                startActivity(
-                    Intent(this@LoginActivity, OnboardingActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        putExtra(OnboardingActivity.EXTRA_IS_GUEST, false)
-                        putExtra(OnboardingActivity.EXTRA_AUTH_PROVIDER, provider)
-                    }
-                )
-            } else {
-                SessionHolder.currentProfile = UserStore.getProfile(socialProvider)
-                startActivity(
-                    Intent(this@LoginActivity, MainActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    }
-                )
-            }
-        }
     }
 
     // ── UI 헬퍼 ──────────────────────────────────────────────────────────────

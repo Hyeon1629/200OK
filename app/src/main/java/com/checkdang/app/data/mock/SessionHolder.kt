@@ -31,10 +31,15 @@ object SessionHolder {
     var socialEmail: String? = null
     var socialNickname: String? = null
 
-    // 백엔드 발급 토큰 — Authorization: Bearer {accessToken} 헤더에 사용
+    // Cognito 발급 ID Token (2026-05-24 백엔드 단일화 후) — Authorization: Bearer {accessToken}
+    // 백엔드는 자체 JWT 를 발급하지 않으므로 refreshToken 은 사실상 미사용(호환 위해 잔존).
     var accessToken: String? = null
     var refreshToken: String? = null
     var userId: String? = null
+
+    // 게스트(unauthenticated) 사용자의 Cognito Identity Pool ID.
+    // 보호 API 호출 시 `X-Guest-Identity-Id` 헤더로 백엔드 `GuestIdentityFilter` 가 검증.
+    var guestIdentityId: String? = null
 
     fun toggleTierForDemo() {
         tier = if (tier == UserTier.PAID) UserTier.FREE else UserTier.PAID
@@ -51,6 +56,7 @@ object SessionHolder {
         accessToken    = null
         refreshToken   = null
         userId         = null
+        guestIdentityId = null
     }
 
     val dummyProfile = PatientProfile(

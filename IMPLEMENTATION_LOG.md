@@ -4,6 +4,118 @@
 
 ---
 
+## [2026-05-24] sync 3종 `source_id` 필수 필드 추가
+
+### 배경
+백엔드(kgh) 회신 `codejwj-source-id-required.md` — `blood_glucose_record`, `heart_rate`, `step_calorie` 세 DynamoDB 테이블의 SK 를 `timestamp` → **`source_id`** 로 교체(FastAPI commit `eee0ecd`, ECR `:latest` 배포). 같은 `source_id` 재전송 시 putItem upsert 로 1건 유지하는 서버 측 멱등 도입. 운영 반영 완료된 상태라 누락 시 즉시 **422** 발생.
+
+### 작업 내용
+`HealthSyncApiClient.kt` 의 3개 push 함수 body 에 `source_id` 추가. 심박·걸음의 dead field `user_date` 동시 제거.
+
+| 함수 | source_id 결정 방식 |
+|------|---------------------|
+| `pushGlucose` | `r.id` (GlucoseRecord 가 이미 보유 — Samsung Health record ID 또는 수동 입력 시 UUID) |
+| `pushHeartRates` | `"${deviceId}-${sample.timestamp}"` (HeartRateSample 에 id 필드 없음, epoch ms 로 결정성 ID 생성) |
+| `pushStepCalorie` | `"${deviceId}-${date}"` (하루 1건이라 단말+날짜 조합) |
+
+### 주요 결정
+- **HeartRateSample / StepCalorie 측 모델에 id 필드 추가 안 함** — 호출 측 시그니처 변경 없이 `HealthSyncApiClient` 안에서 결정성 ID 만 생성. 같은 단말이 같은 timestamp/date 의 데이터를 재전송해도 같은 source_id 가 만들어져 서버 멱등이 작동
+- **`user_date` 필드 제거** — md 명시: 백엔드가 `{user_id}#{date}` 자동 조합. 보낼 필요 없음
+- **`GlucoseSyncStore` SharedPreferences dedup 유지** — md 권장 그대로. 서버 멱등은 호출 자체는 받아내야 하므로 처음부터 안 보내는 클라이언트 dedup 이 모바일 데이터·배터리 절약 측면에서 유리
+- **심박·걸음 dedup 도입은 보류** — md 가 "선택" 이라 했고 데이터 양 측정 후 결정. 현재는 일별 1회 sync 라 누적이 심각하지 않음
+
+### 수정 파일
+- `app/src/main/java/com/checkdang/app/data/remote/HealthSyncApiClient.kt`
+
+### 빌드 검증
+`./gradlew compileDebugKotlin` → BUILD SUCCESSFUL (23s)
+
+---
+
+## [2026-05-24] 백엔드 회신 4건 정리 — Cognito 인증 단일화 + 헬스 422 + 결제 verify
+
+### 배경
+백엔드(kgh)가 보낸 `codejwj-auth-migration.md` (2026-05-24) 회신:
+1. 자체 OAuth2 + 자체 JWT 구조 → **AWS Cognito User Pool 단일화**. `/api/auth/social` → `/api/auth/social-login`, body 없음, Cognito ID Token 만 Bearer 헤더로. `/api/auth/logout` 자체 제거(Cognito 가 refresh 관리).
+2. 게스트 흐름에 `GuestIdentityFilter` 신규 — Cognito Identity Pool unauthenticated ID 를 `X-Guest-Identity-Id` 헤더로 받아 검증.
+3. `/heart-rate`, `/step-calorie` 가 `?date=YYYY-MM-DD` query 필수(DynamoDB PK `{user_id}#{date}` 구조). 누락 시 422.
+4. Google Play 결제 verify (`/api/payment/google/verify`) 미구현 — 결제 성공 시 백엔드가 알 수 없어 `users.isPremium` 미갱신.
+
+### 작업 내용
+
+#### 인증 (item 1) — Amplify Auth Cognito 도입
+| 항목 | 변경 |
+|------|------|
+| 의존성 | `com.amplifyframework:core-kotlin:2.19.1` + `aws-auth-cognito:2.19.1` (build.gradle.kts) |
+| 설정 | `res/raw/amplifyconfiguration.json` 신규 — User Pool `ap-northeast-2_dB7hAykk4`, App Client `668uqu6u9qiqtiv9h6er9lqfu8`, Identity Pool `ap-northeast-2:b8ca4228-55e4-4aad-ae89-acc31771ebbd`, OAuth Hosted UI 도메인 `ap-northeast-2db7haykk4.auth.ap-northeast-2.amazoncognito.com`, scopes `openid email profile` |
+| Manifest | `HostedUIRedirectActivity` intent-filter (scheme `checkdang`) 추가 |
+| Application | `Amplify.addPlugin(AWSCognitoAuthPlugin())` + `Amplify.configure(...)` |
+| AuthApiClient | `socialLogin()` 단일 함수로 재작성 (body 없음, `/api/auth/social-login`, Bearer 헤더만). 응답은 `{ success, data: {id, email, name, role, isPremium}, message }` 파싱. `logout()` 삭제 |
+| LoginActivity | 기존 Google SignIn SDK / Kakao SDK 직접 호출 제거. `Amplify.Auth.signInWithSocialWebUI(AuthProvider.google()/.custom("KakaoOIDC"))` 로 통일. fetchAuthSession → ID Token → SessionHolder.accessToken → `AuthApiClient.socialLogin()`. **mock 토큰 fallback 분기 완전 제거** — 실패 시 Amplify.signOut + 로그인 화면 유지 |
+| MenuFragment | 로그아웃: `AuthApiClient.logout(token)` → `Amplify.Auth.signOut()`. 회원 탈퇴 흐름도 Amplify.signOut 추가 |
+
+#### 게스트 (item 2) — Identity Pool ID
+| 항목 | 변경 |
+|------|------|
+| SessionHolder | `guestIdentityId: String?` 필드 추가 + reset() 에 포함 |
+| CognitoGuestSession | 신규 헬퍼 — `ensureIdentityId()` 가 `fetchAuthSession().identityIdResult.value` 로 ID 발급 후 SessionHolder 저장 |
+| SplashActivity | 게스트 콜드 스타트 복원 시 `ensureIdentityId()` await |
+| LoginActivity | 게스트 진입 시 백그라운드로 `ensureIdentityId()` (온보딩 차단 방지) |
+| HealthSyncApiClient | `post()` 에서 `SessionHolder.isGuest && guestIdentityId != null` 일 때 `X-Guest-Identity-Id` 헤더 부착 |
+
+#### 헬스 422 fix (item 3)
+| 항목 | 변경 |
+|------|------|
+| HealthSyncApiClient | `pushStepCalorie` path → `/step-calorie/$userId?date=$date`. `pushHeartRates` path → `/heart-rate/$userId?date=$date`. 혈당 `pushGlucose` 와 동일한 패턴 (이미 ?date 송신 중) |
+
+#### 결제 verify (item 4)
+| 항목 | 변경 |
+|------|------|
+| PaymentApiClient | 신규 — `verifyGooglePurchase(purchaseToken, subscriptionId)` → `POST /api/payment/google/verify` Bearer 헤더. body 는 2필드. 응답 `{ success, data: { isPremium, premiumExpiresAt, ... } }` 파싱 |
+| BillingRepository | `handlePurchase` 흐름 재구성: verify → 성공 시에만 acknowledge → `isPremium` 결과에 따라 tier 갱신. verify 실패 시 tier 유지 + Error 상태 (purchaseToken 은 acknowledge 전까지 재처리 가능) |
+
+#### 빌드 인프라
+| 항목 | 변경 |
+|------|------|
+| gradle.properties | `org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g` 추가. Amplify SDK 도입으로 default 1G 힙 초과 → DEX merge OOM 발생 → 4G 로 확장 |
+
+### 주요 결정
+- **AWS Amplify SDK 도입** — CLAUDE.md "Firebase 등 외부 의존성 추가 금지" 와 일부 상충하나, 기존 Google Sign-In SDK / Kakao SDK 가 이미 존재해 절대적 제약은 아니었음. 백엔드가 Cognito 전용으로 전환한 이상 클라이언트 측 선택지 없음. Hosted UI 한 줄 호출로 refresh / 세션 / Federated 사인-인 자동화 효과 우선
+- **mock 토큰 fallback 제거** — 기존 `LoginActivity:187` 의 `"mock_access_token"` 분기는 백엔드 호출이 일부 성공처럼 보이게 만들어 실패를 가렸음. md 의 명시적 요청대로 제거. 실패는 곧 로그인 실패 (재시도 가능 상태)
+- **redirect URI 는 `checkdang://signin/`, `checkdang://signout/` 로 선결** — md 에 미명시. backend(kgh) 에 "Cognito App Client 의 Callback/Logout URLs 로 등록" 요청 필요 (TODO 주석)
+- **게스트 보호 API 호출은 헤더 plumbing 만 완성** — 현재 `pushGlucose` 등이 `userId == null` 일 때 early return 하는 구조 그대로 유지. 백엔드에 게스트 전용 path 명세 나오면 게스트 데이터 push 별도 STEP
+
+### 미해결 / 후속
+- **TODO(auth-redirect-uri)**: 백엔드 Cognito App Client 의 Callback/Logout URLs 에 `checkdang://signin/`, `checkdang://signout/` 등록 확인. 미등록 시 OAuth 콜백 미수신 → 로그인 무한 로딩
+- **혈당 `source_id` 멱등 처리(md item 5)**: 백엔드 멱등 처리 완료 회신 후 `pushGlucose`/`pushHeartRate`/`pushStepCalorie` body 에 `source_id` 필드 추가 + 클라이언트 dedup 제거 가능
+- **게스트 데이터 push 흐름**: 백엔드 게스트 전용 endpoint 명세 확보 후 별도 STEP
+
+### 수정 파일
+- `app/build.gradle.kts`
+- `gradle.properties`
+- `app/src/main/AndroidManifest.xml`
+- `app/src/main/res/raw/amplifyconfiguration.json` (신규)
+- `app/src/main/java/com/checkdang/app/CheckDangApplication.kt`
+- `app/src/main/java/com/checkdang/app/data/remote/AuthApiClient.kt`
+- `app/src/main/java/com/checkdang/app/data/remote/CognitoGuestSession.kt` (신규)
+- `app/src/main/java/com/checkdang/app/data/remote/PaymentApiClient.kt` (신규)
+- `app/src/main/java/com/checkdang/app/data/remote/HealthSyncApiClient.kt`
+- `app/src/main/java/com/checkdang/app/data/billing/BillingRepository.kt`
+- `app/src/main/java/com/checkdang/app/data/mock/SessionHolder.kt`
+- `app/src/main/java/com/checkdang/app/ui/auth/login/LoginActivity.kt`
+- `app/src/main/java/com/checkdang/app/ui/splash/SplashActivity.kt`
+- `app/src/main/java/com/checkdang/app/ui/menu/MenuFragment.kt`
+
+### 빌드 검증
+`./gradlew assembleDebug` → **BUILD SUCCESSFUL** (29s, gradle.properties heap 확장 후)
+
+### 단말 테스트 시 확인 사항 (back-and-forth 필요)
+- backend(kgh): Cognito App Client Callback/Logout URLs 에 `checkdang://signin/`, `checkdang://signout/` 등록 여부
+- backend(kgh): Cognito Hosted UI 의 KakaoOIDC IdP 등록 상태(이름 일치) 확인
+- 통합 테스트(md 끝): 로그인 → 온보딩 → 헬스 동기화 6종(혈당/운동/식사/수면/심박/걸음) → AI 분석 → 결제 → 게스트 모드 end-to-end
+
+---
+
 ## [2026-05-22] 혈당 push 중복 전송 억제 — GlucoseSyncStore
 
 ### 배경

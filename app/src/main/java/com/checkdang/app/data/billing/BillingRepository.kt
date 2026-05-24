@@ -15,6 +15,7 @@ import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
 import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.mock.UserTier
+import com.checkdang.app.data.remote.PaymentApiClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -150,29 +151,53 @@ class BillingRepository(private val appContext: Context) :
         }
     }
 
+    /**
+     * 결제 처리 (2026-05-24 백엔드 회신 반영):
+     * 1) 백엔드 `/api/payment/google/verify` 가 200 응답한 경우에만 PAID 승격.
+     *    서버는 Google Play Developer API 로 token 유효성 확인 후 payment_records 저장 + users.isPremium 갱신까지 처리.
+     * 2) verify 성공 시 Google Play 측 acknowledge 진행 (acknowledge 누락 시 3일 뒤 환불 처리됨).
+     * 3) verify 실패 시 tier 미갱신 + Error 상태. purchaseToken 은 acknowledge 전까지 재처리 가능하므로
+     *    재시도 가능 상태 유지.
+     */
     private fun handlePurchase(purchase: Purchase) {
-        // TODO(backend, billing): 서버에 영수증(purchaseToken) 검증 요청
-        // POST /api/v1/billing/verify { purchaseToken, productId, packageName }
-        // 응답 OK 시에만 tier 갱신하도록 변경
         if (purchase.purchaseState != Purchase.PurchaseState.PURCHASED) return
-
         val productId = purchase.products.firstOrNull() ?: return
 
-        if (!purchase.isAcknowledged) {
-            val params = AcknowledgePurchaseParams.newBuilder()
-                .setPurchaseToken(purchase.purchaseToken)
-                .build()
-            billingClient.acknowledgePurchase(params) { result ->
-                if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                    SessionHolder.tier = UserTier.PAID
-                    _state.value = BillingState.Success(productId)
-                } else {
-                    _state.value = BillingState.Error("결제 확인 실패", result.responseCode)
-                }
+        scope.launch {
+            val verified = runCatching {
+                PaymentApiClient.verifyGooglePurchase(
+                    purchaseToken  = purchase.purchaseToken,
+                    subscriptionId = productId
+                )
             }
-        } else {
-            SessionHolder.tier = UserTier.PAID
-            _state.value = BillingState.Success(productId)
+            if (verified.isFailure) {
+                _state.value = BillingState.Error(
+                    "결제 검증 실패: ${verified.exceptionOrNull()?.message ?: "서버 오류"}"
+                )
+                return@launch
+            }
+
+            val result = verified.getOrThrow()
+            if (!purchase.isAcknowledged) {
+                acknowledgePurchase(purchase, productId, result.isPremium)
+            } else {
+                SessionHolder.tier = if (result.isPremium) UserTier.PAID else UserTier.FREE
+                _state.value = BillingState.Success(productId)
+            }
+        }
+    }
+
+    private fun acknowledgePurchase(purchase: Purchase, productId: String, isPremium: Boolean) {
+        val params = AcknowledgePurchaseParams.newBuilder()
+            .setPurchaseToken(purchase.purchaseToken)
+            .build()
+        billingClient.acknowledgePurchase(params) { ack ->
+            if (ack.responseCode == BillingClient.BillingResponseCode.OK) {
+                SessionHolder.tier = if (isPremium) UserTier.PAID else UserTier.FREE
+                _state.value = BillingState.Success(productId)
+            } else {
+                _state.value = BillingState.Error("결제 확인 실패", ack.responseCode)
+            }
         }
     }
 

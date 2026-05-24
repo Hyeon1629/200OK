@@ -1,0 +1,42 @@
+{
+  "UserAgent": "aws-amplify-cli/2.0",
+  "Version": "1.0",
+  "auth": {
+    "plugins": {
+      "awsCognitoAuthPlugin": {
+        "UserAgent": "aws-amplify-cli/0.1.0",
+        "Version": "0.1.0",
+        "IdentityManager": {
+          "Default": {}
+        },
+        "CredentialsProvider": {
+          "CognitoIdentity": {
+            "Default": {
+              "PoolId": "ap-northeast-2:b8ca4228-55e4-4aad-ae89-acc31771ebbd",
+              "Region": "ap-northeast-2"
+            }
+          }
+        },
+        "CognitoUserPool": {
+          "Default": {
+            "PoolId": "ap-northeast-2_dB7hAykk4",
+            "AppClientId": "668uqu6u9qiqtiv9h6er9lqfu8",
+            "Region": "ap-northeast-2"
+          }
+        },
+        "Auth": {
+          "Default": {
+            "OAuth": {
+              "WebDomain": "ap-northeast-2db7haykk4.auth.ap-northeast-2.amazoncognito.com",
+              "AppClientId": "668uqu6u9qiqtiv9h6er9lqfu8",
+              "SignInRedirectURI": "checkdang://signin/",
+              "SignOutRedirectURI": "checkdang://signout/",
+              "Scopes": ["openid", "email", "profile"]
+            },
+            "authenticationFlowType": "USER_SRP_AUTH"
+          }
+        }
+      }
+    }
+  }
+}
