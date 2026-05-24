@@ -8,18 +8,20 @@ TABLE_NAME = "heart_rate"
 
 
 # 심박수 저장
-# data-flow.md 참고: heart_rate 테이블 - user_date, timestamp, bpm, device_id, ibi
+# PK: user_date = "{user_id}#{YYYY-MM-DD}", SK: source_id (멱등 키)
+# 같은 source_id 재전송 시 putItem upsert로 1건만 유지
 @router.post("/{user_id}")
 async def save_heart_rate(user_id: str, date: str, record: HeartRateRecord):
     item = {
-        "user_date": f"{user_id}#{date}",   # PK: user_id + date
-        "timestamp": record.timestamp,       # SK
+        "user_date": f"{user_id}#{date}",
+        "source_id": record.source_id,
+        "timestamp": record.timestamp,
         "bpm": record.bpm,
         "device_id": record.device_id,
         "ibi": str(record.ibi) if record.ibi else None
     }
     save_item(TABLE_NAME, item)
-    return {"message": "심박수 저장 완료"}
+    return {"message": "심박수 저장 완료", "user_date": item["user_date"], "source_id": record.source_id}
 
 
 # 심박수 조회

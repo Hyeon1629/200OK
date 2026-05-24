@@ -8,18 +8,20 @@ TABLE_NAME = "step_calorie"
 
 
 # 걸음수/소비칼로리 저장
-# data-flow.md 참고: step_calorie 테이블 - user_date, timestamp, step_count, calorie, device_id
+# PK: user_date = "{user_id}#{YYYY-MM-DD}", SK: source_id (멱등 키)
+# 같은 source_id 재전송 시 putItem upsert로 1건만 유지
 @router.post("/{user_id}")
 async def save_step_calorie(user_id: str, date: str, record: StepCalorieRecord):
     item = {
-        "user_date": f"{user_id}#{date}",   # PK: user_id + date
-        "timestamp": record.timestamp,       # SK
+        "user_date": f"{user_id}#{date}",
+        "source_id": record.source_id,
+        "timestamp": record.timestamp,
         "step_count": record.step_count,
         "calorie": str(record.calorie),
         "device_id": record.device_id
     }
     save_item(TABLE_NAME, item)
-    return {"message": "걸음수/소비칼로리 저장 완료"}
+    return {"message": "걸음수/소비칼로리 저장 완료", "user_date": item["user_date"], "source_id": record.source_id}
 
 
 # 걸음수/소비칼로리 조회

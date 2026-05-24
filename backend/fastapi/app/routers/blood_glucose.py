@@ -9,6 +9,7 @@ TABLE_NAME = "blood_glucose_record"
 
 
 class BloodGlucoseCreateRequest(BaseModel):
+    source_id: str        # SK 겸 멱등 키. 같은 source_id 재전송 시 upsert
     timestamp: str        # ISO-8601 (예: "2025-05-04T09:30:00")
     level: int            # 혈당 수치 (mg/dL)
     meal_timing: str      # FASTING / BEFORE_MEAL / AFTER_MEAL / BEDTIME
@@ -17,6 +18,7 @@ class BloodGlucoseCreateRequest(BaseModel):
 
 class BloodGlucoseResponse(BaseModel):
     user_date: str
+    source_id: str
     timestamp: str
     level: int
     meal_timing: str
@@ -24,7 +26,8 @@ class BloodGlucoseResponse(BaseModel):
 
 
 # 혈당 기록 저장
-# PK: user_date = "{user_id}#{YYYY-MM-DD}", SK: timestamp
+# PK: user_date = "{user_id}#{YYYY-MM-DD}", SK: source_id
+# 같은 source_id 재전송 시 putItem upsert로 1건만 유지 (서버 측 멱등 보장)
 @router.post("/{user_id}", status_code=201)
 async def save_blood_glucose(user_id: str, date: str, record: BloodGlucoseCreateRequest):
     if not record.timestamp:
@@ -34,6 +37,7 @@ async def save_blood_glucose(user_id: str, date: str, record: BloodGlucoseCreate
 
     item = {
         "user_date": f"{user_id}#{date}",
+        "source_id": record.source_id,
         "timestamp": record.timestamp,
         "level": record.level,
         "meal_timing": record.meal_timing,
@@ -42,7 +46,7 @@ async def save_blood_glucose(user_id: str, date: str, record: BloodGlucoseCreate
         item["memo"] = record.memo
 
     save_item(TABLE_NAME, item)
-    return {"message": "혈당 기록 저장 완료", "user_date": item["user_date"], "timestamp": record.timestamp}
+    return {"message": "혈당 기록 저장 완료", "user_date": item["user_date"], "source_id": record.source_id}
 
 
 # 특정 날짜의 혈당 기록 전체 조회
