@@ -22,15 +22,17 @@ object CognitoGuestSession {
     suspend fun ensureIdentityId() {
         runCatching {
             val session = Amplify.Auth.fetchAuthSession() as AWSCognitoAuthSession
-            // AuthSessionResult<String>.value 는 Success 일 때만 non-null. Failure 면 null.
-            session.identityIdResult.value
-        }.onSuccess { id: String? ->
+            session.identityIdResult
+        }.onSuccess { r ->
+            val id = r.value
             if (id != null) {
                 SessionHolder.guestIdentityId = id
                 Log.i(TAG, "게스트 Identity ID 확보")
             } else {
-                Log.w(TAG, "Identity ID 결과가 비어있음 — Identity Pool 미지원 단말?")
+                // type=FAILURE 일 때 r.error 에 진짜 원인. Identity Pool unauthenticated 비활성/
+                // role 미할당/네트워크 어느 쪽인지는 메시지·스택으로 판별.
+                Log.w(TAG, "Identity ID 미발급 (type=${r.type}): ${r.error?.message}", r.error)
             }
-        }.onFailure { Log.w(TAG, "Identity ID 발급 실패: ${it.message}") }
+        }.onFailure { Log.w(TAG, "Identity ID 발급 실패: ${it.message}", it) }
     }
 }

@@ -4,6 +4,59 @@
 
 ---
 
+## [2026-05-25] Cognito Callback/Logout URLs 정합성 확인 — 백엔드 콘솔 정리 회신 반영
+
+### 배경
+백엔드(kgh) 회신: Cognito App Client 에 잘못 등록돼 있던 URI 두 건(`https://chekdang://callback` — https prefix + `chekdang` 오타, `https://checkdang://logout` — https prefix) 삭제하고, 우리가 요청한 `checkdang://signin/`, `checkdang://signout/` 로 정리 완료. `http://localhost:3000/callback` 은 로컬 개발용으로 유지. Kakao IdP 는 `KakaoOIDC` 이름으로 등록.
+
+### 작업 내용
+앱 측 설정·코드는 이미 일치 상태(2026-05-24 작업분) — 별도 수정 불필요. 확인만 진행:
+
+| 위치 | 값 | 상태 |
+|------|-----|------|
+| `amplifyconfiguration.json` `SignInRedirectURI` | `checkdang://signin/` | ✅ |
+| `amplifyconfiguration.json` `SignOutRedirectURI` | `checkdang://signout/` | ✅ |
+| `AndroidManifest.xml` `HostedUIRedirectActivity` scheme | `checkdang` | ✅ |
+| `LoginActivity.kt:68` Kakao provider | `AuthProvider.custom("KakaoOIDC")` | ✅ |
+
+코드/설정에 `chekdang` 오타 흔적 없음 — 잘못된 URI 는 백엔드 콘솔에만 등록되어 있던 값.
+
+### 주요 결정
+- **앱 수정 없음** — 모든 값이 이미 백엔드 정리 후 값과 일치. AndroidManifest 의 "백엔드 등록 요청 필요" TODO 주석만 "등록 완료" 메모로 갱신.
+
+### 수정 파일
+- `app/src/main/AndroidManifest.xml` (주석만 갱신, 로직 변경 없음)
+
+### 단말 검증 결과 (Pixel-class 단말, USB 직결)
+
+| 흐름 | 결과 | 원인 |
+|------|------|------|
+| Google 로그인 | ❌ Hosted UI 에서 Google 페이지 도달 후 `redirect_uri_mismatch` | Google Cloud Console OAuth Client 에 `<cognito>/oauth2/idpresponse` 미등록 |
+| Kakao 로그인 | ❌ 동일 cancel/mismatch (실패 시점 동일) | Kakao Developers 콘솔 동일 누락 추정 |
+| 비회원 시작 | ⚠️ UI 는 온보딩→메인 정상 진입, 그러나 Cognito Identity Pool 에서 `InvalidIdentityPoolConfigurationException` | Identity Pool 의 unauthenticated IAM role 미할당 또는 trust policy 오류 |
+
+위 진단은 코드/설정 정합성 문제 아닌 **AWS·Google·Kakao 콘솔 설정 누락**. 백엔드(kgh) 에 회신 예정. 우리쪽 추가 변경 없음.
+
+### CognitoGuestSession 로깅 개선 (진단용)
+
+게스트 흐름 단말 검증 중 기존 경고 메시지 "Identity ID 결과가 비어있음 — Identity Pool 미지원 단말?" 가 실제 원인을 가리고 있어 보완:
+
+- `AuthSessionResult` 의 `type` enum 과 `error` 필드를 함께 로깅 → `InvalidIdentityPoolConfigurationException` 같은 SDK 측 진짜 메시지가 logcat 에 표시되도록.
+- AWS Amplify Core 2.19.1 jar 디컴파일로 `AuthSessionResult` 가 sealed class 아님(일반 클래스 + `type`/`error`/`value` 게터) 을 사전 확인 후 수정.
+
+수정 파일: `app/src/main/java/com/checkdang/app/data/remote/CognitoGuestSession.kt`
+
+### 백엔드 회신 대기 항목
+
+1. Google Cloud Console — OAuth 2.0 Client (`572413466137-...`) Authorized redirect URIs 에 `https://ap-northeast-2db7haykk4.auth.ap-northeast-2.amazoncognito.com/oauth2/idpresponse` 추가
+2. Kakao Developers — KakaoOIDC 앱 Redirect URI 에 동일 URL 추가
+3. Cognito Identity Pool `ap-northeast-2:b8ca4228-55e4-4aad-ae89-acc31771ebbd` — unauthenticated IAM role 할당 + trust policy 검증
+
+### 빌드 검증
+`./gradlew compileDebugKotlin` → BUILD SUCCESSFUL. `./gradlew assembleDebug` → BUILD SUCCESSFUL (39s, AndroidManifest 변경 직후).
+
+---
+
 ## [2026-05-24] sync 3종 `source_id` 필수 필드 추가
 
 ### 배경
