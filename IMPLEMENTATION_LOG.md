@@ -4,6 +4,62 @@
 
 ---
 
+## [2026-05-25] OAuth 단말 재검증 (2차) — redirect 3건 해결 확인 + 신규 IdP 설정 이슈 2건 발견
+
+### 배경
+이전 단말 검증(같은 날 오전)에서 백엔드(kgh) 에 회신 대기로 넘긴 3건이 백엔드 측 콘솔 작업 완료 통보 후 어떻게 됐는지 단말 재검증 (Galaxy `R3CT10JVBHN`, 새 APK 재설치 + `pm clear`).
+
+### 결과 — 회신 대기 3건 vs 재검증
+
+| 회신 대기 항목 | 1차 결과 | 2차 결과 | 잔여 작업 |
+|---|---|---|---|
+| Google `redirect_uri_mismatch` | ❌ | ✅ 해결 (Hosted UI → Google 동의 → 콜백 통과) | 신규 이슈 — Cognito User Pool **Google IdP Attribute mapping (email)** 누락 |
+| Kakao `redirect_uri_mismatch` | ❌ | ✅ 해결 (동일 경로 통과 확인) | 신규 이슈 — **KakaoOIDC IdP Authorize scope** 에 `profile` 포함 (Kakao OIDC 미지원) |
+| Identity Pool `InvalidIdentityPoolConfigurationException` | ❌ | ✅ **완전 해결** — `I/CognitoGuest: 게스트 Identity ID 확보` | 없음 |
+
+### 신규 이슈 상세 — token 교환 단계(④)에서 차단
+
+검증 5체크포인트 중 ①②③ 통과, ④ Cognito ↔ IdP token 교환에서 두 IdP 모두 실패. **앱 코드 무관**, Cognito 콘솔의 IdP 설정 문제.
+
+**Google**
+```
+W/SocialLogin: 구글 로그인 실패: invalid_request: attributes required: [email]
+    at com.amplifyframework.auth.cognito.HostedUIClient.fetchToken(HostedUIClient.kt:108)
+```
+→ User Pool 의 `email` 속성이 Required 인데 Google IdP attribute mapping 에 매핑 행 없음. 동의 화면에서 발급된 인가코드는 정상이지만 Cognito 가 User 생성/lookup 시 거부.
+
+**Kakao**
+```
+W/SocialLogin: 카카오 로그인 실패: invalid_scope: Invalid scope: profile; error=invalid_scope
+    at com.amplifyframework.auth.cognito.HostedUIClient.fetchToken(HostedUIClient.kt:108)
+```
+→ Cognito 가 IdP token endpoint 호출 시 표준 `profile` scope 포함. Kakao OIDC 는 표준 `profile` 스코프 미지원 — KakaoOIDC IdP 의 "Authorize scope" 필드를 `openid account_email` 같은 Kakao 지원 형식으로 변경 필요.
+
+**왜 앱 측 `amplifyconfiguration.json` 의 Scopes 변경이 답이 아닌가**
+- `Scopes: ["openid", "email", "profile"]` 는 **클라이언트 ↔ Cognito** 사이의 scope. Google 은 받고 있음.
+- **IdP ↔ Cognito** 사이는 Cognito 콘솔의 각 Identity Provider 의 "Authorize scope" 필드로 별도 정의. KakaoOIDC 만 이 값에서 `profile` 빼면 해결.
+
+### 백엔드(kgh) 회신 요청 (2건)
+
+1. Cognito User Pool `ap-northeast-2_dB7hAykk4` → Identity Providers → **Google** → Attribute mapping 에 `email` ← `email` 행 추가
+2. 동일 User Pool → **KakaoOIDC** → Authorize scope 에서 `profile` 제거 (`openid account_email` 권장) + Attribute mapping 의 `email` 행 점검
+
+### 수정 파일
+- `IMPLEMENTATION_LOG.md` (이 항목)
+- 앱 코드 변경 없음
+
+### 검증 명령 메모 (재현용)
+```powershell
+$adb = "C:\Users\LG\AppData\Local\Android\Sdk\platform-tools\adb.exe"
+& $adb -s R3CT10JVBHN shell pm clear com.checkdang.app   # Cognito 세션 캐시 초기화
+& $adb -s R3CT10JVBHN logcat -c
+# (단말 조작 후)
+$pid = (& $adb -s R3CT10JVBHN shell pidof com.checkdang.app).Trim()
+& $adb -s R3CT10JVBHN logcat -d -v time --pid=$pid | Select-String "SocialLogin|CognitoGuest|AuthClient|HostedUI"
+```
+
+---
+
 ## [2026-05-25] Cognito Callback/Logout URLs 정합성 확인 — 백엔드 콘솔 정리 회신 반영
 
 ### 배경
