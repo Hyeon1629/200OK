@@ -1,0 +1,15 @@
+# 학습 산출물 — 이미지 빌드 시 COPY 되지만 git에는 안 올림
+artifacts/*.pt
+artifacts/*.pkl
+artifacts/*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.python-version
+
+# IDE
+.idea/
+.vscode/

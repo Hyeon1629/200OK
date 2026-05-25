@@ -1,0 +1,13 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.git/
+.gitignore
+.idea/
+.vscode/
+requirements-train.txt
+train.py
+Dockerfile
+.dockerignore
+README.md

@@ -1,9 +1,19 @@
-from typing import Any
+import os
+from typing import Any, Optional
 
-from fastapi import APIRouter, HTTPException
+import httpx
+from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel, Field
 
 from app.services.gemini import analyze_diet, analyze_health_report
+
+
+# 같은 EC2의 별도 컨테이너 (D-3/D-4 배포). 외부 노출 X — 메인 FastAPI만 호출.
+# Linux EC2에서 컨테이너 안에서 host 접근: 172.17.0.1 (docker default bridge gateway).
+# predictor 포트는 host의 127.0.0.1:8001 에 바인딩됨.
+GLUCOSE_PREDICTOR_URL = os.getenv(
+    "GLUCOSE_PREDICTOR_URL", "http://172.17.0.1:8001"
+)
 
 
 # prefix 제거: Spring Boot의 AiAnalysisClient가 /analyze/diet, /analyze/health-report 로 호출하기 때문
@@ -75,8 +85,34 @@ def post_analyze_health_report(request: HealthReportAnalyzeRequest) -> AnalyzeRe
 
 
 @router.post("/ai/predict/blood-glucose/{user_id}")
-async def predict_blood_glucose(user_id: str):
-    pass
+async def predict_blood_glucose(
+    user_id: str,
+    date: str,
+    body: Optional[dict[str, Any]] = Body(default=None),
+):
+    """Seq2Seq GRU 혈당 예측 — 같은 EC2의 checkdang-glucose-predictor 컨테이너로 forward.
+
+    body { glucose: [288 floats] } 있으면 그대로, 없으면 DynamoDB blood_glucose_record에서 조회.
+    """
+    url = f"{GLUCOSE_PREDICTOR_URL}/predict/blood-glucose/{user_id}"
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(url, params={"date": date}, json=body)
+    except httpx.RequestError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"혈당 예측 서비스에 연결할 수 없습니다: {exc}",
+        ) from exc
+
+    if resp.status_code != 200:
+        # predictor 측 422/500 등을 그대로 전달
+        try:
+            detail = resp.json().get("detail", resp.text)
+        except Exception:
+            detail = resp.text
+        raise HTTPException(status_code=resp.status_code, detail=detail)
+
+    return resp.json()
 
 
 @router.post("/ai/analyze/pain/{user_id}")
