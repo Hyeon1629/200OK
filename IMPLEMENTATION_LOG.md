@@ -4,6 +4,122 @@
 
 ---
 
+## [2026-05-26] Cognito User Pool 이관 — `amplifyconfiguration.json` 갱신
+
+### 배경
+백엔드(kgh) DM 으로 신규 User Pool/App Client 로의 이관 요청. 카카오 시연용 임시 우회 적용을 위해 User Pool email 속성을 Optional 로 재구성한 새 풀로 분리한 것으로 추정 (관련: 2026-05-25 항목의 시연용 임시 우회 결정).
+
+### 변경값
+
+| 항목 | 이전 | 변경 |
+|---|---|---|
+| `CognitoUserPool.PoolId` | `ap-northeast-2_dB7hAykk4` | `ap-northeast-2_mb9vuwfui` |
+| `CognitoUserPool.AppClientId` | `668uqu6u9qiqtiv9h6er9lqfu8` | `7a0e8e0agsd8a44cgp1o5as344` |
+| `Auth.Default.OAuth.AppClientId` | `668uqu6u9qiqtiv9h6er9lqfu8` | `7a0e8e0agsd8a44cgp1o5as344` |
+| `Auth.Default.OAuth.WebDomain` | `ap-northeast-2db7haykk4...` | `ap-northeast-2mb9vuwfui.auth.ap-northeast-2.amazoncognito.com` |
+| `Auth.Default.OAuth.Scopes` | `["openid","email","profile"]` | `["openid","profile"]` |
+
+- `CredentialsProvider.CognitoIdentity` (Identity Pool `ap-northeast-2:b8ca4228-55e4-4aad-ae89-acc31771ebbd`) 유지.
+- `SignInRedirectURI` / `SignOutRedirectURI` 유지.
+
+### `email` scope 제거 이유
+백엔드 메시지대로 카카오에서 `email` 동의 자체를 받을 수 없는 정책 한계 (2026-05-25 항목 참고) + 새 App Client 에 `email` standard scope 활성화 안 된 경우 Hosted UI 가 `invalid_scope` 로 거부할 수 있어 안전 조치. 본 scope 는 Amplify SDK ↔ Cognito 레벨이고, IdP Authorize scope (`openid` 단독) 와 별개.
+
+### 수정 파일
+- `app/src/main/res/raw/amplifyconfiguration.json` — 위 5개 필드 교체
+
+### 후속 확인 필요
+- 단말 재검증 (Google / Kakao 로그인 → 백엔드 등록 → 메인 진입) — User Pool/Identity Pool 연결, Google·KakaoOIDC IdP 재구성 여부 모두 새 풀에 반영됐는지 단말로 확인.
+- 산출물에서 이전 ID (`dB7hAykk4` / `668uqu6u9qiqtiv9h6er9lqfu8`) 참조가 남아있는 곳은 이 LOG 의 과거 항목뿐. 코드 하드코딩 없음 — 회귀 영향 0.
+
+---
+
+## [2026-05-27] 새 풀 단말 검증 (1차) — scope 진단 + ④b 차단점 2건 식별
+
+### 배경
+어제 풀 이관 후 첫 단말 검증 (Galaxy `R3CT10JVBHN`). 단계별 에러 변화로 차단점을 좁혀가며 진단.
+
+### 단계별 진행
+
+| 시각 | scope | Google | Kakao | 진단 |
+|---|---|---|---|---|
+| 23:48 | `["openid","profile"]` | ④a `invalid_scope` | ④a `invalid_scope` | 새 App Client `7a0e8e0agsd8a44cgp1o5as344` 에 `profile` scope 미활성화 (양쪽 동시 실패 → IdP 무관, 공통 인자 scope 뿐) |
+| 00:00 | `["openid"]` | ④b `Invalid email address format.` | ④b `PreSignUp failed: exports is not defined in ES module scope.` | scope 통과. 각 IdP 별 다른 백엔드 이슈로 ④b 차단 |
+
+### 차단점 2건 (백엔드 영역)
+
+**① Google — Attribute mapping 누락 또는 email scope 미활성**
+- ④ token 교환은 성공, Cognito 가 User Pool 에 attribute 쓰는 단계에서 형식 검증 실패
+- 추정: 새 풀에 Google IdP Attribute mapping (`email ← email`) 미설정 + 클라 scope 가 `openid` 뿐이라 email claim 자체가 전달 안 됨
+- 어제 (2026-05-25) 이전 풀에서는 동일 mapping 으로 ⑤까지 통과한 이력 있음 — 새 풀 미반영으로 회귀
+
+**② Kakao — PreSignUp Lambda 의 Node.js 모듈 시스템 충돌**
+- 시연용 우회를 위해 백엔드가 신규 추가한 PreSignUp Lambda trigger 가 호출은 되지만 런타임 에러
+- `exports is not defined in ES module scope` — `package.json` 에 `"type": "module"` 또는 `.mjs` 확장자인데 핸들러는 `exports.handler = ...` CommonJS 문법 사용
+- Lambda 호출 단계까지 도달했다는 점에서 Cognito attribute mapping → trigger 매핑은 정상
+
+### 클라이언트 조치
+- `app/src/main/res/raw/amplifyconfiguration.json` — `Scopes` 를 `["openid","profile"]` → `["openid"]` 로 진단 목적 임시 축소
+- 백엔드 작업 완료 후 활성화된 scope 에 맞춰 원복 예정 (`["openid","email","profile"]` 권장)
+
+### 백엔드 회신 발행
+- `C:\Users\LG\Downloads\kgh-new-pool-blockers-20260527.md` — 위 차단점 2건 + 원하는 수정 방향 (Attribute mapping 설정, App Client OpenID Connect scopes 활성화, Lambda 모듈 통일 방안) 정리하여 kgh 전달
+
+### 현재 진척도 (시연 목표 100 기준)
+약 **78/100**. Phase 1·2 (Cognito 인프라 + IdP redirect) 완료, Phase 3 (token + attribute + Lambda) 60% 진행. Phase 4 (E2E 폴리시) 미착수.
+
+성공 가능성 높음 — 차단점 모두 콘솔/코드 설정 영역(외부 정책 한계 아님), 어제 Google ⑤ 완주 이력 보유.
+
+### 수정 파일
+- `app/src/main/res/raw/amplifyconfiguration.json` — `Scopes` 축소
+
+---
+
+## [2026-05-25] OAuth 단말 재검증 (3차) — Google ✅ / Kakao 비즈 앱 한계로 시연용 우회 결정
+
+### 배경
+2차 검증에서 회신한 신규 이슈 2건(Google Attribute mapping, Kakao Authorize scope) 에 대한 백엔드 콘솔 작업 후 단말 재검증 (Galaxy `R3CT10JVBHN`). 단계별로 에러가 다음 단계로 밀려나며 진행, 최종적으로 카카오 측 정책 한계에 부딪힘.
+
+### 결과 요약
+
+| IdP | 5체크포인트 | 결과 |
+|---|---|---|
+| **Google** | ①②③ ④a ④b ⑤ | ✅ **전부 통과** — `D/SocialLogin: ✅ Cognito + 백엔드 등록 \| userId=3`, 온보딩→메인 진입 정상 |
+| **Kakao** | ① ② ③ ④a | ④b 단계에서 차단 — `attributes required: [email]` |
+
+### Kakao 차단 — 단계별 에러 변화 (시간순)
+
+| 시점 | 에러 | 진단 | 조치 |
+|---|---|---|---|
+| 5/25 22:31 | `invalid_scope: account_email` | 1차 회신에서 권장한 scope 값을 카카오 OIDC 도 거부 | 3차 회신 md `cognito-kakao-scope-followup.md` 작성 → 백엔드에 `openid` 단독 요청 |
+| 5/25 22:51 | `invalid_request: attributes required: [email]` | scope 통과. 단 ID Token 에 email claim 없음 | 4차 회신 md `cognito-kakao-attribute-mapping.md` 작성 → KakaoOIDC Attribute mapping 추가 요청 |
+| 5/25 23:37 | (동일) | 백엔드는 카카오 콘솔 점검을 프론트에 분담 — 카카오 콘솔 → 카카오 로그인 → **OpenID Connect 활성화 OFF** 발견. ON 변경 후에도 동일 에러 | 카카오 콘솔 → 동의항목 → **`카카오계정(이메일)` "권한 없음"** 상태 확인 |
+
+### 최종 차단 원인 — 카카오 정책 한계
+카카오는 `카카오계정(이메일)` 동의항목을 보호 정보로 분류해 **개인 개발자 앱에서 권한 신청 자체가 닫혀있음**. **비즈 앱 전환 (사업자등록증 필요)** 을 통해서만 허용. 본 산학 프로젝트 팀 전원 대학생 신분으로 사업자등록 부담 + 산학협력업체 명의 분리 부담으로 비즈 앱 전환 불가.
+
+### 결정 — 시연용 임시 우회 (백엔드 회신 대기)
+출시까지 가는 게 아니라 **앱 완성도 시연까지가 목표** 인 점을 고려해 백엔드에 다음 임시 조치를 DM 으로 요청:
+1. **Cognito User Pool `email` 속성 Required → Optional**
+2. `/api/auth/social-login` 에서 카카오 sub 기반 사용자 생성 — 더미 이메일 자동 할당 or email NULL 허용 (백엔드 판단)
+
+→ 적용되면 ④b 통과되어 카카오 로그인도 시연 가능. 출시 진행 시 비즈 앱 전환 + Attribute mapping 정식 추가 + email Required 원복 작업 필요 (별도 메모 보관).
+
+### 회신 md 작성 (Downloads → kgh 전달)
+- `cognito-kakao-scope-followup.md` (22:43) — `openid` 단독 요청
+- `cognito-kakao-attribute-mapping.md` (23:00) — Attribute mapping 추가 요청 (현재까지 작업 미완료)
+- (최종) 시연용 임시 우회 DM — 백엔드 회신 대기
+
+### 수정·신규 파일
+- (코드) 없음 — 본 차수는 진단 + Cognito 콘솔 측 작업 + 카카오 콘솔 측 작업 중심
+- (회신) `~/Downloads/cognito-kakao-scope-followup.md`, `~/Downloads/cognito-kakao-attribute-mapping.md`
+
+### 다음 차수 (대기 중)
+- 백엔드 임시 우회 적용 → 단말에서 카카오 로그인 ⑤ 백엔드 등록까지 통과 확인
+- (선택) 시연 안정성을 위해 카카오 버튼 가드 (비활성화 or 안내 토스트) — 임시 우회 적용 전까지
+
+---
+
 ## [2026-05-25] OAuth 단말 재검증 (2차) — redirect 3건 해결 확인 + 신규 IdP 설정 이슈 2건 발견
 
 ### 배경

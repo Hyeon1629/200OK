@@ -19,19 +19,19 @@
         },
         "CognitoUserPool": {
           "Default": {
-            "PoolId": "ap-northeast-2_dB7hAykk4",
-            "AppClientId": "668uqu6u9qiqtiv9h6er9lqfu8",
+            "PoolId": "ap-northeast-2_mb9vuwfui",
+            "AppClientId": "7a0e8e0agsd8a44cgp1o5as344",
             "Region": "ap-northeast-2"
           }
         },
         "Auth": {
           "Default": {
             "OAuth": {
-              "WebDomain": "ap-northeast-2db7haykk4.auth.ap-northeast-2.amazoncognito.com",
-              "AppClientId": "668uqu6u9qiqtiv9h6er9lqfu8",
+              "WebDomain": "ap-northeast-2mb9vuwfui.auth.ap-northeast-2.amazoncognito.com",
+              "AppClientId": "7a0e8e0agsd8a44cgp1o5as344",
               "SignInRedirectURI": "checkdang://signin/",
               "SignOutRedirectURI": "checkdang://signout/",
-              "Scopes": ["openid", "email", "profile"]
+              "Scopes": ["openid"]
             },
             "authenticationFlowType": "USER_SRP_AUTH"
           }
