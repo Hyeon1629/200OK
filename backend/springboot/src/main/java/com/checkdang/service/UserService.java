@@ -27,10 +27,7 @@ public class UserService {
     // 앱이 Cognito 로그인(로컬/소셜) 후 최초 1회 호출 → 이후 모든 API는 Cognito JWT만으로 동작.
     @Transactional
     public UserResponse syncUserFromCognito(Jwt jwt) {
-        String email = jwt.getClaimAsString("email");
-        if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("Cognito 토큰에 email 클레임이 없습니다.");
-        }
+        final String email = resolveEmail(jwt);
 
         String name = jwt.getClaimAsString("name");
         if (name == null || name.isBlank()) {
@@ -70,6 +67,19 @@ public class UserService {
             }
         }
         return localUsers.size();
+    }
+
+    private String resolveEmail(Jwt jwt) {
+        String email = jwt.getClaimAsString("email");
+        if (email != null && !email.isBlank()) return email;
+
+        String cognitoUsername = jwt.getClaimAsString("cognito:username");
+        if (cognitoUsername != null && cognitoUsername.startsWith("KakaoOIDC_")) {
+            // TODO: 비즈 앱 전환 후 카카오계정(이메일) 동의항목 활성화 + Cognito email Required 복원 시 제거
+            String kakaoId = cognitoUsername.substring("KakaoOIDC_".length());
+            return "kakao_" + kakaoId + "@checkdang.local";
+        }
+        throw new IllegalArgumentException("Cognito 토큰에 email 클레임이 없습니다.");
     }
 
     // cognito:username prefix로 소셜 provider 판별
