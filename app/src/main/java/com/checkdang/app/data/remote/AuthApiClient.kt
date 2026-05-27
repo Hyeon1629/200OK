@@ -64,6 +64,7 @@ object AuthApiClient {
                 conn.inputStream.bufferedReader().readText()
             } else {
                 val err = conn.errorStream?.bufferedReader()?.readText().orEmpty()
+                android.util.Log.w("AuthApi", "POST $path → $code body=$err")
                 val msg = runCatching { JSONObject(err).optString("message", "") }
                     .getOrDefault("").ifEmpty { "서버 오류 ($code)" }
                 throw Exception(msg)

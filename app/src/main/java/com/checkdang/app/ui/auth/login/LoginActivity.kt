@@ -90,6 +90,7 @@ class LoginActivity : AppCompatActivity() {
                 return@launch
             }
             SessionHolder.accessToken = idToken.getOrThrow()
+            logTokenClaims(idToken.getOrThrow())
 
             // 3. 백엔드 /api/auth/social-login (body 없음, Bearer 만)
             val apiResult = runCatching { AuthApiClient.socialLogin() }
@@ -117,6 +118,22 @@ class LoginActivity : AppCompatActivity() {
             dismissLoadingDialog()
             navigateAfterLogin(provider)
         }
+    }
+
+    /** Cognito ID Token 의 payload 만 디코드해 logcat 으로 출력 (401 진단용). */
+    private fun logTokenClaims(jwt: String) {
+        runCatching {
+            val payload = jwt.split(".").getOrNull(1) ?: return@runCatching
+            val bytes = android.util.Base64.decode(payload, android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP or android.util.Base64.NO_PADDING)
+            val json  = org.json.JSONObject(String(bytes))
+            android.util.Log.d(
+                "SocialLogin",
+                "ID Token claims: iss=${json.optString("iss")} aud=${json.optString("aud")} " +
+                "token_use=${json.optString("token_use")} sub=${json.optString("sub")} " +
+                "email=${json.optString("email")} email_verified=${json.optString("email_verified")} " +
+                "identities=${json.optString("identities")} exp=${json.optString("exp")}"
+            )
+        }.onFailure { android.util.Log.w("SocialLogin", "토큰 디코드 실패: ${it.message}") }
     }
 
     private fun onLoginFailed(stage: String, e: Throwable?) {

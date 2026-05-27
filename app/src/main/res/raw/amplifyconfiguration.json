@@ -20,7 +20,7 @@
         "CognitoUserPool": {
           "Default": {
             "PoolId": "ap-northeast-2_mb9vuwfui",
-            "AppClientId": "7a0e8e0agsd8a44cgp1o5as344",
+            "AppClientId": "21herirtq1gr5frptrpmrv45ga",
             "Region": "ap-northeast-2"
           }
         },
@@ -28,7 +28,7 @@
           "Default": {
             "OAuth": {
               "WebDomain": "ap-northeast-2mb9vuwfui.auth.ap-northeast-2.amazoncognito.com",
-              "AppClientId": "7a0e8e0agsd8a44cgp1o5as344",
+              "AppClientId": "21herirtq1gr5frptrpmrv45ga",
               "SignInRedirectURI": "checkdang://signin/",
               "SignOutRedirectURI": "checkdang://signout/",
               "Scopes": ["openid"]
