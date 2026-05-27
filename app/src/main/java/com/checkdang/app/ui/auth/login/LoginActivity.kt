@@ -70,6 +70,16 @@ class LoginActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
+            // 0. Amplify 잔존 세션 정리 — signInWithSocialWebUI 는 기존 세션이 있으면 SignedInException 던짐.
+            //    앱 재시작/이전 로그인 후 LoginActivity 재진입 시 발생.
+            runCatching {
+                val session = Amplify.Auth.fetchAuthSession()
+                if (session.isSignedIn) {
+                    android.util.Log.d("SocialLogin", "기존 Amplify 세션 발견 → signOut 후 재로그인")
+                    Amplify.Auth.signOut()
+                }
+            }.onFailure { android.util.Log.w("SocialLogin", "세션 사전 정리 실패: ${it.message}") }
+
             // 1. Hosted UI 로 IdP 인증
             val signInResult = runCatching {
                 Amplify.Auth.signInWithSocialWebUI(authProvider, this@LoginActivity)
