@@ -123,15 +123,20 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         if (request.getName() != null) user.setName(request.getName());
-        if (request.getGender() != null) user.setGender(request.getGender());
         if (request.getBirthDate() != null) user.setBirthDate(request.getBirthDate());
+        if (request.getGender() != null) user.setGender(request.getGender());
         if (request.getHeight() != null) user.setHeight(request.getHeight());
         if (request.getWeight() != null) user.setWeight(request.getWeight());
-        if (request.getDiabetesType() != null) user.setDiabetesType(request.getDiabetesType());
-        if (request.getTargetBloodSugar() != null) user.setTargetBloodSugar(request.getTargetBloodSugar());
-        if (request.getNotificationEnabled() != null) user.setNotificationEnabled(request.getNotificationEnabled());
 
         return UserResponse.from(userRepository.save(user));
+    }
+
+    @Transactional
+    public void updateFcmToken(String email, String fcmToken) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        user.setFcmToken(fcmToken);
+        userRepository.save(user);
     }
 
     public boolean checkEmailAvailable(String email) {

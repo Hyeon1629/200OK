@@ -4,37 +4,33 @@ import com.checkdang.domain.PainRecord;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
 
 @Getter
 @Builder
 public class PainRecordResponse {
 
     private Long id;
-    private String userId;
+    private PainRecord.BodyPart bodyPart;
     private Integer intensity;
-    private PainRecord.BodyArea bodyArea;
-    private PainRecord.BodySide bodySide;
-    private Double bodyMapX;
-    private Double bodyMapY;
-    private PainRecord.PainType painType;
-    private String memo;
-    private LocalDateTime recordedAt;
-    private LocalDateTime createdAt;
+    private List<PainRecord.PainType> painTypes;
+    private Long recordedAt;   // Unix millis (프론트 요구사항)
+    private String aiCause;
+    private String aiFirstAid;
 
     public static PainRecordResponse from(PainRecord record) {
         return PainRecordResponse.builder()
                 .id(record.getId())
-                .userId(record.getUserId())
+                .bodyPart(record.getBodyPart())
                 .intensity(record.getIntensity())
-                .bodyArea(record.getBodyArea())
-                .bodySide(record.getBodySide())
-                .bodyMapX(record.getBodyMapX())
-                .bodyMapY(record.getBodyMapY())
-                .painType(record.getPainType())
-                .memo(record.getMemo())
-                .recordedAt(record.getRecordedAt())
-                .createdAt(record.getCreatedAt())
+                .painTypes(record.getPainTypes())
+                .recordedAt(record.getRecordedAt()
+                        .atZone(ZoneId.of("Asia/Seoul"))
+                        .toInstant()
+                        .toEpochMilli())
+                .aiCause(record.getAiCause())
+                .aiFirstAid(record.getAiFirstAid())
                 .build();
     }
 }

@@ -8,11 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserProfileUpdateRequest {
     private String name;
-    private User.Gender gender;
     private String birthDate;
+    private User.Gender gender;  // MALE / FEMALE / NONE
     private Integer height;
     private Integer weight;
-    private User.DiabetesType diabetesType;
-    private Integer targetBloodSugar;
-    private Boolean notificationEnabled;
 }

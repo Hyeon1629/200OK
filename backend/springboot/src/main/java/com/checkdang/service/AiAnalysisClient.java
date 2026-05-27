@@ -18,9 +18,28 @@ public class AiAnalysisClient {
     @Value("${ai.server-url}")
     private String aiServerUrl;
 
+    public record PainAiResult(String aiCause, String aiFirstAid) {}
+
     public String analyzeDiet(List<DietResponse> diets) {
         Map<String, Object> requestBody = Map.of("diets", diets);
         return requestAnswer("/analyze/diet", requestBody);
+    }
+
+    public PainAiResult analyzePain(Map<String, Object> painContext) {
+        Map<?, ?> response = restClient.post()
+                .uri(aiServerUrl + "/analyze/pain")
+                .body(painContext)
+                .retrieve()
+                .body(Map.class);
+
+        if (response == null) {
+            throw new IllegalStateException("AI server response is empty.");
+        }
+
+        return new PainAiResult(
+                (String) response.get("ai_cause"),
+                (String) response.get("ai_first_aid")
+        );
     }
 
     public String analyzeHealthReport(Map<String, Object> reportData) {

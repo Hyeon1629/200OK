@@ -78,6 +78,9 @@ aws:
     refresh-token-table-name: refresh_tokens
     payment-table-name: payment_records
 
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+
 server:
   port: ${PORT:8080}
   forward-headers-strategy: framework
@@ -90,3 +93,6 @@ management:
 
 ai:
   server-url: ${AI_SERVER_URL:http://localhost:8000}
+
+firebase:
+  service-account-key: ${FIREBASE_SERVICE_ACCOUNT_KEY:}

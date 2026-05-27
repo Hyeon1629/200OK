@@ -77,6 +77,9 @@ public class User {
     @Column(name = "notification_enabled")
     private Boolean notificationEnabled;
 
+    @Column(name = "fcm_token", length = 512)
+    private String fcmToken;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AccountStatus accountStatus;
@@ -101,7 +104,7 @@ public class User {
     }
 
     public enum Gender {
-        MALE, FEMALE
+        MALE, FEMALE, NONE
     }
 
     public enum FamilyRole {

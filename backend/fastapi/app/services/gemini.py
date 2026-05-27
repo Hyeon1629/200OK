@@ -111,3 +111,42 @@ def analyze_health_report(data: dict[str, Any]) -> str:
     """식단·수면·운동 데이터를 종합해 Markdown 헬스 리포트를 반환한다."""
     prompt = _build_health_report_prompt(data)
     return _generate_text(prompt, max_output_tokens=4000)
+
+
+def analyze_pain(pain_data: dict[str, Any]) -> tuple[str, str]:
+    """통증 데이터를 받아 (ai_cause, ai_first_aid) 튜플을 반환한다."""
+    body_part = pain_data.get("body_part", "-")
+    pain_types = ", ".join(pain_data.get("pain_types") or [])
+    intensity = pain_data.get("intensity", "-")
+
+    prompt = f"""
+너는 의료 보조 AI야. 아래 통증 기록을 보고 한국어로 분석해줘.
+
+통증 부위: {body_part}
+통증 종류: {pain_types}
+통증 강도: {intensity} / 10
+
+다음 두 가지를 반드시 아래 형식으로만 답해줘. 다른 텍스트는 절대 포함하지 마.
+
+[원인]
+(통증 원인을 2~3문장으로 설명. 의학적 진단이 아닌 가능성 설명)
+
+[응급조치]
+(지금 당장 할 수 있는 조치를 2~3문장으로 설명. 통증 강도 7 이상이면 의료진 상담 권장 포함)
+"""
+
+    raw = _generate_text(prompt, max_output_tokens=600)
+
+    # [원인] / [응급조치] 파싱
+    ai_cause, ai_first_aid = "", ""
+    if "[원인]" in raw and "[응급조치]" in raw:
+        cause_part = raw.split("[원인]")[1].split("[응급조치]")[0].strip()
+        first_aid_part = raw.split("[응급조치]")[1].strip()
+        ai_cause = cause_part
+        ai_first_aid = first_aid_part
+    else:
+        # 파싱 실패 시 전체를 원인으로
+        ai_cause = raw.strip()
+        ai_first_aid = "통증이 지속되면 의료진과 상담하세요."
+
+    return ai_cause, ai_first_aid

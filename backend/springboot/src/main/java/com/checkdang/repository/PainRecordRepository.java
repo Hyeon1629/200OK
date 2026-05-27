@@ -13,6 +13,6 @@ public interface PainRecordRepository extends JpaRepository<PainRecord, Long> {
     List<PainRecord> findByUserIdAndRecordedAtBetweenOrderByRecordedAtDesc(
             String userId, LocalDateTime from, LocalDateTime to);
 
-    List<PainRecord> findByUserIdAndBodyAreaOrderByRecordedAtDesc(
-            String userId, PainRecord.BodyArea bodyArea);
+    List<PainRecord> findByUserIdAndBodyPartOrderByRecordedAtDesc(
+            String userId, PainRecord.BodyPart bodyPart);
 }

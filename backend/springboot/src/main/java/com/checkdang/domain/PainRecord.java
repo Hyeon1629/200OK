@@ -7,6 +7,9 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "pain_records")
@@ -29,31 +32,24 @@ public class PainRecord {
     @Column(nullable = false)
     private Integer intensity;
 
-    /** 통증 부위 (바디맵 선택 위치) */
+    /** 통증 부위 (프론트 BodyPart enum과 동일) */
     @Enumerated(EnumType.STRING)
-    @Column(name = "body_area", nullable = false)
-    private BodyArea bodyArea;
+    @Column(name = "body_part", nullable = false)
+    private BodyPart bodyPart;
 
-    /** 바디맵 앞면/뒷면 */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "body_side", nullable = false)
-    private BodySide bodySide;
-
-    /** 바디맵 X 좌표 (0.0~1.0 비율, 앱에서 터치 위치) */
-    @Column(name = "body_map_x")
-    private Double bodyMapX;
-
-    /** 바디맵 Y 좌표 (0.0~1.0 비율, 앱에서 터치 위치) */
-    @Column(name = "body_map_y")
-    private Double bodyMapY;
-
-    /** 통증 종류 */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "pain_type", nullable = false)
-    private PainType painType;
+    /** 통증 종류 (복수 선택, CSV로 저장) */
+    @Convert(converter = PainTypeListConverter.class)
+    @Column(name = "pain_types", nullable = false)
+    private List<PainType> painTypes;
 
     @Column(columnDefinition = "TEXT")
     private String memo;
+
+    @Column(name = "ai_cause", columnDefinition = "TEXT")
+    private String aiCause;
+
+    @Column(name = "ai_first_aid", columnDefinition = "TEXT")
+    private String aiFirstAid;
 
     @Column(name = "recorded_at", nullable = false)
     private LocalDateTime recordedAt;
@@ -66,59 +62,47 @@ public class PainRecord {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public enum BodyArea {
-        // 머리/목
-        HEAD,           // 머리
-        NECK,           // 목
-        // 상체 앞
-        CHEST,          // 가슴
-        UPPER_ABDOMEN,  // 상복부
-        LOWER_ABDOMEN,  // 하복부
-        // 상체 뒤
-        UPPER_BACK,     // 등 위
-        LOWER_BACK,     // 허리
-        // 어깨/팔
-        LEFT_SHOULDER,  // 왼쪽 어깨
-        RIGHT_SHOULDER, // 오른쪽 어깨
-        LEFT_UPPER_ARM, // 왼쪽 위팔
-        RIGHT_UPPER_ARM,// 오른쪽 위팔
-        LEFT_ELBOW,     // 왼쪽 팔꿈치
-        RIGHT_ELBOW,    // 오른쪽 팔꿈치
-        LEFT_FOREARM,   // 왼쪽 아래팔
-        RIGHT_FOREARM,  // 오른쪽 아래팔
-        LEFT_WRIST,     // 왼쪽 손목
-        RIGHT_WRIST,    // 오른쪽 손목
-        LEFT_HAND,      // 왼쪽 손
-        RIGHT_HAND,     // 오른쪽 손
-        // 골반/엉덩이
-        LEFT_HIP,       // 왼쪽 엉덩이
-        RIGHT_HIP,      // 오른쪽 엉덩이
-        // 다리
-        LEFT_THIGH,     // 왼쪽 허벅지
-        RIGHT_THIGH,    // 오른쪽 허벅지
-        LEFT_KNEE,      // 왼쪽 무릎
-        RIGHT_KNEE,     // 오른쪽 무릎
-        LEFT_SHIN,      // 왼쪽 정강이
-        RIGHT_SHIN,     // 오른쪽 정강이
-        LEFT_ANKLE,     // 왼쪽 발목
-        RIGHT_ANKLE,    // 오른쪽 발목
-        LEFT_FOOT,      // 왼쪽 발
-        RIGHT_FOOT      // 오른쪽 발
-    }
+    // ────────────────────────────────────────────────
+    // Enum 정의 (프론트 enum 이름과 정확히 일치)
+    // ────────────────────────────────────────────────
 
-    public enum BodySide {
-        FRONT,  // 앞면
-        BACK    // 뒷면
+    public enum BodyPart {
+        // 정면
+        HEAD, NECK_FRONT,
+        LEFT_SHOULDER_FRONT, RIGHT_SHOULDER_FRONT,
+        CHEST, LEFT_ARM_FRONT, RIGHT_ARM_FRONT,
+        ABDOMEN, LEFT_HIP_FRONT, RIGHT_HIP_FRONT,
+        LEFT_THIGH_FRONT, RIGHT_THIGH_FRONT,
+        LEFT_KNEE, RIGHT_KNEE,
+        LEFT_SHIN, RIGHT_SHIN,
+        // 후면
+        NECK_BACK, UPPER_BACK, LOWER_BACK,
+        LEFT_SHOULDER_BACK, RIGHT_SHOULDER_BACK
     }
 
     public enum PainType {
-        SHARP,      // 찌르는 통증
-        DULL,       // 둔한 통증
-        BURNING,    // 타는 듯한 통증
-        THROBBING,  // 욱신거리는 통증
-        ACHING,     // 쑤시는 통증
-        CRAMPING,   // 쥐어짜는 통증
-        STABBING,   // 칼로 찌르는 통증
-        PRESSURE    // 압박감
+        SHARP, DULL, BURNING, THROBBING, STIFFNESS, NUMBNESS
+    }
+
+    // ────────────────────────────────────────────────
+    // List<PainType> ↔ "SHARP,NUMBNESS" CSV 변환
+    // ────────────────────────────────────────────────
+
+    @Converter
+    public static class PainTypeListConverter implements AttributeConverter<List<PainType>, String> {
+
+        @Override
+        public String convertToDatabaseColumn(List<PainType> attribute) {
+            if (attribute == null || attribute.isEmpty()) return "";
+            return attribute.stream().map(Enum::name).collect(Collectors.joining(","));
+        }
+
+        @Override
+        public List<PainType> convertToEntityAttribute(String dbData) {
+            if (dbData == null || dbData.isBlank()) return List.of();
+            return Arrays.stream(dbData.split(","))
+                    .map(PainType::valueOf)
+                    .collect(Collectors.toList());
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.checkdang.controller;
 
 import com.checkdang.domain.PainRecord;
 import com.checkdang.dto.ApiResponse;
+import com.checkdang.dto.PainRecordAnalysisResponse;
 import com.checkdang.dto.PainRecordRequest;
 import com.checkdang.dto.PainRecordResponse;
 import com.checkdang.service.PainRecordService;
@@ -32,22 +33,31 @@ public class PainRecordController {
                 .body(ApiResponse.ok(painRecordService.save(userDetails.getUsername(), request)));
     }
 
+    /** 통증 기록 저장 + AI 상관관계 분석 */
+    @PostMapping("/analyze")
+    public ResponseEntity<ApiResponse<PainRecordAnalysisResponse>> saveAndAnalyze(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody PainRecordRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(painRecordService.saveAndAnalyze(userDetails.getUsername(), request)));
+    }
+
     /**
      * 내 통증 기록 목록 조회
      * - from/to 없으면 전체 조회
      * - from/to 있으면 날짜 범위 조회
-     * - bodyArea 있으면 부위 필터
+     * - bodyPart 있으면 부위 필터
      */
     @GetMapping
     public ResponseEntity<ApiResponse<List<PainRecordResponse>>> getMyRecords(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
-            @RequestParam(required = false) PainRecord.BodyArea bodyArea) {
+            @RequestParam(required = false) PainRecord.BodyPart bodyPart) {
 
         List<PainRecordResponse> result;
-        if (bodyArea != null) {
-            result = painRecordService.getMyRecordsByBodyArea(userDetails.getUsername(), bodyArea);
+        if (bodyPart != null) {
+            result = painRecordService.getMyRecordsByBodyPart(userDetails.getUsername(), bodyPart);
         } else if (from != null && to != null) {
             result = painRecordService.getMyRecordsByRange(userDetails.getUsername(), from, to);
         } else {

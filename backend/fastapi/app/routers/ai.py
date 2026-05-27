@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from app.services.gemini import analyze_diet, analyze_health_report
+from app.services.gemini import analyze_diet, analyze_health_report, analyze_pain
 
 
 # prefix 제거: Spring Boot의 AiAnalysisClient가 /analyze/diet, /analyze/health-report 로 호출하기 때문
@@ -71,14 +71,37 @@ def post_analyze_health_report(request: HealthReportAnalyzeRequest) -> AnalyzeRe
     return AnalyzeResponse(answer=answer)
 
 
-# === 추후 구현 예정 ===
+class PainAnalyzeRequest(BaseModel):
+    record_id: int
+    body_part: str
+    pain_types: list[str]
+    intensity: int
 
+
+class PainAnalyzeResponse(BaseModel):
+    ai_cause: str
+    ai_first_aid: str
+
+
+@router.post("/analyze/pain", response_model=PainAnalyzeResponse)
+def post_analyze_pain(request: PainAnalyzeRequest) -> PainAnalyzeResponse:
+    """Spring Boot의 PainRecordService가 호출하는 통증 분석 엔드포인트.
+
+    Gemini가 통증 원인(ai_cause)과 응급조치(ai_first_aid)를 반환한다.
+    """
+    pain_data = request.model_dump()
+    try:
+        ai_cause, ai_first_aid = analyze_pain(pain_data)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail="Gemini API request failed.") from exc
+
+    return PainAnalyzeResponse(ai_cause=ai_cause, ai_first_aid=ai_first_aid)
+
+
+# === 추후 구현 예정 ===
 
 @router.post("/ai/predict/blood-glucose/{user_id}")
 async def predict_blood_glucose(user_id: str):
-    pass
-
-
-@router.post("/ai/analyze/pain/{user_id}")
-async def analyze_pain(user_id: str):
     pass
