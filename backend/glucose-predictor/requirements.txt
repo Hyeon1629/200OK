@@ -1,9 +1,0 @@
-# 추론 컨테이너 운영 의존성
-# torch는 CPU wheel 사용 — Dockerfile에서 별도 --index-url 로 설치
-
-fastapi
-uvicorn[standard]
-boto3
-numpy
-scikit-learn
-pydantic

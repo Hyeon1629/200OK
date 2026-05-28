@@ -1,6 +1,0 @@
-fastapi
-uvicorn
-boto3
-python-dotenv
-google-genai
-httpx
