@@ -1,0 +1,182 @@
+name: deploy
+
+# main 브랜치 push 시 변경된 서비스만 빌드 → ECR push → ECS 무중단 배포.
+# 인증: GitHub OIDC (장기 키 없음). 태깅: git-sha + latest.
+# 배포: 현재 운영 TaskDef에서 이미지만 교체해 새 리비전 등록(env/secrets 보존).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "강제 배포 대상: springboot | fastapi | predictor | all"
+        default: all
+
+permissions:
+  id-token: write   # OIDC 단기 자격 발급
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REGISTRY: 353842237556.dkr.ecr.ap-northeast-2.amazonaws.com
+  ROLE_ARN: arn:aws:iam::353842237556:role/checkdang-github-actions-deploy-role
+  CLUSTER: checkdang-cluster
+  S3_BUCKET: checkdang-bucket-353842237556-ap-northeast-2-an
+
+jobs:
+  # ── 변경된 서비스 감지 ──────────────────────────────────────────────
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      springboot: ${{ steps.filter.outputs.springboot }}
+      fastapi: ${{ steps.filter.outputs.fastapi }}
+      predictor: ${{ steps.filter.outputs.predictor }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            springboot:
+              - 'backend/springboot/**'
+            fastapi:
+              - 'backend/fastapi/**'
+            predictor:
+              - 'backend/glucose-predictor/**'
+
+  # ── Spring Boot ────────────────────────────────────────────────────
+  springboot:
+    needs: changes
+    if: >-
+      needs.changes.outputs.springboot == 'true' ||
+      github.event.inputs.service == 'springboot' ||
+      github.event.inputs.service == 'all'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: vars
+        run: echo "sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/springboot/Dockerfile
+          push: true
+          platforms: linux/amd64
+          provenance: false
+          sbom: false
+          tags: |
+            ${{ env.ECR_REGISTRY }}/chekdang-spring-boot:${{ steps.vars.outputs.sha }}
+            ${{ env.ECR_REGISTRY }}/chekdang-spring-boot:latest
+      - run: aws ecs describe-task-definition --task-definition chekdang-spring-task --query taskDefinition --output json > td.json
+      - id: render
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: td.json
+          container-name: spring-boot-container
+          image: ${{ env.ECR_REGISTRY }}/chekdang-spring-boot:${{ steps.vars.outputs.sha }}
+      - uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          service: chekdang-spring-task-service
+          cluster: ${{ env.CLUSTER }}
+          wait-for-service-stability: true
+
+  # ── FastAPI ────────────────────────────────────────────────────────
+  fastapi:
+    needs: changes
+    if: >-
+      needs.changes.outputs.fastapi == 'true' ||
+      github.event.inputs.service == 'fastapi' ||
+      github.event.inputs.service == 'all'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: vars
+        run: echo "sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: backend/fastapi
+          file: backend/fastapi/Dockerfile
+          push: true
+          platforms: linux/amd64
+          provenance: false
+          sbom: false
+          tags: |
+            ${{ env.ECR_REGISTRY }}/chekdang-fastapi:${{ steps.vars.outputs.sha }}
+            ${{ env.ECR_REGISTRY }}/chekdang-fastapi:latest
+      - run: aws ecs describe-task-definition --task-definition checkdang-fastapi --query taskDefinition --output json > td.json
+      - id: render
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: td.json
+          container-name: checkdang-fastapi
+          image: ${{ env.ECR_REGISTRY }}/chekdang-fastapi:${{ steps.vars.outputs.sha }}
+      - uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          service: checkdang-fastapi-service
+          cluster: ${{ env.CLUSTER }}
+          wait-for-service-stability: true
+
+  # ── Glucose Predictor (모델은 S3 버전 경로에서 다운로드해 이미지에 동봉) ──
+  predictor:
+    needs: changes
+    if: >-
+      needs.changes.outputs.predictor == 'true' ||
+      github.event.inputs.service == 'predictor' ||
+      github.event.inputs.service == 'all'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: vars
+        run: echo "sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: 모델 산출물 S3에서 다운로드 (model-version.txt 버전)
+        run: |
+          VERSION=$(tr -d '[:space:]' < backend/glucose-predictor/model-version.txt)
+          echo "model version: $VERSION"
+          aws s3 cp "s3://${S3_BUCKET}/glucose-predictor/artifacts/${VERSION}/" \
+            backend/glucose-predictor/artifacts/ --recursive --region "$AWS_REGION"
+          ls -la backend/glucose-predictor/artifacts/
+      - uses: aws-actions/amazon-ecr-login@v2
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: backend/glucose-predictor
+          file: backend/glucose-predictor/Dockerfile
+          push: true
+          platforms: linux/amd64
+          provenance: false
+          sbom: false
+          tags: |
+            ${{ env.ECR_REGISTRY }}/checkdang-glucose-predictor:${{ steps.vars.outputs.sha }}
+            ${{ env.ECR_REGISTRY }}/checkdang-glucose-predictor:latest
+      - run: aws ecs describe-task-definition --task-definition checkdang-glucose-predictor --query taskDefinition --output json > td.json
+      - id: render
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: td.json
+          container-name: glucose-predictor
+          image: ${{ env.ECR_REGISTRY }}/checkdang-glucose-predictor:${{ steps.vars.outputs.sha }}
+      - uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          service: checkdang-glucose-predictor-service
+          cluster: ${{ env.CLUSTER }}
+          wait-for-service-stability: true
