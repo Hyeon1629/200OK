@@ -1,28 +1,20 @@
-# 앱 실행 방법
+#파일 경로 및 용도
 
-사전 준비
+200OK-front-2_temp/200OK-front-2_temp/app/src/main/java/com/checkdang/app/data/remote/AiAdviceApiClient.kt
 
-env.example에 있는 RDS 비번 채우기 #backend 
+백엔드 /api/ai/demo-diet-advice 호출 및 Gemini 응답 파싱
 
-fastapi에 .env 파일 하나 만들고 gemini_api_key 넣기
+200OK-front-2_temp/200OK-front-2_temp/app/src/main/java/com/checkdang/app/ui/lifestyle/meal/MealDetailActivity.kt
 
-2. FastAPI 실행
+식사 상세 화면에서 AI 조언 버튼 클릭 처리
 
-cd C:\Users\user\Desktop\200OK-main\200OK-main\backend_temp\fastapi
+200OK-front-2_temp/200OK-front-2_temp/app/src/main/res/layout/activity_meal_detail.xml
 
-python -m uvicorn main:app --reload --port 8000
+Gemini 조언 버튼과 응답 표시 영역 UI
 
-3. Spring Boot 실행
+200OK-front-2_temp/200OK-front-2_temp/app/src/main/AndroidManifest.xml
 
-cd C:\Users\user\Desktop\200OK-main\200OK-main\backend_temp\springboot
-
-.\gradlew.bat bootRun
-
-4. 안드로이드 스튜디오에서 앱 실행
-
-식사 상세 화면 이동
--> Gemini 식단 조언 받기 버튼 클릭
--> 버튼 아래에 Gemini 답변 표시 확인
+인터넷 권한 및 로컬 HTTP 통신 허용 설정
 
 
 
