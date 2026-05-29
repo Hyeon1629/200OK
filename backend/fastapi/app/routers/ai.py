@@ -2,9 +2,10 @@ import os
 from typing import Any, Optional
 
 import httpx
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from pydantic import BaseModel, Field
 
+from app.auth import verify_token
 from app.services.gemini import analyze_diet, analyze_health_report
 
 
@@ -84,7 +85,7 @@ def post_analyze_health_report(request: HealthReportAnalyzeRequest) -> AnalyzeRe
 # === 추후 구현 예정 ===
 
 
-@router.post("/ai/predict/blood-glucose/{user_id}")
+@router.post("/ai/predict/blood-glucose/{user_id}", dependencies=[Depends(verify_token)])
 async def predict_blood_glucose(
     user_id: str,
     date: str,
@@ -115,6 +116,6 @@ async def predict_blood_glucose(
     return resp.json()
 
 
-@router.post("/ai/analyze/pain/{user_id}")
+@router.post("/ai/analyze/pain/{user_id}", dependencies=[Depends(verify_token)])
 async def analyze_pain(user_id: str):
     pass
