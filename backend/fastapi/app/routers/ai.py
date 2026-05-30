@@ -1,4 +1,6 @@
+import logging
 import os
+from datetime import datetime
 from typing import Any, Optional
 
 import httpx
@@ -6,7 +8,14 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from app.auth import verify_token
+from app.services.dynamodb import get_items_by_user, save_item
 from app.services.gemini import analyze_diet, analyze_health_report
+
+logger = logging.getLogger(__name__)
+
+# 예측 결과 저장 테이블 (PK=user_date, SK=predicted_at)
+PREDICTION_TABLE = "blood_glucose_prediction"
+MODEL_VERSION = os.getenv("MODEL_VERSION", "v1")
 
 
 # 같은 EC2의 별도 컨테이너 (D-3/D-4 배포). 외부 노출 X — 메인 FastAPI만 호출.
@@ -113,7 +122,62 @@ async def predict_blood_glucose(
             detail = resp.text
         raise HTTPException(status_code=resp.status_code, detail=detail)
 
-    return resp.json()
+    result = resp.json()
+
+    # 예측 결과 자동 저장 (실패해도 예측 응답은 유지)
+    predicted_at = datetime.now().isoformat(timespec="seconds")
+    saved = False
+    try:
+        item = {
+            "user_date": f"{user_id}#{date}",
+            "predicted_at": predicted_at,
+            "predictions": [str(v) for v in result.get("predictions", [])],
+            "horizon_minutes": result.get("horizon_minutes"),
+            "interval_minutes": 5,
+            "source": result.get("source"),
+            "model_version": MODEL_VERSION,
+        }
+        save_item(PREDICTION_TABLE, item)
+        saved = True
+    except Exception as exc:
+        logger.warning("예측 결과 저장 실패 (user=%s date=%s): %s", user_id, date, exc)
+
+    result["predicted_at"] = predicted_at
+    result["saved"] = saved
+    return result
+
+
+def _normalize_item(item: dict) -> dict:
+    """DynamoDB Decimal 등을 JSON 직렬화 가능한 타입으로 변환.
+
+    - 숫자 메타(horizon_minutes/interval_minutes)는 int
+    - predictions는 문자열로 저장돼 있으므로 float 리스트로 복원
+    """
+    out = dict(item)
+    for k in ("horizon_minutes", "interval_minutes"):
+        if k in out and out[k] is not None:
+            out[k] = int(out[k])
+    if "predictions" in out:
+        out["predictions"] = [float(v) for v in out["predictions"]]
+    return out
+
+
+@router.get("/ai/predictions/{user_id}", dependencies=[Depends(verify_token)])
+async def get_predictions(user_id: str, date: str):
+    """해당 날짜의 예측 이력 전체 조회 (predicted_at 내림차순)."""
+    items = get_items_by_user(PREDICTION_TABLE, user_id, date)
+    items.sort(key=lambda x: x.get("predicted_at", ""), reverse=True)
+    return [_normalize_item(i) for i in items]
+
+
+@router.get("/ai/predictions/{user_id}/latest", dependencies=[Depends(verify_token)])
+async def get_latest_prediction(user_id: str, date: str):
+    """해당 날짜의 최신 예측 1건 조회."""
+    items = get_items_by_user(PREDICTION_TABLE, user_id, date)
+    if not items:
+        raise HTTPException(status_code=404, detail="해당 날짜의 예측 기록이 없습니다.")
+    items.sort(key=lambda x: x.get("predicted_at", ""), reverse=True)
+    return _normalize_item(items[0])
 
 
 @router.post("/ai/analyze/pain/{user_id}", dependencies=[Depends(verify_token)])
