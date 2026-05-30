@@ -211,20 +211,9 @@
                 android:orientation="horizontal">
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_pdf"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="52dp"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="8dp"
-                    android:text="PDF 저장"
-                    app:cornerRadius="12dp" />
-
-                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_confirm"
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="52dp"
-                    android:layout_weight="1"
                     android:text="확인"
                     app:cornerRadius="12dp" />
             </LinearLayout>

@@ -14,7 +14,7 @@ import com.checkdang.app.data.model.GlucoseSummary
 import com.checkdang.app.data.model.LifestyleSummary
 import com.checkdang.app.data.model.MealSummary
 import com.checkdang.app.data.model.PainRecord
-import com.checkdang.app.data.model.PainType
+import com.checkdang.app.data.model.PainTaxonomy
 import com.checkdang.app.data.model.SleepSummary
 import com.checkdang.app.util.MealTiming
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -151,16 +151,17 @@ object MockDataProvider {
             val list = mutableListOf<PainRecord>()
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)
-                val typesArr = o.getJSONArray("painTypes")
-                val types = (0 until typesArr.length()).mapNotNull { idx ->
-                    runCatching { PainType.valueOf(typesArr.getString(idx)) }.getOrNull()
+                fun strList(key: String): List<String> {
+                    val a = o.optJSONArray(key) ?: return emptyList()
+                    return (0 until a.length()).map { idx -> a.getString(idx) }
                 }
                 list += PainRecord(
-                    id         = o.getString("id"),
-                    bodyPart   = BodyPart.valueOf(o.getString("bodyPart")),
-                    intensity  = o.getInt("intensity"),
-                    painTypes  = types,
-                    recordedAt = o.getLong("recordedAt")
+                    id            = o.getString("id"),
+                    bodyPart      = BodyPart.valueOf(o.getString("bodyPart")),
+                    intensity     = o.getInt("intensity"),
+                    qualityTags   = strList("qualityTags"),
+                    situationTags = strList("situationTags"),
+                    recordedAt    = o.getLong("recordedAt")
                 )
             }
             _painRecords.clear()
@@ -175,11 +176,12 @@ object MockDataProvider {
         val arr = JSONArray()
         _painRecords.forEach { p ->
             arr.put(JSONObject().apply {
-                put("id",         p.id)
-                put("bodyPart",   p.bodyPart.name)
-                put("intensity",  p.intensity)
-                put("recordedAt", p.recordedAt)
-                put("painTypes",  JSONArray().apply { p.painTypes.forEach { put(it.name) } })
+                put("id",            p.id)
+                put("bodyPart",      p.bodyPart.name)
+                put("intensity",     p.intensity)
+                put("recordedAt",    p.recordedAt)
+                put("qualityTags",   JSONArray().apply { p.qualityTags.forEach { put(it) } })
+                put("situationTags", JSONArray().apply { p.situationTags.forEach { put(it) } })
             })
         }
         store.edit().putString(KEY_PAIN_RECORDS, arr.toString()).apply()
@@ -238,12 +240,12 @@ object MockDataProvider {
                 description = "기록된 운동 세션과 해당 부위 통증 사이의 낮은 상관관계가 발견되었습니다."
             )
         }
-        // Pain type-based correlation
-        if (PainType.NUMBNESS in record.painTypes || PainType.BURNING in record.painTypes) {
+        // 통증 성질 기반 상관관계 — 신경성 태그가 있으면 신경 민감도 추가
+        if (record.qualityTags.any { it in PainTaxonomy.NEURAL_TAGS }) {
             list += Correlation(
                 factor      = "신경 민감도",
                 level       = CorrelationLevel.HIGH,
-                description = "저림·타는 느낌은 신경 관련 증상일 수 있으며, 혈당 조절과 밀접한 연관이 있습니다."
+                description = "저림·타는 느낌·방사통 등은 신경 관련 증상일 수 있으며, 혈당 조절과 밀접한 연관이 있습니다."
             )
         }
         return list

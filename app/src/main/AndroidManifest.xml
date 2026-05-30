@@ -8,6 +8,11 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- 혈당 PDF "기기에 저장" — API 26–28 레거시 Downloads 쓰기용. API 29+ 는 MediaStore 라 불요. -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
     <!-- Health Connect 읽기 권한 (삼성 헬스 → Health Connect 동기화 데이터) -->
     <uses-permission android:name="android.permission.health.READ_EXERCISE" />
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
@@ -32,6 +37,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CheckDang">
+
+        <!-- 혈당 PDF 공유용 FileProvider (cacheDir/reports → content://) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
         <activity
             android:name=".ui.splash.SplashActivity"
@@ -110,7 +126,7 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
-            android:name=".ui.legal.TermsActivity"
+            android:name=".ui.legal.LegalDocumentActivity"
             android:exported="false"
             android:parentActivityName=".ui.main.MainActivity" />
 

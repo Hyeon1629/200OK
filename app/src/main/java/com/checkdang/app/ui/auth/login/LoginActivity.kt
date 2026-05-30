@@ -27,7 +27,8 @@ import com.checkdang.app.data.remote.CognitoGuestSession
 import com.checkdang.app.databinding.ActivityLoginBinding
 import com.checkdang.app.databinding.DialogSocialLoadingBinding
 import com.checkdang.app.ui.auth.onboarding.OnboardingActivity
-import com.checkdang.app.ui.legal.TermsActivity
+import com.checkdang.app.ui.legal.LegalDocument
+import com.checkdang.app.ui.legal.LegalDocumentActivity
 import com.checkdang.app.ui.main.MainActivity
 import kotlinx.coroutines.launch
 
@@ -238,15 +239,10 @@ class LoginActivity : AppCompatActivity() {
         }
 
         applySpan("이용약관") {
-            startActivity(
-                Intent(this, TermsActivity::class.java).apply {
-                    putExtra(TermsActivity.EXTRA_MODE, TermsActivity.MODE_VIEW)
-                }
-            )
+            startActivity(LegalDocumentActivity.intent(this, LegalDocument.TERMS))
         }
         applySpan("개인정보처리방침") {
-            // TODO(legal): PrivacyPolicyActivity 구현 후 동일 패턴으로 연결
-            Toast.makeText(this, "개인정보처리방침 (준비 중)", Toast.LENGTH_SHORT).show()
+            startActivity(LegalDocumentActivity.intent(this, LegalDocument.PRIVACY))
         }
 
         binding.tvTermsNotice.text           = span

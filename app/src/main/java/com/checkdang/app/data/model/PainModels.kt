@@ -30,15 +30,6 @@ enum class BodyPart(val label: String, val view: BodyView) {
     RIGHT_SHOULDER_BACK("오른쪽 어깨 (뒤)", BodyView.BACK),
 }
 
-enum class PainType(val label: String) {
-    SHARP("찌르는 통증"),
-    DULL("둔한 통증"),
-    BURNING("타는 느낌"),
-    THROBBING("욱신거림"),
-    STIFFNESS("뻣뻣함"),
-    NUMBNESS("저림"),
-}
-
 enum class CorrelationLevel(val label: String) {
     HIGH("높음"),
     MEDIUM("중간"),
@@ -54,10 +45,15 @@ data class Correlation(
 data class PainRecord(
     val id: String = UUID.randomUUID().toString(),
     val bodyPart: BodyPart,
-    val intensity: Int,          // 1–5
-    val painTypes: List<PainType>,
+    val intensity: Int,                              // 1–5
+    val qualityTags: List<String> = emptyList(),     // 통증 성질 (PainTaxonomy.QUALITY)
+    val situationTags: List<String> = emptyList(),   // 통증 상황 (PainTaxonomy.SITUATION)
     val recordedAt: Long = System.currentTimeMillis(),
-)
+) {
+    /** 기록 목록/요약에 표시할 태그 한 줄 (성질 + 상황) */
+    val tagSummary: String
+        get() = (qualityTags + situationTags).joinToString(" · ").ifEmpty { "기록된 태그 없음" }
+}
 
 data class AIAnalysisResult(
     val painRecord: PainRecord,

@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -18,7 +17,6 @@ import com.checkdang.app.data.model.BodyPart
 import com.checkdang.app.data.model.Correlation
 import com.checkdang.app.data.model.CorrelationLevel
 import com.checkdang.app.data.model.PainRecord
-import com.checkdang.app.data.model.PainType
 import com.checkdang.app.databinding.ActivityAiAnalysisBinding
 import com.checkdang.app.databinding.ItemCorrelationBinding
 import kotlinx.coroutines.delay
@@ -29,9 +27,10 @@ class AIAnalysisActivity : AppCompatActivity() {
     private val binding by lazy { ActivityAiAnalysisBinding.inflate(layoutInflater) }
 
     companion object {
-        const val EXTRA_BODY_PART   = "extra_body_part"
-        const val EXTRA_INTENSITY   = "extra_intensity"
-        const val EXTRA_PAIN_TYPES  = "extra_pain_types"
+        const val EXTRA_BODY_PART       = "extra_body_part"
+        const val EXTRA_INTENSITY       = "extra_intensity"
+        const val EXTRA_QUALITY_TAGS    = "extra_quality_tags"
+        const val EXTRA_SITUATION_TAGS  = "extra_situation_tags"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,14 +41,14 @@ class AIAnalysisActivity : AppCompatActivity() {
 
         val partName   = intent.getStringExtra(EXTRA_BODY_PART) ?: BodyPart.LOWER_BACK.name
         val intensity  = intent.getIntExtra(EXTRA_INTENSITY, 3)
-        val typeNames  = intent.getStringArrayExtra(EXTRA_PAIN_TYPES) ?: emptyArray()
-        val painTypes  = typeNames.mapNotNull { runCatching { PainType.valueOf(it) }.getOrNull() }
-            .ifEmpty { listOf(PainType.DULL) }
+        val qualityTags   = intent.getStringArrayExtra(EXTRA_QUALITY_TAGS)?.toList() ?: emptyList()
+        val situationTags = intent.getStringArrayExtra(EXTRA_SITUATION_TAGS)?.toList() ?: emptyList()
 
         val record = PainRecord(
-            bodyPart   = BodyPart.valueOf(partName),
-            intensity  = intensity,
-            painTypes  = painTypes,
+            bodyPart      = BodyPart.valueOf(partName),
+            intensity     = intensity,
+            qualityTags   = qualityTags,
+            situationTags = situationTags,
         )
 
         // Save to mock storage
@@ -87,7 +86,7 @@ class AIAnalysisActivity : AppCompatActivity() {
         binding.layoutResult.visibility  = View.VISIBLE
 
         binding.tvResultPart.text      = record.bodyPart.label
-        binding.tvResultTypes.text     = record.painTypes.joinToString(" · ") { it.label }
+        binding.tvResultTypes.text     = record.tagSummary
         binding.tvResultIntensity.text = record.intensity.toString()
         binding.tvSummary.text         = summary
         binding.tvRecommendation.text  = recommendation
@@ -97,9 +96,6 @@ class AIAnalysisActivity : AppCompatActivity() {
         binding.rvCorrelations.adapter = adapter
         adapter.submitList(correlations)
 
-        binding.btnPdf.setOnClickListener {
-            Toast.makeText(this, "PDF 저장 기능은 준비 중입니다.", Toast.LENGTH_SHORT).show()
-        }
         binding.btnConfirm.setOnClickListener { finish() }
     }
 

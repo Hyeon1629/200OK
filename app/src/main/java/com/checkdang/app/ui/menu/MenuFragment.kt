@@ -25,7 +25,8 @@ import com.checkdang.app.databinding.ItemMenuRowBinding
 import com.amplifyframework.kotlin.core.Amplify
 import com.checkdang.app.ui.auth.login.LoginActivity
 import com.checkdang.app.ui.family.FamilyActivity
-import com.checkdang.app.ui.legal.TermsActivity
+import com.checkdang.app.ui.legal.LegalDocument
+import com.checkdang.app.ui.legal.LegalDocumentActivity
 import com.checkdang.app.ui.menu.subscription.SubscriptionActivity
 import com.checkdang.app.ui.profile.ProfileActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -163,19 +164,16 @@ class MenuFragment : Fragment() {
         // 섹션 1: 내 정보
         configRow(binding.menuProfile,      R.drawable.ic_person, "환자 프로필 관리")
         configRow(binding.menuNotification, R.drawable.ic_bell,   "알림 설정")
+        configRow(binding.menuFamily,       R.drawable.ic_group,  "가족 공유")
 
-        // 섹션 2: 데이터
-        configRow(binding.menuExport, R.drawable.ic_export, "데이터 내보내기 (PDF/CSV)")
-        configRow(binding.menuFamily, R.drawable.ic_group,  "가족 공유")
-
-        // 섹션 3: 고객센터
+        // 섹션 2: 고객센터
         configRow(binding.menuFaq,     R.drawable.ic_help,     "자주 묻는 질문")
         configRow(binding.menuTerms,   R.drawable.ic_document, "이용약관")
         configRow(binding.menuPrivacy, R.drawable.ic_shield,   "개인정보처리방침")
         configRow(binding.menuVersion, R.drawable.ic_info,     "앱 버전",
             subText = "1.0.0", showArrow = false)
 
-        // 섹션 4: 계정
+        // 섹션 3: 계정
         configRow(binding.menuConnectedAccount, R.drawable.ic_person, "연결된 계정",
             showArrow = false)
         configRow(binding.menuLogout,   R.drawable.ic_logout, "로그아웃")
@@ -200,16 +198,14 @@ class MenuFragment : Fragment() {
             openAppNotificationSettings()
         }
         binding.menuTerms.root.setOnClickListener {
-            startActivity(
-                Intent(requireContext(), TermsActivity::class.java).apply {
-                    putExtra(TermsActivity.EXTRA_MODE, TermsActivity.MODE_VIEW)
-                }
-            )
+            startActivity(LegalDocumentActivity.intent(requireContext(), LegalDocument.TERMS))
+        }
+        binding.menuPrivacy.root.setOnClickListener {
+            startActivity(LegalDocumentActivity.intent(requireContext(), LegalDocument.PRIVACY))
         }
 
         listOf(
-            binding.menuExport, binding.menuFaq,
-            binding.menuPrivacy
+            binding.menuFaq
         ).forEach { row ->
             row.root.setOnClickListener {
                 Toast.makeText(requireContext(), "${row.tvMenuTitle.text} (준비 중)", Toast.LENGTH_SHORT).show()

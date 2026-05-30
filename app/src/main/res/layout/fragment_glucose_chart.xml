@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingBottom="24dp">
+        android:paddingBottom="20dp">
 
         <!-- 기간 필터 ChipGroup -->
         <com.google.android.material.chip.ChipGroup
@@ -18,8 +18,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="6dp"
             app:singleSelection="true"
             app:selectionRequired="true">
 
@@ -65,13 +65,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingTop="12dp"
-                android:paddingBottom="8dp">
+                android:paddingTop="10dp"
+                android:paddingBottom="6dp">
 
                 <com.github.mikephil.charting.charts.LineChart
                     android:id="@+id/chart_glucose"
                     android:layout_width="match_parent"
-                    android:layout_height="320dp"
+                    android:layout_height="260dp"
                     android:paddingHorizontal="8dp" />
 
                 <!-- 범례 -->
@@ -79,8 +79,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginBottom="6dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 

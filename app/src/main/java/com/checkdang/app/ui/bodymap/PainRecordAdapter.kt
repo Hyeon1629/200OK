@@ -19,7 +19,7 @@ class PainRecordAdapter(
         fun bind(record: PainRecord) {
             binding.tvIntensity.text  = record.intensity.toString()
             binding.tvPart.text       = record.bodyPart.label
-            binding.tvPainTypes.text  = record.painTypes.joinToString(" · ") { it.label }
+            binding.tvPainTypes.text  = record.tagSummary
             binding.tvDate.text       = formatRelativeTime(record.recordedAt)
             binding.root.setOnClickListener { onClick(record) }
         }

@@ -1,28 +1,46 @@
 package com.checkdang.app.ui.glucose
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.checkdang.app.R
+import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.databinding.FragmentGlucoseBinding
+import com.checkdang.app.ui.glucose.export.GlucosePdfExporter
 import com.checkdang.app.ui.glucose.input.GlucoseInputBottomSheet
 import com.checkdang.app.util.GlucoseEvaluator
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class GlucoseFragment : Fragment() {
 
     private var _binding: FragmentGlucoseBinding? = null
     private val binding get() = _binding!!
     private val viewModel: GlucoseViewModel by viewModels()
+
+    // API 26–28 의 "기기에 저장" 은 WRITE_EXTERNAL_STORAGE 가 필요. 허가되면 저장을 이어서 진행.
+    private val storagePermLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) exportSave()
+        else Toast.makeText(requireContext(), "저장 권한이 필요해요", Toast.LENGTH_SHORT).show()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -52,9 +70,7 @@ class GlucoseFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
-        binding.btnPdf.setOnClickListener {
-            Toast.makeText(requireContext(), "PDF 생성을 시작합니다", Toast.LENGTH_SHORT).show()
-        }
+        binding.btnPdf.setOnClickListener { showExportChooser() }
 
         binding.fabAdd.setOnClickListener {
             val sheet = GlucoseInputBottomSheet()
@@ -80,6 +96,61 @@ class GlucoseFragment : Fragment() {
                     // max/min에 GlucoseEvaluator 색상 적용 생략 (단순화)
                 }
             }
+        }
+    }
+
+    // ── 혈당 PDF 내보내기 ────────────────────────────────────────────────────
+    private fun showExportChooser() {
+        if (viewModel.records.value.isEmpty()) {
+            Toast.makeText(requireContext(), "내보낼 혈당 기록이 없어요", Toast.LENGTH_SHORT).show()
+            return
+        }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("혈당 리포트 PDF")
+            .setItems(arrayOf("공유하기", "기기에 저장")) { _, which ->
+                when (which) {
+                    0 -> exportShare()
+                    1 -> exportSaveWithPermission()
+                }
+            }
+            .show()
+    }
+
+    private fun nickname(): String = SessionHolder.currentProfile?.nickname ?: "체크당 사용자"
+
+    private fun exportShare() {
+        val ctx = requireContext().applicationContext
+        val records = viewModel.records.value
+        val nickname = nickname()
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching {
+                withContext(Dispatchers.IO) {
+                    GlucosePdfExporter.buildShareIntent(ctx, records, nickname)
+                }
+            }.onSuccess { startActivity(it) }
+                .onFailure { Toast.makeText(requireContext(), "PDF 생성에 실패했어요", Toast.LENGTH_SHORT).show() }
+        }
+    }
+
+    /** API 26–28 은 저장 권한을 먼저 확인/요청한다. API 29+ 는 권한 없이 바로 저장. */
+    private fun exportSaveWithPermission() {
+        val needsLegacyPerm = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
+            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+            PackageManager.PERMISSION_GRANTED
+        if (needsLegacyPerm) storagePermLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        else exportSave()
+    }
+
+    private fun exportSave() {
+        val ctx = requireContext().applicationContext
+        val records = viewModel.records.value
+        val nickname = nickname()
+        viewLifecycleOwner.lifecycleScope.launch {
+            val path = withContext(Dispatchers.IO) {
+                GlucosePdfExporter.saveToDownloads(ctx, records, nickname)
+            }
+            if (path != null) Snackbar.make(binding.root, "저장됨 · $path", Snackbar.LENGTH_LONG).show()
+            else Toast.makeText(requireContext(), "저장에 실패했어요", Toast.LENGTH_SHORT).show()
         }
     }
 

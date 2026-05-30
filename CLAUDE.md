@@ -118,16 +118,24 @@ data/samsunghealth/
 - Legacy mipmap raster 미생성 — minSdk=26 이라 Android 8.0+ 만 지원 (adaptive icon 항상 적용)
 - TODO(icon): Android 13+ Themed Icon (monochrome 레이어) 별도 STEP
 
-## 약관 관리
+## 법적 문서 (이용약관 / 개인정보처리방침)
 
-- **약관 원문 위치**: `app/src/main/res/raw/terms_of_service.md` (UTF-8 마크다운)
-- **렌더링**: `TermsActivity` 가 Markwon 으로 표시 (`io.noties.markwon:core` + `linkify`)
+- **원문 위치**:
+  - `app/src/main/res/raw/terms_of_service.md` (UTF-8 마크다운)
+  - `app/src/main/res/raw/privacy_policy.md`
+- **화면**: `LegalDocumentActivity` 단일 — `LegalDocument` enum (`TERMS` / `PRIVACY`) 으로 분기
+- **렌더링**: Markwon (`core` + `linkify` + `ext-tables`) — 표/링크 자동 처리
+- **호출**: `LegalDocumentActivity.intent(context, LegalDocument.X)` 빌더 사용 (직접 Intent 생성 금지)
 - **버전 변경 시**:
-  1. 약관 본문 상단의 `시행일` / `최종 수정일` / `버전` 갱신
-  2. 부칙 섹션에 변경 이력 한 줄 추가
-  3. **사용자 재동의가 필요할 수 있음** — 변경 범위에 따라 법무 검토 후 진행
-- TODO(legal): 현 v1.0 약관은 형식 템플릿이며, 출시 전 법무 검토 필요
-- TODO(legal): 개인정보처리방침은 본문 확보 후 동일 패턴(`PrivacyPolicyActivity`)으로 구현 예정
+  1. 본문 상단의 `시행일` / `최종 수정일` / `버전` 갱신
+  2. 부칙(약관) 또는 변경 이력(처리방침) 섹션에 한 줄 추가
+  3. **약관**: 사용자 재동의가 필요할 수 있음 — 법무 검토 후 진행
+  4. **처리방침**: 고지 의무만 — 동의 불요. 단 민감정보 조항 변경 시 별도 동의 필요
+- **IMPORTANT — 두 문서 모두 형식 템플릿. 출시 전 법무 검토 필수**
+- **IMPORTANT — 개인정보처리방침 11개 법정 필수 항목 (수집/목적/보유/제3자/위탁/국외/파기/권리/안전성/보호책임자/침해구제) 중 하나라도 누락 시 위법. 단순 삭제 금지**
+- **IMPORTANT — 민감정보(건강 데이터) 처리는 「개인정보 보호법」 제23조에 따라 별도 동의 필요. 처리방침 제3조 단순 삭제 금지**
+- TODO(legal): 회사명/이메일/보호책임자/백엔드 인프라 제공자 자리표시자 → 출시 전 실값 교체
+- TODO(legal): 민감정보 별도 동의 화면 (OnboardingActivity 신규 단계) 별도 STEP 으로 추가 예정
 
 ## Implementation Log 규칙
 

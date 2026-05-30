@@ -67,6 +67,7 @@ dependencies {
     // === Markwon — Markdown 렌더링 (이용약관/개인정보처리방침 등 정적 문서) ===
     implementation("io.noties.markwon:core:4.6.2")
     implementation("io.noties.markwon:linkify:4.6.2")
+    implementation("io.noties.markwon:ext-tables:4.6.2")
 
     // === Samsung Health Data SDK (STEP 11 — Phase 2 활성화) ===
     // app/libs/samsung-health-data-api-1.1.0.aar — 개발자 모드 가정.

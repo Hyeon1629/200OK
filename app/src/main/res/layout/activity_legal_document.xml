@@ -14,7 +14,6 @@
         android:background="@color/background_primary"
         android:elevation="2dp"
         app:navigationIcon="?attr/homeAsUpIndicator"
-        app:title="이용약관"
         app:titleTextColor="@color/text_primary"
         app:titleTextAppearance="@style/TextAppearance.CheckDang.Title2" />
 
@@ -48,29 +47,28 @@
                     android:padding="14dp">
 
                     <TextView
-                        android:id="@+id/tv_meta_version"
+                        android:id="@+id/tv_meta"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="버전 v1.0"
                         android:textAppearance="@style/TextAppearance.CheckDang.Body2"
                         android:textColor="@color/brand_green"
                         android:textStyle="bold" />
 
                     <TextView
-                        android:id="@+id/tv_meta_dates"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/tv_meta_subtitle"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="시행일 2026.07.01 · 최종 수정 2026.06.15"
+                        android:layout_marginTop="6dp"
                         android:textAppearance="@style/TextAppearance.CheckDang.Caption"
-                        android:textColor="@color/text_secondary" />
+                        android:textColor="@color/text_secondary"
+                        android:visibility="gone" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- 약관 본문 — Markwon 으로 렌더링 -->
+            <!-- 본문 — Markwon 렌더링 -->
             <TextView
-                android:id="@+id/tv_terms"
+                android:id="@+id/tv_document"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/TextAppearance.CheckDang.Body1"
@@ -78,10 +76,30 @@
                 android:lineSpacingMultiplier="1.4"
                 android:textIsSelectable="true" />
 
+            <!-- Privacy 전용: 보호책임자 문의 버튼 -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_contact"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="24dp"
+                android:minWidth="200dp"
+                android:paddingHorizontal="24dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:singleLine="true"
+                android:gravity="center"
+                android:text="@string/legal_contact_button"
+                android:visibility="gone"
+                app:cornerRadius="12dp"
+                app:strokeColor="@color/brand_green"
+                android:textColor="@color/brand_green" />
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- 동의 footer — MODE_AGREEMENT 일 때만 노출 -->
+    <!-- Terms 전용: 동의 footer (MODE_AGREEMENT 일 때만 노출) -->
     <LinearLayout
         android:id="@+id/footer_agreement"
         android:layout_width="match_parent"
@@ -98,7 +116,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="위 약관에 동의합니다"
+            android:text="@string/legal_agreement_label"
             android:textAppearance="@style/TextAppearance.CheckDang.Body2"
             android:textColor="@color/text_primary" />
 
@@ -112,7 +130,7 @@
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:singleLine="true"
-            android:text="동의하기" />
+            android:text="@string/legal_agreement_button" />
 
     </LinearLayout>
 

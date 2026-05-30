@@ -51,8 +51,10 @@ class HomeFragment : Fragment() {
 
     // ── 헤더 ──────────────────────────────────────────────────────────────
     private fun setupHeader() {
+        // 닉네임은 환자 본인이 아닐 수 있다 (고령 환자를 가족이 대리 기록하는 케이스).
+        // → "안녕하세요" 인사 대신 닉네임을 기록 대상으로 지칭하는 카피 사용.
         val nickname = SessionHolder.currentProfile?.nickname ?: "체크당 사용자"
-        binding.tvGreeting.text = "안녕하세요, ${nickname}님"
+        binding.tvGreeting.text = "${nickname}님의 기록을 확인해볼까요?"
 
         val sdf = SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN)
         val dayOfWeekSdf = SimpleDateFormat("E요일", Locale.KOREAN)

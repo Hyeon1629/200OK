@@ -4,6 +4,113 @@
 
 ---
 
+## [2026-05-30] 혈당 기록 PDF 내보내기 (공유 / 기기 저장) + 바디맵 PDF 제거
+
+### 배경
+- AI 바디맵 분석 결과의 PDF 보관 기능은 **제외** — 현재 분석은 Mock(규칙 기반)이라 비검증 분석에 의학 문서 권위를 입히는 리스크. `AIAnalysisActivity` 의 PDF 버튼(스텁) 삭제.
+- 대신 **객관적 측정값인 혈당 기록**만 PDF 로 내보내도록 구현. 당뇨 환자 진료 지참용 "혈당 일지" 실수요. (실제 가치는 Health Connect 연동 후 발현, 현재는 Mock 데이터 기반)
+
+### 작업 내용
+| 항목 | 변경 |
+|------|------|
+| 바디맵 PDF 제거 | `AIAnalysisActivity` `btnPdf` 핸들러·미사용 `Toast` import 제거, `activity_ai_analysis.xml` `btn_pdf` 삭제 후 "확인" 버튼 full-width |
+| PDF 생성기 | `GlucosePdfExporter.kt` 신규 — `android.graphics.pdf.PdfDocument` 기반 A4 리포트(헤더+요약+측정표+면책, 다중 페이지). 외부 의존성 0 |
+| ① 공유 | `cacheDir/reports` → `FileProvider` `content://` → `ACTION_SEND` chooser |
+| ② 기기 저장 | API 29+ `MediaStore.Downloads/체크당`(권한 불요) · API 26–28 레거시 Downloads(`WRITE_EXTERNAL_STORAGE` 사전 요청) |
+| FileProvider | `AndroidManifest` `<provider>` 등록(`${applicationId}.fileprovider`) + `res/xml/file_paths.xml`(cache-path) |
+| 권한 | `WRITE_EXTERNAL_STORAGE` `maxSdkVersion=28` 추가 |
+| UI 연결 | `GlucoseFragment` `btnPdf` → `MaterialAlertDialog`(공유/기기 저장 2지선다). API≤28 저장 권한 런처 + `Dispatchers.IO` 렌더링 |
+
+### 주요 결정
+- **AI 분석 PDF 제외, 혈당 PDF 채택** — 측정값(객관)은 OK, Mock 분석(비검증)은 risk. 출처 정직성 기준
+- **기본 PdfDocument API** — 제약(외부 의존성/영속성 프레임워크 금지)과 충돌 없음. PDF 는 저장이 아닌 렌더링+공유
+- **대상 기간** — 별도 기간 선택 UI 없이 현재 로드된 전체 기록(refresh 90일 + Mock)을 실제 min~max 날짜 범위로 라벨링. 추후 기간 필터 연동 가능
+- **닉네임 = 기록 대상** — 대리 기록(가족) 케이스 고려해 "OOO님 혈당 기록"으로 지칭
+- **저장 경로 이원화** — 공유(진료 전달 본질) + 기기 저장(보관) 둘 다 제공. minSdk 26 때문에 저장은 버전 분기 필수
+
+### 신규/수정 파일
+- 신규: `ui/glucose/export/GlucosePdfExporter.kt`, `res/xml/file_paths.xml`
+- 수정: `GlucoseFragment.kt`, `AIAnalysisActivity.kt`, `activity_ai_analysis.xml`, `AndroidManifest.xml`
+
+---
+
+## [2026-05-30] 2D 바디맵 Phase 2 — 상세 통증 기록 (성질/상황 taxonomy)
+
+### 배경
+"통증 입력하기" → 기존 바텀시트는 강도(1–5) + 평면 `PainType` 6종 칩뿐. 사양의 통증 분류 체계
+(성질 5군 + 상황 3군, 부위별 다중 태그)로 상세 기록 가능하도록 교체.
+
+### 작업 내용
+| 항목 | 변경 |
+|------|------|
+| 분류 데이터 | `PainTaxonomy.kt` 신규 — 성질 5군(둔한/날카로운/신경성/근육성/관절성, 그룹 색상)·상황 3군(동작/일상동작/시간대), 그룹별 하위 태그 + `NEURAL_TAGS` |
+| 모델 교체 | `PainRecord.painTypes: List<PainType>` → `qualityTags`/`situationTags: List<String>`. `PainType` enum 제거. `tagSummary` 파생 프로퍼티 추가 |
+| 바텀시트 | `PainInputBottomSheet` 재작성 — 강도(유지) + 성질/상황 **아코디언**(그룹 헤더 클릭 토글, 그룹 색상 dot, 선택 개수 배지) + 그룹 색상 칩 다중선택. NestedScrollView 로 스크롤 |
+| 칩 스타일 | 선택 시 그룹 색상 채움(alpha 0x22)+윤곽+체크아이콘 틴트. `ColorStateList(state_checked)` |
+| 저장 경로 | BottomSheet → `AIAnalysisActivity` extras 를 `EXTRA_QUALITY_TAGS`/`EXTRA_SITUATION_TAGS`(String[]) 로 교체. Activity 가 PainRecord 구성·저장·분석 |
+| 영속화 | `MockDataProvider.persistPain/restorePain` 가 `qualityTags`/`situationTags` JSON 배열로 직렬화(구버전 `painTypes` 키는 `optJSONArray` 로 무시) |
+| Mock 분석 | `buildCorrelations` 신경 민감도 판정을 `qualityTags ∩ NEURAL_TAGS` 로 변경 |
+| 기록 표시 | `PainRecordAdapter`/`AIAnalysisActivity` 결과 라벨을 `record.tagSummary` 로 |
+
+### 주요 결정
+- **태그를 String 으로 저장** — 성질·상황 합 ~40종. enum 대신 taxonomy 테이블(`PainTaxonomy`) + `Set<String>`. 디자인이 그룹/태그를 자주 조정할 수 있어 데이터-주도 구성이 유리
+- **아코디언 프로그래매틱 생성** — XML+ViewBinding(Compose 미사용) 환경에서 동적 그룹/칩을 코드로 빌드. 그룹 펼침 상태·배지 카운트를 헤더 클릭/칩 토글로 관리
+- **저장은 AIAnalysisActivity 단일 지점 유지** — 기존 흐름 보존(중복 저장 방지)
+- **구버전 기록 호환** — `painTypes` 키만 있던 과거 mock 데이터는 태그 없이 로드(크래시 방지). dev 데이터라 마이그레이션 불요
+
+### 수정·신규 파일
+- 신규: `data/model/PainTaxonomy.kt`
+- 수정: `data/model/PainModels.kt`(PainType 제거, PainRecord 필드 교체), `ui/bodymap/input/PainInputBottomSheet.kt`(재작성), `res/layout/bottom_sheet_pain_input.xml`(재구성), `ui/bodymap/analysis/AIAnalysisActivity.kt`, `data/mock/MockDataProvider.kt`, `ui/bodymap/PainRecordAdapter.kt`
+
+### 빌드 검증
+`./gradlew assembleDebug` → BUILD SUCCESSFUL (31s)
+
+### 후속
+- 부위별 active part 전환 칩 + 태그 개수 배지(바디맵 화면 본문) — 멀티 부위 동시 기록 UX
+- 실기기 시각 검증 (아코디언/칩 색상 대비, 시니어 터치 타깃)
+
+---
+
+## [2026-05-30] 2D 바디맵 Phase 1 — 인체 실루엣 PNG + 알파 마스킹 점등
+
+### 배경
+BodyMapView 가 둥근 사각형 모자이크("회색 사각형")로 신체부위를 그리던 와이어프레임 상태.
+확정 자산(`docs/체크당 바디맵 자산 (단일파일).html`)의 인체 실루엣 PNG 로 교체. Phase 1 은
+렌더링/좌표만 교체하고 통증 입력 흐름(PainType·BottomSheet·AIAnalysis)은 그대로 유지.
+
+### 작업 내용
+| 항목 | 변경 |
+|------|------|
+| 자산 추출 | HTML 내장 gzip+base64 blob 2개 디코드 → 정면/후면 PNG(1000×2479, 투명배경, 신장 동일) |
+| PNG 배치 | `res/drawable-nodpi/bodymap_grey_front.png` · `bodymap_grey_back.png` 신규 |
+| BodyMapView | 사각형 drawRoundRect → **인체 PNG 실루엣** 렌더링. 점등은 `PorterDuff.DST_IN` 으로 **인체 알파 마스킹**(몸 밖 번짐 제거). 메모리 안전 위해 `inSampleSize=2` |
+| **부위 = 해부학적 폴리곤** | 초기 사각형 히트박스는 "어깨 박스가 팔·목까지 점등"되는 문제. 실루엣 알파를 row 단위로 실측(`_silhouette_probe.py`)해 정면 16 / 후면 12 부위를 **다각형**으로 재정의(어깨↔팔 사선, 몸통↔팔 간격, 좌우 다리 갈림 반영). 점등은 `drawPath`, 히트 테스트는 `Region.setPath` |
+| 좌표 교체 | 확정 자산 좌표계(viewBox 200×400) + 이미지 배치 상수(x=18.87,y=-2.04,w=162.79,h=403.56) |
+| 좌/우 규칙 | 인체 자신 기준(의학적 관례) — 정면 LEFT=화면 우측(x>100), 후면 LEFT=화면 좌측 |
+| 히트 테스트 | `Region`(1000×2000 정수 스케일) 폴리곤 contains. 겹치는 영역은 **최소 면적 부위 우선**(`minByOrNull`) |
+| 분할 검증 | 부위별 색상 분할맵 PNG(`_parts_render.py`) 렌더 → 육안 확인 후 폴리곤 좌표 보정 |
+
+### 주요 결정
+- **알파 마스킹 = `saveLayer` + `DST_IN`** — 점등 사각형을 레이어에 그린 뒤 인체 비트맵 알파로 클립. 인체 모양 안에서만 녹색이 채워짐(자산 사양 핵심 요건)
+- **`inSampleSize=2`** — 1000×2479 풀해상도(≈9.9MB/장)는 과함. 뷰 높이 대비 1/2(≈2.5MB) 로 충분 + OOM 회피
+- **공개 API 유지** — `selectedPart`/`onPartSelected`/`setBodyView`/`clearSelection` 그대로 → BodyMapFragment 무변경
+- **BodyPart enum 미변경** — 좌표만 BodyMapView 가 보유. 사양의 부위 이름이 기존 enum 과 일치
+- **Phase 2 예고** — 통증 분류 체계(성질 5군/상황 3군), 멀티선택+active part 칩·배지, BottomSheet 아코디언, Mock/AIAnalysis 적응은 별도 STEP
+
+### 수정·신규 파일
+- 신규: `res/drawable-nodpi/bodymap_grey_front.png`, `res/drawable-nodpi/bodymap_grey_back.png`
+- 수정: `ui/bodymap/BodyMapView.kt` (전면 재작성)
+
+### 빌드 검증
+`./gradlew assembleDebug` → BUILD SUCCESSFUL (57s)
+
+### 후속 (Phase 2)
+- 통증 분류 taxonomy 교체 + 부위별 `{성질:Set, 상황:Set}` 다중 기록
+- active part 전환 칩 + 태그 개수 배지, BottomSheet 아코디언 재구성
+- `MockDataProvider.analyzePainMock` / `AIAnalysisActivity` 새 모델 적응
+
+---
+
 ## [2026-05-26] Cognito User Pool 이관 — `amplifyconfiguration.json` 갱신
 
 ### 배경
@@ -407,6 +514,188 @@ $pid = (& $adb -s R3CT10JVBHN shell pidof com.checkdang.app).Trim()
 
 ### 빌드 검증
 `./gradlew compileDebugKotlin` → BUILD SUCCESSFUL
+
+---
+
+## [2026-05-22] 홈/혈당/라이프 — 여백 적정 수준 복구 (직전 축소가 과했음)
+
+### 배경
+이전 축소(360dp) 가 너무 적극적이라 화면이 빽빽한 느낌. 스크롤은 유지하지 않되 카드/헤더 간 시각적 호흡을 회복.
+
+### 재조정 — "원본 ↔ 직전 축소 값의 중간 지점" 원칙
+| 항목 | 원본 → 직전 → 재조정 |
+|------|--------------------|
+| **홈** 헤더 paddingTop | 24 → 16 → **20** |
+| **홈** 헤더 paddingBottom | 16 → 8 → **12** |
+| **홈** 메인 카드 padding | 20 → 16 → **18** |
+| **홈** 메인 카드 marginBottom | 16 → 10 → **12** |
+| **홈** divider marginVertical | 16 → 10 → **12** |
+| **홈** 빈 상태 paddingVertical | 24 → 12 → **16** |
+| **홈** 라이프 카드 padding | 14 → 12 → **14 (원복)** |
+| **홈** 차트 높이 | 200 → 160 → **170** |
+| **홈** 차트 padding | 12 → 8 → **10** |
+| **홈** 루트 paddingBottom | 24 → 16 → **20** |
+| **혈당** 통계 카드 padding | 16 → 10 → **12** |
+| **혈당** 통계 카드 marginTop | 12 → 6 → **8** |
+| **혈당** TabLayout marginTop | 8 → 2 → **4** |
+| **혈당** 차트 paddingBottom | 24 → 16 → **20** |
+| **혈당** 차트 높이 | 320 → 240 → **260** |
+| **라이프** 루트 paddingTop | 20 → 12 → **16** |
+| **라이프** 루트 paddingBottom | 24 → 16 → **20** |
+| **라이프** 동기화 배너 padding | 12 → 8 → **10** |
+| **라이프** 카드 padding | 16 → 12 → **14** |
+| **라이프** 카드 marginBottom | 12 → 8 → **10** |
+| **라이프** 운동 헤더 marginBottom | 16 → 8 → **12** |
+| **라이프** 도넛 크기 | 120 → 96 → **104** |
+| **라이프** 식사/수면 헤더 marginBottom | 12 → 8 → **10** |
+| **라이프** 수면 단계 라벨 marginBottom | 12 → 6 → **10** |
+
+### 합산
+- 직전 축소: 약 −360dp
+- 재조정 후: 약 **−180dp** (절반만 유지)
+
+### 수정 파일
+- `res/layout/fragment_home.xml`
+- `res/layout/fragment_glucose.xml`
+- `res/layout/fragment_glucose_chart.xml`
+- `res/layout/fragment_lifestyle.xml`
+
+### 빌드 검증
+`./gradlew assembleDebug` → BUILD SUCCESSFUL (37s)
+
+---
+
+## [2026-05-22] 홈/혈당/라이프 — 한 화면 안에 들어가도록 세로 공간 축소
+
+### 배경
+세 메인 화면 콘텐츠가 너무 길어 매번 스크롤이 필요. 한 화면에 핵심 정보가 보이도록 상하 여백·헤더·카드 간격·차트 높이 축소.
+
+### 변경 요약 (수치는 dp)
+**홈 (`fragment_home.xml`)**
+- 헤더 paddingTop 24→16, paddingBottom 16→8
+- 메인 혈당 카드: marginBottom 16→10, 내부 padding 20→16, divider marginVertical 16→10
+- 빈 상태 paddingVertical 24→12
+- 라이프스타일 섹션 marginBottom 12→8, 라이프 카드 행 marginBottom 16→10
+- 라이프스타일 카드 내부 padding 14→12 (×3)
+- 차트 섹션 marginBottom 12→8, 차트 높이 200→160, 차트 padding 12→8
+- 루트 paddingBottom 24→16
+- **합산 약 −130dp**
+
+**혈당 (`fragment_glucose.xml` + `fragment_glucose_chart.xml`)**
+- 통계 카드 marginTop 12→6, marginBottom 4→2, padding 16→10
+- TabLayout marginTop 8→2
+- 차트 페이지 paddingBottom 24→16, chipGroup marginTop 12→6, marginBottom 8→4
+- 차트 카드 내부 paddingTop 12→8, paddingBottom 8→4
+- **차트 높이 320→240**, 범례 margin 8→4
+- **합산 약 −110dp**
+
+**라이프 (`fragment_lifestyle.xml`)**
+- 루트 paddingTop 20→12, paddingBottom 24→16
+- 헤더 tv_date marginTop 4→2, marginBottom 16→10
+- 동기화 배너 marginBottom 12→8, padding 12→8
+- 운동/식사 카드 marginBottom 12→8 / 수면 카드는 기존대로 (마지막)
+- 모든 카드 내부 padding 16→12
+- 운동 카드 헤더 marginBottom 16→8, **도넛 120→96**
+- 식사 카드 헤더 marginBottom 12→8, tv_meal_goal marginBottom 12→8
+- 수면 카드 헤더 marginBottom 12→8, 총시간 marginBottom 12→8, 단계 라벨 marginBottom 12→6
+- **합산 약 −120dp**
+
+### 주요 결정
+- **차트 높이 축소가 가장 임팩트 큼** — 홈 차트 200→160, 혈당 차트 320→240. 시각적 변화는 크지만 가독성 유지 범위 내
+- **도넛 차트 120→96dp** — 라이프 운동 카드. 우측 통계와의 시각 균형 유지
+- **카드 내부 padding 일관 16→12** — 라이프 3카드 공통 패턴. 통일성도 함께 확보
+- **헤더 여백 가장 적극적으로 축소** — paddingTop 24→16/12. 스크롤 없이 보이려면 상단부터 줄여야 효과적
+- **차트 종횡비 변경** — 데이터 시각화 가독성에 영향 가능. 시각 검증에서 확인 필요
+
+### 수정 파일
+- `res/layout/fragment_home.xml`
+- `res/layout/fragment_glucose.xml`
+- `res/layout/fragment_glucose_chart.xml`
+- `res/layout/fragment_lifestyle.xml`
+
+### 빌드 검증
+`./gradlew assembleDebug` → BUILD SUCCESSFUL (42s)
+
+---
+
+## [2026-05-22] 개인정보처리방침 화면 + 법적 문서 컴포넌트 공통화 (v1.0)
+
+### 배경
+이용약관(`TermsActivity`) 은 구현 완료, 개인정보처리방침은 본문 미확보로 `"준비 중"` Toast 만 노출 중이던 상태. v1.0 처리방침 본문 확보 → 화면 신규 구현. 동시에 두 문서가 70% 공통 구조라 단일 Activity + enum 으로 통합 리팩토링.
+
+### 작업 내용
+| 항목 | 변경 |
+|------|------|
+| 처리방침 원문 | `res/raw/privacy_policy.md` 신규 — v1.0 본문 323줄, 11개 법정 필수 항목 포함, `TODO(legal)` 주석 |
+| 의존성 | `io.noties.markwon:ext-tables:4.6.2` 추가 — 처리방침의 표(보유기간/위탁/국외이전) 렌더링 |
+| 공통 컴포넌트 | `ui/legal/LegalDocumentActivity` + `LegalDocument` enum (TERMS / PRIVACY) 신규. 단일 레이아웃 `activity_legal_document.xml` |
+| 문자열 분리 | `res/values/strings_legal.xml` — 제목/메타/contact/agreement 텍스트, 다국어 확장 대비 |
+| Footer 분기 | `agreementFooter` (Terms+MODE_AGREEMENT) / `btnContact` (Privacy) — visibility 토글 |
+| 이메일 fallback | `mailto:` 인텐트를 `runCatching` 으로 처리. Android 11+ `<queries>` 가시성 제한 우회 |
+| TermsActivity 제거 | 기존 `TermsActivity.kt` + `activity_terms.xml` 삭제, Manifest 등록 교체 |
+| 호출처 마이그레이션 | `MenuFragment` (Terms + Privacy 둘 다) / `LoginActivity` 캡션 SpannableString — `LegalDocumentActivity.intent()` 빌더 사용 |
+
+### 주요 결정 (Plan 단계 사용자 승인)
+- **옵션 B 채택** — `LegalDocumentActivity` 단일 + enum 분기. 향후 다른 법적 문서(위치 기반 약관 등) 추가 시 enum 항목만 추가
+- **`TermsActivity` 완전 삭제** — Thin wrapper 유지는 부채만 늘림. 호출처 2곳만 교체
+- **TablePlugin 을 base 에 추가** — Terms 본문 표 0개 확인, 무해 + 향후 표 사용 시 일관 적용
+- **이메일 fallback 은 `runCatching`** — 원안의 `resolveActivity` 는 Android 11+ 가시성 제한으로 false negative 위험. 호출 시점 catch 가 안전
+- **빌더 패턴** — `LegalDocumentActivity.intent(ctx, doc)` / `agreementIntent(ctx)` 정적 메서드. 직접 `Intent` 생성 + extra 누락 방지
+
+### 산출물 / 삭제 / 수정
+- **신규**: `res/raw/privacy_policy.md`, `ui/legal/LegalDocumentActivity.kt`, `ui/legal/LegalDocument.kt`, `res/layout/activity_legal_document.xml`, `res/values/strings_legal.xml`, `docs/STEP_privacy.md`
+- **삭제**: `ui/legal/TermsActivity.kt`, `res/layout/activity_terms.xml`
+- **수정**: `app/build.gradle.kts`, `AndroidManifest.xml`, `ui/menu/MenuFragment.kt`, `ui/auth/login/LoginActivity.kt`, `CLAUDE.md` ("법적 문서" 섹션으로 확장)
+
+### 자가 검증 (11/11 통과)
+1. `./gradlew assembleDebug` → BUILD SUCCESSFUL (54s)
+2. Markwon 3건 hit (`core` + `linkify` + `ext-tables`)
+3. 처리방침 원문 323줄 (≥200)
+4. `TODO(legal)` 주석 hit
+5. 11개 법정 필수 항목(수집/목적/보유/제3자/위탁/국외/파기/권리/안전성/보호책임자/침해구제) 모두 hit
+6. 민감정보 조항 6건 hit
+7. `textIsSelectable` hit
+8. 이메일 인텐트 `runCatching` + Toast fallback 둘 다 존재
+9. `LegalDocumentActivity` 호출처 — MenuFragment + LoginActivity 2곳
+10. `TablePlugin.create` hit
+11. `TermsActivity` 잔존 참조 0건
+
+### 미해결 / 후속 STEP
+- **자리표시자**: 회사명, `privacy@checkdang.com`, 보호책임자 성명/직책, 백엔드 인프라 제공자 — 출시 전 실값 교체
+- **법무 검토**: 본문은 형식 템플릿. 출시 전 개인정보 전문 법무 검토 필수
+- **민감정보 별도 동의 화면**: 「개보법」 제23조 의무. `OnboardingActivity` 의 신규 단계로 별도 STEP
+- **데이터 이동 요구권**: 본문 제9조 1항 안내만 존재, 실제 export 기능은 별도 STEP
+- **다국어 (영문)**: `strings_legal.xml` 분리 완료, 번역 본문은 출시 후
+
+---
+
+## [2026-05-22] 메뉴 — "가족 공유" 를 내 정보 섹션으로 통합
+
+### 변경
+- 이전 단계에서 "데이터 내보내기" 제거 후 섹션 2(데이터) 가 가족 공유 한 행만 남아 의미 약화.
+- 가족 공유를 섹션 1(내 정보) 카드로 이동, 섹션 2 헤더/카드 통째 제거. 결과: 섹션 2개 (내 정보 / 고객센터 / 계정 → 3개로 축소되었으나 카드 묶음만 보면 시각적으로 더 단정)
+
+### 수정 파일
+- `res/layout/fragment_menu.xml` — 섹션 2 `TextView` "데이터" + `MaterialCardView`(menu_family 포함) 제거. menu_family 를 섹션 1 카드 내부로 이동 + 사이 divider 추가
+- `ui/menu/MenuFragment.kt` — `configRow(menuFamily, ...)` 를 섹션 1로 이동, 섹션 주석 번호 재정렬
+
+### 빌드 검증
+`./gradlew compileDebugKotlin` → BUILD SUCCESSFUL (8s)
+
+---
+
+## [2026-05-22] 메뉴 — "데이터 내보내기" 항목 제거
+
+### 변경
+- 데이터 내보내기 기능은 혈당 페이지의 PDF 버튼으로 일원화. 메뉴에서 중복 노출 제거.
+- 섹션 2(데이터) 카드는 가족 공유 한 행만 유지 → 행 사이 divider 도 함께 제거
+
+### 수정 파일
+- `res/layout/fragment_menu.xml` — `menu_export` `<include>` + divider `<View>` 삭제
+- `ui/menu/MenuFragment.kt` — `configRow(menuExport, ...)` + Toast 리스트의 `binding.menuExport` 참조 제거
+
+### 빌드 검증
+`./gradlew compileDebugKotlin` → BUILD SUCCESSFUL (24s). 잔존 `menuExport` / `menu_export` 참조 0건.
 
 ---
 
