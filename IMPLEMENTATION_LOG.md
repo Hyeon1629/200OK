@@ -4,6 +4,40 @@
 
 ---
 
+## [2026-05-30] Gemini 식단 조언 배선 + 루트 stray 파일 정리
+
+### 배경
+PR #3(`gemini connection`)이 `AiAdviceApiClient.kt` / `MealDetailActivity.kt` / `activity_meal_detail.xml` / `AndroidManifest.xml` 4개를 **저장소 루트(패키지 구조 밖)** 에 업로드해 둔 상태였다. 실제 빌드 소스셋(`app/src`)에는 반영되지 않아 Gemini 식단 조언 기능이 **미배선** 상태였다.
+
+### 핵심 판단 — 통짜 이동이 아닌 수술적 병합
+루트 파일들은 현재 코드의 **구버전 포크(stale fork)**. 통째로 덮어쓰면 퇴행이 발생하므로 신규 파일만 이동하고 AI 기능만 이식했다.
+
+| 루트(구버전) | 현재 `app/src`(신버전) | 처리 |
+|------|------|------|
+| `MealDetailActivity` = `MockDataProvider`(동기) + AI 버튼 | `HealthRepository.getMealSummary()`(suspend) | 신버전 유지 + AI 버튼만 이식 |
+| `activity_meal_detail.xml` = 현재 + AI 뷰 2개 | AI 뷰만 없음 | 신버전에 AI 뷰 2개만 추가 |
+| `AndroidManifest.xml` = INTERNET만 | Health 권한·FileProvider·LegalDocumentActivity 포함 | 루트 삭제(실 매니페스트에 `INTERNET`+`usesCleartextTraffic` 이미 존재) |
+
+### 작업 내용
+| 항목 | 변경 |
+|------|------|
+| API 클라이언트 | `AiAdviceApiClient.kt` 루트 → `data/remote/` 로 이동(git rename, 내용 무수정). `/api/ai/demo-diet-advice` 호출 후 Gemini 응답 파싱 |
+| 화면 배선 | `MealDetailActivity` 에 `setupAiAdviceButton()` 이식 — 버튼 클릭 시 코루틴으로 조언 요청, 요청 중 버튼 비활성화, 실패 시 Toast+에러 메시지 |
+| 레이아웃 | `activity_meal_detail.xml` 식단 카드 아래 `btn_ai_advice` + `tv_ai_answer` 추가 |
+| 정리 | 루트의 stale 중복 4개 + 설명용 `README.md` 삭제 |
+
+### 주요 결정
+- **데이터 소스 퇴행 방지** — 루트 구버전(`MockDataProvider`)이 아닌 현재 `HealthRepository`(async) 경로 유지
+- **데모 한정 주의** — `BASE_URL = http://10.0.2.2:8080` 은 **에뮬레이터 전용** localhost 별칭. 실기기/배포 시 실제 백엔드 주소 교체 필요
+- 빌드 검증: `:app:compileDebugKotlin --rerun-tasks` BUILD SUCCESSFUL (ViewBinding `btnAiAdvice`/`tvAiAnswer` 정상 생성)
+
+### 신규/수정 파일
+- 이동: `AiAdviceApiClient.kt` → `app/src/main/java/com/checkdang/app/data/remote/AiAdviceApiClient.kt`
+- 수정: `ui/lifestyle/meal/MealDetailActivity.kt`, `res/layout/activity_meal_detail.xml`
+- 삭제: 루트 `AndroidManifest.xml`, `MealDetailActivity.kt`, `activity_meal_detail.xml`, `README.md`
+
+---
+
 ## [2026-05-30] 혈당 AI 예측 기능 (Mock 예측기 + 예측 카드/차트 오버레이)
 
 ### 배경

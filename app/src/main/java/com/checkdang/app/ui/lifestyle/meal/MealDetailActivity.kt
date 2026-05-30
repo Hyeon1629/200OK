@@ -5,12 +5,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.checkdang.app.R
 import com.checkdang.app.data.health.HealthRepository
 import com.checkdang.app.data.model.MealItem
+import com.checkdang.app.data.remote.AiAdviceApiClient
 import com.checkdang.app.databinding.ActivityMealDetailBinding
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
@@ -29,6 +31,7 @@ class MealDetailActivity : AppCompatActivity() {
         setupToolbar()
         setupPieChartEmpty()
         setupKcalCard(0, 2000)
+        setupAiAdviceButton()
 
         lifecycleScope.launch {
             val summary = HealthRepository.getMealSummary()
@@ -51,6 +54,23 @@ class MealDetailActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         onBackPressedDispatcher.onBackPressed()
         return true
+    }
+
+    private fun setupAiAdviceButton() {
+        binding.btnAiAdvice.setOnClickListener {
+            binding.btnAiAdvice.isEnabled = false
+            binding.tvAiAnswer.text = "AI 조언을 불러오는 중..."
+
+            lifecycleScope.launch {
+                val result = runCatching { AiAdviceApiClient.getDietAdviceForDemo() }
+
+                binding.tvAiAnswer.text = result.getOrElse {
+                    Toast.makeText(this@MealDetailActivity, "AI 조언 요청 실패", Toast.LENGTH_SHORT).show()
+                    "AI 조언 요청 실패: ${it.message}"
+                }
+                binding.btnAiAdvice.isEnabled = true
+            }
+        }
     }
 
     private fun setupPieChartEmpty() {
