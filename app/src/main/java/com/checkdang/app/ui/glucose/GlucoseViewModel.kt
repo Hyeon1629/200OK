@@ -5,9 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.checkdang.app.data.health.HealthRepository
 import com.checkdang.app.data.mock.MockDataProvider
+import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.model.GlucoseRecord
+import com.checkdang.app.data.remote.BloodGlucosePrediction
+import com.checkdang.app.data.remote.BloodGlucosePredictionApiClient
 import com.checkdang.app.data.remote.GlucoseSyncStore
 import com.checkdang.app.data.remote.HealthSyncApiClient
+import com.checkdang.app.data.remote.PredictionApiException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,8 +20,22 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.ZoneId
 
 data class WeeklyStats(val average: Int, val max: Int, val min: Int)
+
+/** ML 혈당 예측 화면 상태. */
+sealed interface PredictionUiState {
+    /** 아직 조회 전(초기). */
+    object Idle : PredictionUiState
+    object Loading : PredictionUiState
+    /** 예측 결과 표시. */
+    data class Loaded(val prediction: BloodGlucosePrediction) : PredictionUiState
+    /** 저장된 예측이 없음(404). "예측하기" 유도. */
+    object Empty : PredictionUiState
+    data class Error(val message: String) : PredictionUiState
+}
 
 class GlucoseViewModel : ViewModel() {
 
@@ -61,6 +79,59 @@ class GlucoseViewModel : ViewModel() {
         .stateIn(viewModelScope, SharingStarted.Eagerly, WeeklyStats(0, 0, 0))
 
     fun setFilter(days: Int) { _filterDays.value = days }
+
+    // ── ML 혈당 예측 (FastAPI) ────────────────────────────────────────────────
+
+    private val _prediction = MutableStateFlow<PredictionUiState>(PredictionUiState.Idle)
+    val prediction: StateFlow<PredictionUiState> = _prediction.asStateFlow()
+
+    /**
+     * 화면 진입 시: 오늘자 최신 예측 1건을 조회해 표시.
+     * 200 → Loaded, 404 → Empty(예측하기 유도), 그 외 오류 → Error.
+     * 게스트(userId == null)는 예측 API 대상이 아니므로 Empty 로 둔다(HealthSync 와 동일 정책).
+     */
+    fun loadLatestPrediction() {
+        // 이미 결과를 들고 있으면 재진입 시 깜빡임 없이 유지.
+        if (_prediction.value is PredictionUiState.Loaded) return
+        val userId = SessionHolder.userId ?: run {
+            _prediction.value = PredictionUiState.Empty
+            return
+        }
+        viewModelScope.launch {
+            _prediction.value = PredictionUiState.Loading
+            _prediction.value = runCatching { BloodGlucosePredictionApiClient.latest(userId, today()) }
+                .map { if (it == null) PredictionUiState.Empty else PredictionUiState.Loaded(it) }
+                .getOrElse { PredictionUiState.Error(messageFor(it)) }
+        }
+    }
+
+    /**
+     * "예측하기": 오늘자 예측 실행(+백엔드 자동 저장). body 생략 → 백엔드가
+     * DynamoDB 혈당 288개를 조회해 추론한다. 288개 미달이면 422 → 데이터 부족 안내.
+     */
+    fun runPrediction() {
+        val userId = SessionHolder.userId ?: run {
+            _prediction.value = PredictionUiState.Error("예측은 로그인 후 이용할 수 있어요.")
+            return
+        }
+        viewModelScope.launch {
+            _prediction.value = PredictionUiState.Loading
+            _prediction.value = runCatching { BloodGlucosePredictionApiClient.predict(userId, today()) }
+                .map { PredictionUiState.Loaded(it) }
+                .getOrElse { PredictionUiState.Error(messageFor(it)) }
+        }
+    }
+
+    private fun today(): String = LocalDate.now(ZoneId.of("Asia/Seoul")).toString()
+
+    private fun messageFor(t: Throwable): String = when {
+        t is PredictionApiException && t.code == 422 ->
+            "예측에 필요한 혈당 데이터가 부족해요. (24시간·5분 간격 288개 필요)"
+        t is PredictionApiException && t.code == 502 ->
+            "예측 서비스에 연결할 수 없어요. 잠시 후 다시 시도해주세요."
+        t is PredictionApiException -> t.detail.ifBlank { "예측에 실패했어요." }
+        else -> "예측에 실패했어요. 네트워크 상태를 확인해주세요."
+    }
 
     /**
      * 외부 헬스 소스(Samsung Health)에서 최근 90일 혈당을 재조회.

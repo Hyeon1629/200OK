@@ -4,6 +4,42 @@
 
 ---
 
+## [2026-05-30] ML 혈당 예측 API 실연동 (Mock 예측기 → 백엔드 FastAPI 교체)
+
+### 배경
+백엔드(kgh) ML 혈당 예측 API 명세 수령(`ml-prediction-api-명세서.md`). 직전 커밋(`c6fcb73`)의 **Mock 예측기**(향후 3일·선형 외삽)를 실제 백엔드 예측(향후 **3시간·5분 간격 36점**)으로 교체.
+
+### 핵심 판단 — 데이터 형태가 근본적으로 다름 → Mock 대체 + 별도 시각화
+| | 기존 `GlucosePredictor`(Mock) | 새 백엔드 API |
+|---|---|---|
+| 입력 | 희소한 일별 기록 몇 건 | **정확히 288개**(24h × 5분 CGM) |
+| 출력 | 향후 3일(내일/모레/3일후) | 향후 3시간 36점(5분 간격) |
+| 축 | 날짜(MM/dd) | 분 단위 시각(HH:mm) |
+
+- **요청 방식 B 채택**: 앱은 288개 CGM 미보유(수동 입력 위주) → POST **body 생략** → 백엔드가 DynamoDB `blood_glucose_record` 에서 288개 자동 조회. 앱이 CGM 288개를 갖게 되면 glucose 배열 body 만 추가하면 방식 A(락인 없음).
+- 기존 날짜축 차트에는 3시간 곡선이 안 맞음 → 예측 카드에 **전용 LineChart** 신설(분 단위 축, 70~180 가이드라인).
+
+### 작업 내용
+| 항목 | 변경 |
+|------|------|
+| API 클라이언트 | `BloodGlucosePredictionApiClient` 신규 — `predict`(POST, body 생략)/`latest`(GET, 404→null)/`history`(GET). `BloodGlucosePrediction` 모델 + `PredictionApiException(code, detail)` 로 422/404/502 분기. base URL·인증 헤더는 `HealthSyncApiClient` 동일 패턴 |
+| ViewModel | `PredictionUiState`(Idle/Loading/Loaded/Empty/Error) + `loadLatestPrediction()`(진입 자동)·`runPrediction()`(버튼). 422→데이터 부족, 502→재시도 한국어 매핑. 날짜는 KST 오늘 |
+| 예측 카드 | `fragment_glucose_chart.xml` `card_prediction` 재구성 — "예측하기" 버튼 + 전용 `chart_prediction`(36점, HH:mm 축) + 상태 메시지 + 면책. 기존 추세배지/3칸/신뢰도 뷰 제거 |
+| 차트 정리 | `GlucoseChartFragment` 메인 차트의 Mock 점선 오버레이 제거 → 실측 전용. 예측은 전용 차트로 분리 렌더 |
+| Mock 격리 | `GlucosePredictor.kt`(Mock 예측기)는 더 이상 참조되지 않는 dead code 상태이나 **삭제는 보류** — 작성자(Hyeon1629)와 상의 후 별도 처리. 파일 존재 여부와 무관하게 기능은 동작 |
+
+### 주요 결정
+- **게스트(userId 없음)** 는 예측 대상 아님(HealthSync 와 동일 정책) → Empty 표시
+- **실제 곡선 표시 조건** — 로그인 userId + 백엔드 DynamoDB 에 그 날짜 혈당 288개 존재. 미달이면 422 → "데이터 부족" 안내
+- 빌드 검증: `:app:assembleDebug` BUILD SUCCESSFUL (EXIT=0)
+
+### 신규/수정 파일
+- 신규: `data/remote/BloodGlucosePredictionApiClient.kt`
+- 수정: `ui/glucose/GlucoseViewModel.kt`, `ui/glucose/chart/GlucoseChartFragment.kt`, `res/layout/fragment_glucose_chart.xml`
+- 보류: `ui/glucose/prediction/GlucosePredictor.kt`(Mock, 미참조 dead code — 삭제는 작성자 상의 후)
+
+---
+
 ## [2026-05-30] Gemini 식단 조언 배선 + 루트 stray 파일 정리
 
 ### 배경

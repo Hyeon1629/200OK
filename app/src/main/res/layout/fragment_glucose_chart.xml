@@ -129,14 +129,13 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- AI 혈당 예측 카드 (예측 가능 시에만 노출) -->
+        <!-- AI 혈당 예측 카드 (향후 3시간·5분 간격 36점 곡선) -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_prediction"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
             android:layout_marginTop="10dp"
-            android:visibility="gone"
             app:cardBackgroundColor="@color/background_primary"
             app:cardCornerRadius="12dp"
             app:cardElevation="2dp"
@@ -149,7 +148,7 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- 헤더 -->
+                <!-- 헤더: 제목 + 예측하기 버튼 -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -164,49 +163,58 @@
                         android:textAppearance="@style/TextAppearance.CheckDang.Title2"
                         android:textColor="@color/text_primary" />
 
-                    <TextView
-                        android:id="@+id/tv_pred_trend"
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_run_prediction"
+                        style="@style/Widget.Material3.Button.TonalButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textAppearance="@style/TextAppearance.CheckDang.Caption"
-                        android:textStyle="bold"
-                        tools:text="▲ 상승세" />
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="6dp"
+                        android:text="예측하기"
+                        android:textSize="13sp"
+                        app:cornerRadius="18dp" />
                 </LinearLayout>
 
-                <!-- 알림 한 줄 -->
+                <!-- 요약 한 줄 (예측 기준 시각 · 향후 3시간 · 최고/최저) -->
                 <TextView
-                    android:id="@+id/tv_pred_headline"
+                    android:id="@+id/tv_pred_summary"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:lineSpacingExtra="2dp"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    tools:text="혈당이 오르는 추세로, 며칠 내 주의 범위가 예상돼요." />
-
-                <!-- 예측 지점 (내일/모레/3일 후) — 코드로 채움 -->
-                <LinearLayout
-                    android:id="@+id/layout_pred_points"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:baselineAligned="false"
-                    android:orientation="horizontal" />
-
-                <TextView
-                    android:id="@+id/tv_pred_confidence"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
+                    android:layout_marginTop="6dp"
                     android:textAppearance="@style/TextAppearance.CheckDang.Caption"
                     android:textColor="@color/text_secondary"
-                    tools:text="예측 신뢰도 78% · 최근 12건 기록 기준" />
+                    android:visibility="gone"
+                    tools:text="예측 기준 15:00 · 향후 3시간 · 최고 165 / 최저 128"
+                    tools:visibility="visible" />
+
+                <!-- 예측 곡선 (분 단위 X축) -->
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/chart_prediction"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <!-- 진행/빈/오류 상태 메시지 -->
+                <TextView
+                    android:id="@+id/tv_pred_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:layout_marginBottom="6dp"
+                    android:gravity="center"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    tools:text="아직 예측이 없어요. ‘예측하기’를 눌러보세요." />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="AI 예측은 통계 기반 참고 정보이며 의학적 진단이 아니에요."
+                    android:text="AI 예측은 참고 정보이며 의학적 진단이 아니에요."
                     android:textAppearance="@style/TextAppearance.CheckDang.Caption"
                     android:textColor="@color/text_secondary" />
             </LinearLayout>

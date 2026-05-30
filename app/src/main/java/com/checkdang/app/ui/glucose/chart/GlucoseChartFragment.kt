@@ -1,13 +1,9 @@
 package com.checkdang.app.ui.glucose.chart
 
-import android.graphics.Color
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -16,9 +12,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.checkdang.app.R
 import com.checkdang.app.data.model.GlucoseRecord
+import com.checkdang.app.data.remote.BloodGlucosePrediction
 import com.checkdang.app.databinding.FragmentGlucoseChartBinding
 import com.checkdang.app.ui.glucose.GlucoseViewModel
-import com.checkdang.app.ui.glucose.prediction.GlucosePredictor
+import com.checkdang.app.ui.glucose.PredictionUiState
 import com.checkdang.app.util.GlucoseEvaluator
 import com.checkdang.app.util.MealTiming
 import com.github.mikephil.charting.components.LimitLine
@@ -28,8 +25,10 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
+import java.text.SimpleDateFormat
 import java.util.Locale
 
 class GlucoseChartFragment : Fragment() {
@@ -39,9 +38,7 @@ class GlucoseChartFragment : Fragment() {
 
     private val viewModel: GlucoseViewModel by viewModels(ownerProducer = { requireParentFragment() })
 
-    // 차트는 기간 필터된 기록으로, 예측은 전체 기록으로 산출 → 둘을 보관해 함께 렌더
     private var chartRecords: List<GlucoseRecord> = emptyList()
-    private var prediction: GlucosePredictor.Result? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -52,7 +49,9 @@ class GlucoseChartFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         setupChart()
+        setupPredictionChart()
         setupChipGroup()
+        binding.btnRunPrediction.setOnClickListener { viewModel.runPrediction() }
         observeData()
     }
 
@@ -119,75 +118,149 @@ class GlucoseChartFragment : Fragment() {
     private fun observeData() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                // 기간 필터된 기록 → 차트
+                // 진입 시 오늘자 최신 예측 조회 (이미 결과가 있으면 ViewModel 이 스킵)
+                viewModel.loadLatestPrediction()
+
                 launch {
                     viewModel.filteredForChart.collect { records ->
                         chartRecords = records
                         updateChart()
                     }
                 }
-                // 전체 기록 → 예측 산출(분석은 필터와 무관하게 전체 기록 기준)
                 launch {
-                    viewModel.records.collect { all ->
-                        prediction = GlucosePredictor.predict(all)
-                        bindPrediction()
-                        updateChart()
-                    }
+                    viewModel.prediction.collect { bindPrediction(it) }
                 }
             }
         }
     }
 
-    // ── AI 예측 카드 ──────────────────────────────────────────────────────────
-    private fun bindPrediction() {
-        val p = prediction
-        if (p == null) {
-            binding.cardPrediction.visibility = View.GONE
-            return
-        }
-        binding.cardPrediction.visibility = View.VISIBLE
+    // ── AI 예측 (향후 3시간·36점) ──────────────────────────────────────────────
 
-        val trendColor = when (p.trend) {
-            GlucosePredictor.Trend.RISING -> R.color.status_warning
-            GlucosePredictor.Trend.FALLING -> R.color.status_normal
-            GlucosePredictor.Trend.STABLE -> R.color.text_secondary
+    private fun setupPredictionChart() {
+        val chart = binding.chartPrediction
+        chart.apply {
+            description.isEnabled = false
+            legend.isEnabled = false
+            setTouchEnabled(false)
+            setScaleEnabled(false)
+            setDrawGridBackground(false)
         }
-        binding.tvPredTrend.text = "${p.trend.arrow} ${p.trend.label}"
-        binding.tvPredTrend.setTextColor(ContextCompat.getColor(requireContext(), trendColor))
-        binding.tvPredHeadline.text = p.headline
-        binding.tvPredConfidence.text = "예측 신뢰도 ${p.confidence}% · ${p.detail}"
-
-        binding.layoutPredPoints.removeAllViews()
-        p.points.forEach { binding.layoutPredPoints.addView(buildPointColumn(it)) }
+        // 명세 권장: 정상범위(70~180) 가이드라인과 함께 표시
+        val low = LimitLine(70f).apply {
+            lineColor = ContextCompat.getColor(requireContext(), R.color.status_danger)
+            lineWidth = 1f
+            enableDashedLine(10f, 5f, 0f)
+        }
+        val high = LimitLine(180f).apply {
+            lineColor = ContextCompat.getColor(requireContext(), R.color.status_warning)
+            lineWidth = 1f
+            enableDashedLine(10f, 5f, 0f)
+        }
+        chart.axisLeft.apply {
+            axisMinimum = 40f
+            axisMaximum = 280f
+            granularity = 50f
+            addLimitLine(low)
+            addLimitLine(high)
+            setDrawGridLines(true)
+            gridColor = ContextCompat.getColor(requireContext(), R.color.divider)
+        }
+        chart.axisRight.isEnabled = false
+        chart.xAxis.apply {
+            position = XAxis.XAxisPosition.BOTTOM
+            setDrawGridLines(false)
+            granularity = 1f
+        }
     }
 
-    private fun buildPointColumn(point: GlucosePredictor.Point): View {
+    private fun bindPrediction(state: PredictionUiState) {
+        val statusView = binding.tvPredStatus
+        val summaryView = binding.tvPredSummary
+        val chart = binding.chartPrediction
+
+        fun showMessage(msg: String) {
+            statusView.visibility = View.VISIBLE
+            statusView.text = msg
+            summaryView.visibility = View.GONE
+            chart.visibility = View.GONE
+            chart.clear()
+        }
+
+        // Loading 중에도 버튼 중복 클릭 방지
+        binding.btnRunPrediction.isEnabled = state !is PredictionUiState.Loading
+
+        when (state) {
+            is PredictionUiState.Idle,
+            is PredictionUiState.Loading -> showMessage(
+                if (state is PredictionUiState.Loading) "예측을 불러오는 중…" else ""
+            )
+            is PredictionUiState.Empty -> showMessage("아직 예측이 없어요. ‘예측하기’를 눌러보세요.")
+            is PredictionUiState.Error -> showMessage(state.message)
+            is PredictionUiState.Loaded -> renderPrediction(state.prediction)
+        }
+    }
+
+    private fun renderPrediction(p: BloodGlucosePrediction) {
         val ctx = requireContext()
-        val column = LinearLayout(ctx).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER_HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        val values = p.predictions
+        if (values.isEmpty()) {
+            binding.tvPredStatus.visibility = View.VISIBLE
+            binding.tvPredStatus.text = "예측 결과가 비어 있어요."
+            binding.tvPredSummary.visibility = View.GONE
+            binding.chartPrediction.visibility = View.GONE
+            return
         }
-        val label = TextView(ctx).apply {
-            text = point.label
-            textSize = 12f
-            setTextColor(ContextCompat.getColor(ctx, R.color.text_secondary))
+        binding.tvPredStatus.visibility = View.GONE
+
+        // i번째 예측값 시각 = 예측 기준 시각 + interval × (i+1)
+        val baseTime = runCatching {
+            LocalDateTime.parse(p.predictedAt, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        }.getOrNull()
+        val hhmm = DateTimeFormatter.ofPattern("HH:mm")
+
+        val entries = values.mapIndexed { i, v -> Entry(i.toFloat(), v) }
+        val dotColors = values.map {
+            GlucoseEvaluator.getColor(
+                GlucoseEvaluator.evaluate(it.toInt(), MealTiming.FASTING), ctx
+            )
         }
-        val value = TextView(ctx).apply {
-            text = point.value.toString()
-            textSize = 22f
-            setTextColor(GlucoseEvaluator.getColor(point.status, ctx))
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        val set = LineDataSet(entries, "예측").apply {
+            color = ContextCompat.getColor(ctx, R.color.brand_green)
+            lineWidth = 2f
+            enableDashedLine(10f, 6f, 0f)
+            circleColors = dotColors
+            circleRadius = 2.5f
+            setDrawValues(false)
+            setDrawCircles(true)
+            setDrawFilled(false)
+            mode = LineDataSet.Mode.CUBIC_BEZIER
         }
-        val unit = TextView(ctx).apply {
-            text = "mg/dL"
-            textSize = 10f
-            setTextColor(ContextCompat.getColor(ctx, R.color.text_secondary))
+
+        // X축 라벨: 예측 기준 시각이 파싱되면 HH:mm, 아니면 +분
+        binding.chartPrediction.xAxis.apply {
+            valueFormatter = object : ValueFormatter() {
+                override fun getFormattedValue(value: Float): String {
+                    val i = value.toInt()
+                    if (i < 0 || i >= values.size) return ""
+                    val minutes = (p.intervalMinutes * (i + 1)).toLong()
+                    return baseTime?.plusMinutes(minutes)?.format(hhmm) ?: "+${minutes}m"
+                }
+            }
+            labelCount = 6
+            labelRotationAngle = -30f
         }
-        column.addView(label)
-        column.addView(value)
-        column.addView(unit)
-        return column
+
+        binding.chartPrediction.visibility = View.VISIBLE
+        binding.chartPrediction.data = LineData(set)
+        binding.chartPrediction.animateX(400)
+
+        val max = values.maxOrNull()?.toInt() ?: 0
+        val min = values.minOrNull()?.toInt() ?: 0
+        val baseLabel = baseTime?.format(hhmm)?.let { "예측 기준 $it · " } ?: ""
+        val hours = p.horizonMinutes / 60
+        binding.tvPredSummary.visibility = View.VISIBLE
+        binding.tvPredSummary.text =
+            "${baseLabel}향후 ${hours}시간(${p.intervalMinutes}분 간격) · 최고 $max / 최저 $min mg/dL"
     }
 
     private fun updateChart() {
@@ -202,7 +275,7 @@ class GlucoseChartFragment : Fragment() {
 
         val ctx = requireContext()
         val sdf = SimpleDateFormat("MM/dd", Locale.KOREAN)
-        val labels = records.map { sdf.format(Date(it.measuredAt)) }.toMutableList()
+        val labels = records.map { sdf.format(Date(it.measuredAt)) }
 
         val entries = records.mapIndexed { i, r -> Entry(i.toFloat(), r.value.toFloat()) }
         val dotColors = records.map { GlucoseEvaluator.getColor(it.status, ctx) }
@@ -218,39 +291,13 @@ class GlucoseChartFragment : Fragment() {
             mode = LineDataSet.Mode.CUBIC_BEZIER
         }
 
-        val dataSets = mutableListOf<com.github.mikephil.charting.interfaces.datasets.ILineDataSet>(actualSet)
-
-        // 예측 점선 오버레이 — 마지막 실측값에서 이어지도록 connector 포함
-        prediction?.let { p ->
-            val base = records.size - 1
-            val predEntries = mutableListOf(Entry(base.toFloat(), records.last().value.toFloat()))
-            val predCircleColors = mutableListOf(ContextCompat.getColor(ctx, R.color.brand_green))
-            p.points.forEachIndexed { i, pt ->
-                predEntries.add(Entry((records.size + i).toFloat(), pt.value.toFloat()))
-                predCircleColors.add(GlucoseEvaluator.getColor(pt.status, ctx))
-                labels.add(pt.label)
-            }
-            val predSet = LineDataSet(predEntries, "예측").apply {
-                color = ContextCompat.getColor(ctx, R.color.text_secondary)
-                lineWidth = 2f
-                enableDashedLine(10f, 6f, 0f)
-                circleColors = predCircleColors
-                circleRadius = 4f
-                setDrawValues(false)
-                setDrawFilled(false)
-                setDrawCircles(true)
-                mode = LineDataSet.Mode.LINEAR
-            }
-            dataSets.add(predSet)
-        }
-
         chart.xAxis.valueFormatter = object : ValueFormatter() {
             override fun getFormattedValue(value: Float) =
                 labels.getOrNull(value.toInt()) ?: ""
         }
         chart.xAxis.labelCount = minOf(labels.size, 8)
 
-        chart.data = LineData(dataSets)
+        chart.data = LineData(actualSet)
         chart.animateX(400)
     }
 
