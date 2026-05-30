@@ -4,3 +4,4 @@ boto3
 python-dotenv
 google-genai
 httpx
+pyjwt[crypto]
