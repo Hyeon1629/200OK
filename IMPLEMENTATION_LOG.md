@@ -4,6 +4,36 @@
 
 ---
 
+## [2026-06-01] AI 종합 리포트 화면 골격 (Gemini · provisional)
+
+### 배경
+AI팀 확답으로 프론트의 AI 연동 표면이 2개로 확정 — ① 혈당 예측 모델 출력 표시(`e8f8df5` 로 이미 실연동 완료), ② **Gemini 종합 리포트 표시(신규)**. 통증분석·식단조언 확장·알림은 현 범위 제외. 이 중 ②의 화면 골격을 선구축(백엔드 스키마 회신 전이라 클라이언트는 provisional).
+
+### 핵심 판단
+- **렌더 방식 = 마크다운(Markwon)** — 법률문서(`LegalDocumentActivity`)와 동일 스택 재사용. demo-diet-advice 가 `answer` 텍스트를 반환하는 것과 일관. 백엔드가 구조화 JSON 으로 주면 렌더 레이어만 교체.
+- **진입점 = Home 대시보드 카드** — "종합"(혈당+라이프스타일+통증) 성격상 특정 탭(Glucose)은 좁고 Menu(설정)는 발견성↓. 대시보드 진입이 의미·발견성 최적.
+- **provisional 격리** — 엔드포인트 경로/요청/응답필드 3가지는 `AiReportApiClient` 에 `TODO(report)` 로 명시. 스키마 회신 시 그 3곳만 교체.
+- 게스트 차단(로그인 유도) — 기존 AI/FastAPI 게스트 미지원 정책 그대로 적용.
+
+### 작업 내용
+| 항목 | 변경 |
+|------|------|
+| API 클라이언트 | `AiReportApiClient` 신규 — `getComprehensiveReport()`. 가정값: `GET /api/ai/comprehensive-report`, 응답 `{ "report": "<markdown>" }`. Bearer 로그인 전용(게스트 헤더 없음), readTimeout 60s(Gemini) |
+| ViewModel | `ComprehensiveReportViewModel` + `ReportUiState`(Idle/Loading/Loaded/Error). 401/403/404 한국어 메시지 매핑 |
+| 화면 | `ComprehensiveReportActivity` — 로딩/에러/재시도 + Markwon 렌더 + 게스트 사전 차단. `activity_comprehensive_report.xml` |
+| 진입 | `fragment_home.xml` 'AI 종합 리포트' 카드 + `HomeFragment` 클릭 → Activity. `AndroidManifest` 등록 |
+
+### 주요 결정 / 메모
+- 현재 백엔드 엔드포인트 미배포 → 진입 시 정상적으로 Error(404 등) 상태로 낙하. 스키마 회신 후 Loaded 동작.
+- **Kotlin 중첩 주석 함정**: KDoc(`/** */`) 안에 백틱 `/api/*` 표기 시 `/*` 가 중첩 주석을 열어 파일 전체가 주석화됨(`//` 라인주석은 무해). 문구로 회피.
+- 빌드 검증: `:app:assembleDebug` (EXIT=0)
+
+### 신규/수정 파일
+- 신규: `data/remote/AiReportApiClient.kt`, `ui/report/ComprehensiveReportViewModel.kt`, `ui/report/ComprehensiveReportActivity.kt`, `res/layout/activity_comprehensive_report.xml`
+- 수정: `AndroidManifest.xml`, `ui/home/HomeFragment.kt`, `res/layout/fragment_home.xml`
+
+---
+
 ## [2026-06-01] 백엔드 수정요청 반영 — AiAdvice 운영 URL · 게스트 AI/FastAPI 차단
 
 ### 배경
