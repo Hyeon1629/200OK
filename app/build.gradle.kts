@@ -82,4 +82,7 @@ dependencies {
     // core-kotlin: suspend 코루틴 facade. amplifyconfiguration.json 은 res/raw 에 위치.
     implementation("com.amplifyframework:core-kotlin:2.19.1")
     implementation("com.amplifyframework:aws-auth-cognito:2.19.1")
+
+    // === 단위 테스트 (JVM, test scope) ===
+    testImplementation("junit:junit:4.13.2")
 }
