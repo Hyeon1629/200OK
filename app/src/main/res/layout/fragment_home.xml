@@ -41,6 +41,55 @@
                 tools:text="오늘 2024.01.15 월요일" />
         </LinearLayout>
 
+        <!-- ── AI 종합 리포트 진입 카드 ── -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_report"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="@color/brand_green"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="18dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="AI 종합 리포트"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Title2"
+                        android:textColor="@android:color/white" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="혈당·라이프스타일·통증을 한눈에"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Body2"
+                        android:textColor="#E8F5E9" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textColor="@android:color/white"
+                    android:textSize="24sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- ── 메인 혈당 카드 ── -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_glucose"

@@ -14,6 +14,7 @@ import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.model.GlucoseSummary
 import com.checkdang.app.data.model.LifestyleSummary
 import com.checkdang.app.databinding.FragmentHomeBinding
+import com.checkdang.app.ui.report.ComprehensiveReportActivity
 import com.checkdang.app.util.GlucoseEvaluator
 import com.checkdang.app.util.GlucoseStatus
 import com.checkdang.app.util.MealTiming
@@ -204,6 +205,9 @@ class HomeFragment : Fragment() {
     private fun setupClickListeners() {
         val bottomNav = requireActivity().findViewById<BottomNavigationView>(R.id.bottom_nav)
 
+        binding.cardReport.setOnClickListener {
+            startActivity(android.content.Intent(requireContext(), ComprehensiveReportActivity::class.java))
+        }
         binding.cardGlucose.setOnClickListener {
             bottomNav.selectedItemId = R.id.nav_glucose
         }

@@ -135,6 +135,11 @@
             android:exported="false"
             android:parentActivityName=".ui.main.MainActivity" />
 
+        <activity
+            android:name=".ui.report.ComprehensiveReportActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.main.MainActivity" />
+
         <!-- 카카오 OAuth 리다이렉트 처리 -->
         <activity
             android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
