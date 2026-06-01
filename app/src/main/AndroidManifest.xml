@@ -8,6 +8,9 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- 고/저혈당(위험 범위) 본인 로컬 알림 — API 33+ 런타임 권한 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- 혈당 PDF "기기에 저장" — API 26–28 레거시 Downloads 쓰기용. API 29+ 는 MediaStore 라 불요. -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"

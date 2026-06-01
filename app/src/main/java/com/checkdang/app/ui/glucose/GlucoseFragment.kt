@@ -20,6 +20,7 @@ import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.databinding.FragmentGlucoseBinding
 import com.checkdang.app.ui.glucose.export.GlucosePdfExporter
 import com.checkdang.app.ui.glucose.input.GlucoseInputBottomSheet
+import com.checkdang.app.util.GlucoseAlertNotifier
 import com.checkdang.app.util.GlucoseEvaluator
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -41,6 +42,11 @@ class GlucoseFragment : Fragment() {
         if (granted) exportSave()
         else Toast.makeText(requireContext(), "저장 권한이 필요해요", Toast.LENGTH_SHORT).show()
     }
+
+    // 고/저혈당 로컬 알림 권한(API 33+). 허용/거부 모두 조용히 — 알림은 부가 기능이라 본 흐름을 막지 않음.
+    private val notifPermLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* no-op */ }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -73,15 +79,28 @@ class GlucoseFragment : Fragment() {
         binding.btnPdf.setOnClickListener { showExportChooser() }
 
         binding.fabAdd.setOnClickListener {
+            // 위험 범위 입력 시 로컬 알림을 띄울 수 있도록, 입력 전에 알림 권한을 확보해둔다.
+            ensureNotificationPermission()
             val sheet = GlucoseInputBottomSheet()
             sheet.onRecordSaved = { record ->
                 viewModel.pushManualRecord(record)
+                // 저/고혈당(DANGER) 이면 본인 기기 로컬 알림(수동 입력 1건 한정).
+                GlucoseAlertNotifier.notifyIfNeeded(requireContext(), record)
                 val statusColor = GlucoseEvaluator.getColor(record.status, requireContext())
                 Snackbar.make(binding.root, "기록이 저장되었어요", Snackbar.LENGTH_SHORT)
                     .setBackgroundTint(statusColor)
                     .show()
             }
             sheet.show(childFragmentManager, GlucoseInputBottomSheet.TAG)
+        }
+    }
+
+    /** API 33+ 에서 알림 권한이 없으면 1회 요청. 그 이하 버전은 권한 불요. */
+    private fun ensureNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            !GlucoseAlertNotifier.hasPermission(requireContext())
+        ) {
+            notifPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
