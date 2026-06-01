@@ -22,7 +22,8 @@ import java.net.URL
  * 백엔드가 DynamoDB `blood_glucose_record` 에서 288개를 자동 조회하게 한다(명세 "방식 B").
  * 앱이 CGM 288개를 갖게 되면 [predict] 에 glucose 배열 body 만 추가하면 "방식 A" 가 된다.
  *
- * 인증 헤더는 다른 FastAPI 클라이언트와 동일 패턴(Cognito ID Token Bearer / 게스트 헤더).
+ * FastAPI 는 Bearer 토큰만 검증한다(게스트 필터 없음). 따라서 예측은 로그인 사용자 전용이며,
+ * 게스트는 호출 측(GlucoseViewModel)에서 차단한다.
  */
 object BloodGlucosePredictionApiClient {
 
@@ -79,11 +80,8 @@ object BloodGlucosePredictionApiClient {
         val conn = (URL("$BASE_URL$path").openConnection() as HttpURLConnection).apply {
             requestMethod = method
             setRequestProperty("Accept", "application/json")
-            // 로그인 사용자: Cognito ID Token Bearer. 게스트: X-Guest-Identity-Id(백엔드 GuestIdentityFilter).
+            // FastAPI 는 Bearer 토큰만 검증한다(게스트 미지원). 로그인 사용자 전용.
             SessionHolder.accessToken?.let { setRequestProperty("Authorization", "Bearer $it") }
-            SessionHolder.guestIdentityId
-                ?.takeIf { SessionHolder.isGuest }
-                ?.let { setRequestProperty("X-Guest-Identity-Id", it) }
             connectTimeout = 15_000
             readTimeout    = 60_000   // 모델 추론이 길 수 있어 넉넉히
             instanceFollowRedirects = false

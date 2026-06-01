@@ -8,9 +8,9 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 object AiAdviceApiClient {
-    // 실기기 검증: `adb reverse tcp:8080 tcp:8080` 으로 폰 localhost:8080 → 개발 PC 8080 포워딩.
-    // 에뮬레이터 단독 검증 시에는 "http://10.0.2.2:8080" 사용. 배포 시 실제 백엔드 주소로 교체.
-    private const val BASE_URL = "http://127.0.0.1:8080"
+    // `/api/ai/demo-diet-advice` 는 Spring 경로(`/api/*` → ALB 가 Spring 으로 라우팅).
+    // 로그인 사용자 전용 — 게스트는 호출하지 않는다(SecurityConfig 상 게스트는 `/api/home/**` 만 허용).
+    private const val BASE_URL = "https://api.checkdang.xyz"
 
     suspend fun getDietAdviceForDemo(): String =
         withContext(Dispatchers.IO) {
@@ -22,12 +22,9 @@ object AiAdviceApiClient {
         val conn = (URL("$BASE_URL$path").openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             setRequestProperty("Accept", "application/json")
-            // FastAPI 로 가는 모든 요청에 인증 헤더 부착(HealthSyncApiClient 와 동일 패턴).
-            // 로그인 사용자: Cognito ID Token Bearer. 게스트: X-Guest-Identity-Id(백엔드 GuestIdentityFilter).
+            // Spring 경로 — 로그인 사용자의 Cognito ID Token Bearer 만 부착한다.
+            // (게스트는 이 기능을 호출하지 않으므로 게스트 헤더는 두지 않는다.)
             SessionHolder.accessToken?.let { setRequestProperty("Authorization", "Bearer $it") }
-            SessionHolder.guestIdentityId
-                ?.takeIf { SessionHolder.isGuest }
-                ?.let { setRequestProperty("X-Guest-Identity-Id", it) }
             connectTimeout = 15_000
             readTimeout = 60_000
         }

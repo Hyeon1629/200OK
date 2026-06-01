@@ -4,6 +4,36 @@
 
 ---
 
+## [2026-06-01] 백엔드 수정요청 반영 — AiAdvice 운영 URL · 게스트 AI/FastAPI 차단
+
+### 배경
+백엔드(kgh) `frontend-수정요청.md` 정정 3건 반영. 직전 커밋(`e8f8df5` 예측 실연동, `03b0626` 식단조언 게스트헤더) 검토 결과 도출.
+
+### 핵심 판단 — 게스트 정책 A안 확정
+> **게스트는 AI/FastAPI 기능을 사용하지 않는다(로그인 사용자 전용).** 백엔드는 FastAPI 게스트 검증을 구현하지 않음(의도된 차단). **프론트가 게스트 진입을 막는다.**
+
+- `/api/*` = **Spring**(Cognito + GuestIdentityFilter, 단 게스트는 `/api/home/**` 만 허용)
+- `/blood-glucose|/step-calorie|/heart-rate`, `/ai/predict|predictions` = **FastAPI**(Bearer 만 검증, **게스트 필터 없음**)
+- 결론: 게스트가 AI/FastAPI 호출 시 401 → 프론트가 **사전 차단**(버튼 비활성·로그인 유도). 게스트는 항상 `userId == null` + `isGuest == true`.
+
+### 작업 내용
+| 항목 | 변경 |
+|------|------|
+| 1 🔴 운영 URL | `AiAdviceApiClient.BASE_URL` `http://127.0.0.1:8080` → `https://api.checkdang.xyz`. 주석 정정: `/api/ai/demo-diet-advice` 는 **Spring** 경로(이전엔 FastAPI로 오기) |
+| 2 게스트 차단 | `MealDetailActivity` AI 조언 버튼: 게스트면 비활성 + "로그인 후 이용" 안내. `GlucoseChartFragment` 예측 섹션: 게스트면 버튼 비활성·고정 안내 + 예측 조회/구독 스킵. `LifestyleViewModel.pushLifestyleToServer`: 게스트면 early return(동기화 스킵) |
+| 3 주석/헤더 정리 | FastAPI 클라이언트(`BloodGlucosePredictionApiClient`/`HealthSyncApiClient`)의 무의미한 `X-Guest-Identity-Id` 부착 코드 제거 + Spring/FastAPI 구분 주석 정정. Bearer 만 유지 |
+
+### 주요 결정
+- **`SessionHolder.guestIdentityId` / `CognitoGuestSession` 은 유지** — 게스트 허용 경로 `/api/home/**` 용 인프라이나 현재 해당 클라이언트 미구현이라 어느 곳도 읽지 않는 상태. 향후 연동 위해 보존(삭제 보류)
+- 혈당 예측·혈당 push 는 기존 `userId == null` 가드가 이미 게스트를 차단하던 것을 UI 사전 차단으로 보강
+- 빌드 검증: `:app:compileDebugKotlin` (EXIT=0)
+
+### 수정 파일
+- `data/remote/AiAdviceApiClient.kt`, `data/remote/BloodGlucosePredictionApiClient.kt`, `data/remote/HealthSyncApiClient.kt`
+- `ui/lifestyle/meal/MealDetailActivity.kt`, `ui/lifestyle/LifestyleViewModel.kt`, `ui/glucose/chart/GlucoseChartFragment.kt`
+
+---
+
 ## [2026-05-30] ML 혈당 예측 API 실연동 (Mock 예측기 → 백엔드 FastAPI 교체)
 
 ### 배경

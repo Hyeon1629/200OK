@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.checkdang.app.R
 import com.checkdang.app.data.health.HealthRepository
+import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.model.MealItem
 import com.checkdang.app.data.remote.AiAdviceApiClient
 import com.checkdang.app.databinding.ActivityMealDetailBinding
@@ -57,6 +58,12 @@ class MealDetailActivity : AppCompatActivity() {
     }
 
     private fun setupAiAdviceButton() {
+        // AI 식단 조언은 로그인 사용자 전용(백엔드 정책). 게스트는 진입 자체를 막는다.
+        if (SessionHolder.isGuest) {
+            binding.btnAiAdvice.isEnabled = false
+            binding.tvAiAnswer.text = "AI 식단 조언은 로그인 후 이용할 수 있어요."
+            return
+        }
         binding.btnAiAdvice.setOnClickListener {
             binding.btnAiAdvice.isEnabled = false
             binding.tvAiAnswer.text = "AI 조언을 불러오는 중..."

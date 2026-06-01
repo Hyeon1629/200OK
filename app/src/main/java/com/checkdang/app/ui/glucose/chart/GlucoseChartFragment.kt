@@ -11,6 +11,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.checkdang.app.R
+import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.model.GlucoseRecord
 import com.checkdang.app.data.remote.BloodGlucosePrediction
 import com.checkdang.app.databinding.FragmentGlucoseChartBinding
@@ -51,8 +52,22 @@ class GlucoseChartFragment : Fragment() {
         setupChart()
         setupPredictionChart()
         setupChipGroup()
-        binding.btnRunPrediction.setOnClickListener { viewModel.runPrediction() }
+        if (SessionHolder.isGuest) {
+            // 혈당 예측은 로그인 사용자 전용(백엔드 정책). 게스트는 사전 차단한다.
+            showPredictionLoginRequired()
+        } else {
+            binding.btnRunPrediction.setOnClickListener { viewModel.runPrediction() }
+        }
         observeData()
+    }
+
+    /** 게스트: 혈당 예측 섹션을 비활성화하고 로그인 유도 안내를 고정 표시. */
+    private fun showPredictionLoginRequired() {
+        binding.btnRunPrediction.isEnabled = false
+        binding.tvPredStatus.visibility = View.VISIBLE
+        binding.tvPredStatus.text = "혈당 예측은 로그인 후 이용할 수 있어요."
+        binding.tvPredSummary.visibility = View.GONE
+        binding.chartPrediction.visibility = View.GONE
     }
 
     private fun setupChipGroup() {
@@ -118,17 +133,19 @@ class GlucoseChartFragment : Fragment() {
     private fun observeData() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                // 진입 시 오늘자 최신 예측 조회 (이미 결과가 있으면 ViewModel 이 스킵)
-                viewModel.loadLatestPrediction()
-
                 launch {
                     viewModel.filteredForChart.collect { records ->
                         chartRecords = records
                         updateChart()
                     }
                 }
-                launch {
-                    viewModel.prediction.collect { bindPrediction(it) }
+                // 혈당 예측은 로그인 사용자 전용 — 게스트는 조회/구독하지 않는다(고정 안내 유지).
+                if (!SessionHolder.isGuest) {
+                    // 진입 시 오늘자 최신 예측 조회 (이미 결과가 있으면 ViewModel 이 스킵)
+                    viewModel.loadLatestPrediction()
+                    launch {
+                        viewModel.prediction.collect { bindPrediction(it) }
+                    }
                 }
             }
         }

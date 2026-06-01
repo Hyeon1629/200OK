@@ -220,20 +220,20 @@ object HealthSyncApiClient {
             .atTime(LocalTime.of(h, m)).atZone(KST).toInstant().toString()
     }.getOrElse { Instant.now().toString() }
 
-    // ── HTTP (Cognito ID Token Bearer 자동 부착. 게스트는 X-Guest-Identity-Id) ──
+    // ── HTTP (Cognito ID Token Bearer 자동 부착. 로그인 사용자 전용) ──
+    //
+    // Spring(`/api/samsung-health/*`) 은 게스트 필터가 있으나 게스트는 `/api/home/**` 만 허용되고,
+    // FastAPI(`/blood-glucose|/step-calorie|/heart-rate`) 는 게스트를 지원하지 않는다.
+    // 따라서 게스트는 호출 측(ViewModel)에서 차단하며 여기서는 Bearer 만 부착한다.
 
     private fun post(path: String, body: Any) {
         val conn = (URL("$BASE_URL$path").openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             setRequestProperty("Content-Type", "application/json")
             setRequestProperty("Accept", "application/json")
-            // 로그인 사용자: Cognito ID Token. 게스트: identityId 헤더(백엔드 GuestIdentityFilter).
             SessionHolder.accessToken?.let {
                 setRequestProperty("Authorization", "Bearer $it")
             }
-            SessionHolder.guestIdentityId
-                ?.takeIf { SessionHolder.isGuest }
-                ?.let { setRequestProperty("X-Guest-Identity-Id", it) }
             connectTimeout = 15_000
             readTimeout    = 15_000
             doOutput       = true

@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.checkdang.app.CheckDangApplication
 import com.checkdang.app.data.device.DeviceIdProvider
+import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.health.HealthConnectDataSource
 import com.checkdang.app.data.health.HealthRepository
 import com.checkdang.app.data.health.SamsungHealthDataSource
@@ -135,6 +136,11 @@ class LifestyleViewModel(app: Application) : AndroidViewModel(app) {
      * 각 호출 실패는 개별적으로 silent 로깅하여 다른 카테고리 송신을 막지 않는다.
      */
     private suspend fun pushLifestyleToServer(source: String) {
+        // 게스트는 백엔드 동기화 대상이 아니다(Spring 게스트는 /api/home 만 허용, FastAPI 는 게스트 미지원).
+        if (SessionHolder.isGuest) {
+            Log.i(TAG, "pushLifestyleToServer[$source]: guest — skip backend sync")
+            return
+        }
         val ex = _exercise.value
         val ml = _meal.value
         val sl = _sleep.value
