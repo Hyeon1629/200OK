@@ -51,8 +51,11 @@ class SubscriptionActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Play 결제 시트에서 돌아왔거나 연결이 끊겼을 수 있으니 상품/구매 상태 동기화
-        viewModel.retry()
+        // Play 결제 시트에서 돌아왔거나 연결이 끊겼을 수 있으니 상품/구매 상태 동기화.
+        // 단, 구매 진행/완료 중에는 재조회(Ready)로 결과 상태를 덮어쓰지 않도록 스킵(경합 방지).
+        if (!purchaseInitiated && viewModel.state.value !is BillingState.Purchasing) {
+            viewModel.retry()
+        }
     }
 
     private fun setupToolbar() {

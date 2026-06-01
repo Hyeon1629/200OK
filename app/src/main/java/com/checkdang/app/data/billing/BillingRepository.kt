@@ -16,6 +16,7 @@ import com.android.billingclient.api.QueryPurchasesParams
 import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.mock.UserTier
 import com.checkdang.app.data.remote.PaymentApiClient
+import java.security.MessageDigest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -117,7 +118,7 @@ class BillingRepository(private val appContext: Context) :
             _state.value = BillingState.Error("구독 옵션이 설정되지 않았어요")
             return
         }
-        val params = BillingFlowParams.newBuilder()
+        val builder = BillingFlowParams.newBuilder()
             .setProductDetailsParamsList(
                 listOf(
                     BillingFlowParams.ProductDetailsParams.newBuilder()
@@ -126,7 +127,9 @@ class BillingRepository(private val appContext: Context) :
                         .build()
                 )
             )
-            .build()
+        // 결제-사용자 매칭/어뷰징 방지용 식별자. userId 원문 노출을 피해 해시로 부착.
+        SessionHolder.userId?.let { builder.setObfuscatedAccountId(obfuscate(it)) }
+        val params = builder.build()
         _state.value = BillingState.Purchasing
         val result = billingClient.launchBillingFlow(activity, params)
         if (result.responseCode != BillingClient.BillingResponseCode.OK) {
@@ -200,6 +203,13 @@ class BillingRepository(private val appContext: Context) :
             }
         }
     }
+
+    /** userId 를 SHA-256 hex(64자)로 변환. Play obfuscatedAccountId 제약(≤64자, 비PII) 충족. */
+    private fun obfuscate(userId: String): String =
+        MessageDigest.getInstance("SHA-256")
+            .digest(userId.toByteArray())
+            .joinToString("") { "%02x".format(it) }
+            .take(64)
 
     fun resetTransientState() {
         _state.value = if (productDetailsList.isNotEmpty()) {
