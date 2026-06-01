@@ -48,19 +48,27 @@ object GlucoseAlertNotifier {
             PackageManager.PERMISSION_GRANTED
 
     /**
-     * 위험(DANGER) 범위 기록이면 저/고혈당을 구분해 알림. 정상·주의는 알리지 않는다.
+     * 위험/주의 범위 기록이면 알림. 알림 여부는 [NotificationPrefs] 설정을 따른다.
+     *  - 정상: 항상 미발송
+     *  - 위험(DANGER): 마스터 ON 이면 발송 (저/고혈당 구분)
+     *  - 주의(WARNING): 마스터 ON + "주의 포함" ON 일 때만 발송
      * 권한이 없으면 조용히 무시(알림은 부가 기능 — 본 흐름을 막지 않음).
      */
     fun notifyIfNeeded(context: Context, record: GlucoseRecord) {
-        if (record.status != GlucoseStatus.DANGER) return
+        val status = record.status
+        if (status == GlucoseStatus.NORMAL) return
+        if (!NotificationPrefs.isAlertEnabled(context)) return
+        if (status == GlucoseStatus.WARNING && !NotificationPrefs.isIncludeWarning(context)) return
         if (!hasPermission(context)) return
 
         val isLow = record.value < 70
-        val title = if (isLow) "저혈당 주의 ⚠️" else "고혈당 주의 ⚠️"
-        val advice = if (isLow) {
-            "저혈당 범위예요. 빠르게 당분을 섭취하고 상태를 확인하세요."
-        } else {
-            "고혈당 범위예요. 수분 섭취와 가벼운 활동을 고려하세요."
+        val (title, advice) = when {
+            status == GlucoseStatus.DANGER && isLow ->
+                "저혈당 주의 ⚠️" to "저혈당 범위예요. 빠르게 당분을 섭취하고 상태를 확인하세요."
+            status == GlucoseStatus.DANGER ->
+                "고혈당 주의 ⚠️" to "고혈당 범위예요. 수분 섭취와 가벼운 활동을 고려하세요."
+            else ->
+                "혈당 주의 ⚠️" to "주의 범위예요. 식사·활동을 점검하고 추이를 지켜보세요."
         }
         val text = "혈당 ${record.value} mg/dL (${record.timing.label}) · $advice"
 

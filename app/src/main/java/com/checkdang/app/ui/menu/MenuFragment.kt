@@ -4,7 +4,6 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,6 +26,7 @@ import com.checkdang.app.ui.auth.login.LoginActivity
 import com.checkdang.app.ui.family.FamilyActivity
 import com.checkdang.app.ui.legal.LegalDocument
 import com.checkdang.app.ui.legal.LegalDocumentActivity
+import com.checkdang.app.ui.menu.notification.NotificationSettingsActivity
 import com.checkdang.app.ui.menu.subscription.SubscriptionActivity
 import com.checkdang.app.ui.profile.ProfileActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -209,7 +209,7 @@ class MenuFragment : Fragment() {
             startActivity(Intent(requireContext(), ProfileActivity::class.java))
         }
         binding.menuNotification.root.setOnClickListener {
-            openAppNotificationSettings()
+            startActivity(Intent(requireContext(), NotificationSettingsActivity::class.java))
         }
         binding.menuTerms.root.setOnClickListener {
             startActivity(LegalDocumentActivity.intent(requireContext(), LegalDocument.TERMS))
@@ -223,27 +223,6 @@ class MenuFragment : Fragment() {
         ).forEach { row ->
             row.root.setOnClickListener {
                 Toast.makeText(requireContext(), "${row.tvMenuTitle.text} (준비 중)", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    /**
-     * 시스템의 앱별 알림 설정 화면으로 이동.
-     * - API 26+ : ACTION_APP_NOTIFICATION_SETTINGS (앱 minSdk=26 이므로 항상 가용)
-     * - 실패 시 앱 정보 화면으로 fallback
-     */
-    private fun openAppNotificationSettings() {
-        val context = requireContext()
-        val pkg = context.packageName
-        val primary = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-            putExtra(Settings.EXTRA_APP_PACKAGE, pkg)
-        }
-        runCatching { startActivity(primary) }.onFailure {
-            val fallback = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                data = Uri.fromParts("package", pkg, null)
-            }
-            runCatching { startActivity(fallback) }.onFailure {
-                Toast.makeText(context, "설정 화면을 열 수 없어요", Toast.LENGTH_SHORT).show()
             }
         }
     }
