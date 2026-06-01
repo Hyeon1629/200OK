@@ -144,8 +144,22 @@ class MenuFragment : Fragment() {
             ColorStateList.valueOf(ContextCompat.getColor(requireContext(), bgColor))
         binding.btnSubscriptionCta.text = if (tier == UserTier.PAID) "구독 관리" else "프리미엄 시작하기"
         binding.btnSubscriptionCta.setOnClickListener {
-            startActivity(Intent(requireContext(), SubscriptionActivity::class.java))
+            // PAID 는 구독 변경/해지를 Play 구독센터에서 처리. 구매 화면(SubscriptionActivity)은
+            // 이미 구독 중이면 자동 종료되므로 진입시키지 않는다.
+            if (tier == UserTier.PAID) openPlaySubscriptionCenter()
+            else startActivity(Intent(requireContext(), SubscriptionActivity::class.java))
         }
+    }
+
+    /** Google Play 구독 관리 센터로 이동. 구독 변경/해지는 Play 에서 처리. */
+    private fun openPlaySubscriptionCenter() {
+        val uri = Uri.parse(
+            "https://play.google.com/store/account/subscriptions?package=${requireContext().packageName}"
+        )
+        runCatching { startActivity(Intent(Intent.ACTION_VIEW, uri)) }
+            .onFailure {
+                Toast.makeText(requireContext(), "구독 관리는 Google Play 앱에서 확인해 주세요", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun refreshLockedItems(tier: UserTier) {

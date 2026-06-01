@@ -24,6 +24,10 @@ class SubscriptionActivity : AppCompatActivity() {
 
     private var selectedYearly = true
 
+    // 이번 세션에서 사용자가 직접 "구독 시작"을 눌렀는지. 복원(기존 구매 재조회)으로 들어온
+    // Success 와 신규 구매 Success 를 구분해, 복원 시엔 자동 종료/“시작되었어요” 문구를 막는다.
+    private var purchaseInitiated = false
+
     private val benefits = listOf(
         "무제한 데이터 백업",
         "AI 바디맵 분석 무제한",
@@ -88,6 +92,7 @@ class SubscriptionActivity : AppCompatActivity() {
     private fun setupSubscribeButton() {
         binding.btnSubscribe.setOnClickListener {
             val productId = if (selectedYearly) ProductIds.PREMIUM_YEARLY else ProductIds.PREMIUM_MONTHLY
+            purchaseInitiated = true
             viewModel.startPurchase(this, productId)
         }
     }
@@ -129,15 +134,24 @@ class SubscriptionActivity : AppCompatActivity() {
                 binding.btnSubscribe.text = "결제 진행 중..."
             }
             is BillingState.Success -> {
+                binding.pbLoading.visibility = View.GONE
+                binding.layoutError.visibility = View.GONE
                 binding.btnSubscribe.isEnabled = false
-                binding.btnSubscribe.text = "구독 완료"
-                Snackbar.make(binding.root, "구독이 시작되었어요", Snackbar.LENGTH_SHORT).show()
-                binding.root.postDelayed({
-                    viewModel.consumeTransientState()
-                    finish()
-                }, 1500)
+                if (purchaseInitiated) {
+                    // 신규 구매 완료 → 안내 후 화면 종료
+                    binding.btnSubscribe.text = "구독 완료"
+                    Snackbar.make(binding.root, "구독이 시작되었어요", Snackbar.LENGTH_SHORT).show()
+                    binding.root.postDelayed({
+                        viewModel.consumeTransientState()
+                        finish()
+                    }, 1500)
+                } else {
+                    // 기존 구매 복원 → 종료하지 않고 "구독 중" 으로만 반영
+                    binding.btnSubscribe.text = "구독 중"
+                }
             }
             is BillingState.Error -> {
+                purchaseInitiated = false
                 binding.pbLoading.visibility = View.GONE
                 binding.btnSubscribe.isEnabled = true
                 binding.btnSubscribe.text = "구독 시작하기"
