@@ -11,6 +11,7 @@ import java.util.List;
 public class PainRecordRequest {
 
     private PainRecord.BodyPart bodyPart;
-    private Integer intensity;
-    private List<PainRecord.PainType> painTypes;
+    private Integer intensity;                  // 1~5
+    private List<String> qualityTags;           // 통증 성질 (PainTaxonomy.QUALITY 한글 태그, 빈 리스트 허용)
+    private List<String> situationTags;         // 통증 상황 (PainTaxonomy.SITUATION 한글 태그, 빈 리스트 허용)
 }

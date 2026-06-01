@@ -30,7 +30,8 @@ public class PainRecordService {
                 .userId(String.valueOf(user.getId()))
                 .intensity(request.getIntensity())
                 .bodyPart(request.getBodyPart())
-                .painTypes(request.getPainTypes())
+                .qualityTags(request.getQualityTags() != null ? request.getQualityTags() : List.of())
+                .situationTags(request.getSituationTags() != null ? request.getSituationTags() : List.of())
                 .recordedAt(LocalDateTime.now())
                 .build();
 
@@ -79,15 +80,13 @@ public class PainRecordService {
     }
 
     private void validateRequest(PainRecordRequest request) {
-        if (request.getIntensity() == null || request.getIntensity() < 1 || request.getIntensity() > 10) {
-            throw new IllegalArgumentException("통증 강도는 1~10 사이의 값이어야 합니다.");
+        if (request.getIntensity() == null || request.getIntensity() < 1 || request.getIntensity() > 5) {
+            throw new IllegalArgumentException("통증 강도는 1~5 사이의 값이어야 합니다.");
         }
         if (request.getBodyPart() == null) {
             throw new IllegalArgumentException("통증 부위를 선택해주세요.");
         }
-        if (request.getPainTypes() == null || request.getPainTypes().isEmpty()) {
-            throw new IllegalArgumentException("통증 종류를 하나 이상 선택해주세요.");
-        }
+        // 통증 성질/상황 태그는 선택 사항(빈 리스트 허용) — 프론트 모델과 동일
     }
 
     private User findUser(String email) {

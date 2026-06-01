@@ -14,7 +14,8 @@ public class PainRecordResponse {
     private Long id;
     private PainRecord.BodyPart bodyPart;
     private Integer intensity;
-    private List<PainRecord.PainType> painTypes;
+    private List<String> qualityTags;
+    private List<String> situationTags;
     private Long recordedAt;   // Unix millis (프론트 요구사항)
     private String aiCause;
     private String aiFirstAid;
@@ -24,7 +25,8 @@ public class PainRecordResponse {
                 .id(record.getId())
                 .bodyPart(record.getBodyPart())
                 .intensity(record.getIntensity())
-                .painTypes(record.getPainTypes())
+                .qualityTags(record.getQualityTags())
+                .situationTags(record.getSituationTags())
                 .recordedAt(record.getRecordedAt()
                         .atZone(ZoneId.of("Asia/Seoul"))
                         .toInstant()

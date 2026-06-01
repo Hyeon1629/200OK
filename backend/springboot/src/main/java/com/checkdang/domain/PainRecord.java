@@ -28,7 +28,7 @@ public class PainRecord {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
-    /** 통증 강도 1~10 */
+    /** 통증 강도 1~5 (프론트 슬라이더와 동일) */
     @Column(nullable = false)
     private Integer intensity;
 
@@ -37,10 +37,15 @@ public class PainRecord {
     @Column(name = "body_part", nullable = false)
     private BodyPart bodyPart;
 
-    /** 통증 종류 (복수 선택, CSV로 저장) */
-    @Convert(converter = PainTypeListConverter.class)
-    @Column(name = "pain_types", nullable = false)
-    private List<PainType> painTypes;
+    /** 통증 성질 태그 (프론트 PainTaxonomy.QUALITY 한글 태그, 복수, CSV 저장, 빈 리스트 허용) */
+    @Convert(converter = StringListConverter.class)
+    @Column(name = "quality_tags", columnDefinition = "TEXT")
+    private List<String> qualityTags;
+
+    /** 통증 상황 태그 (프론트 PainTaxonomy.SITUATION 한글 태그, 복수, CSV 저장, 빈 리스트 허용) */
+    @Convert(converter = StringListConverter.class)
+    @Column(name = "situation_tags", columnDefinition = "TEXT")
+    private List<String> situationTags;
 
     @Column(columnDefinition = "TEXT")
     private String memo;
@@ -80,28 +85,26 @@ public class PainRecord {
         LEFT_SHOULDER_BACK, RIGHT_SHOULDER_BACK
     }
 
-    public enum PainType {
-        SHARP, DULL, BURNING, THROBBING, STIFFNESS, NUMBNESS
-    }
-
     // ────────────────────────────────────────────────
-    // List<PainType> ↔ "SHARP,NUMBNESS" CSV 변환
+    // List<String> ↔ "태그1,태그2" CSV 변환 (성질·상황 태그 공용)
+    // 프론트 PainTaxonomy 태그는 콤마를 포함하지 않는 고정 어휘
     // ────────────────────────────────────────────────
 
     @Converter
-    public static class PainTypeListConverter implements AttributeConverter<List<PainType>, String> {
+    public static class StringListConverter implements AttributeConverter<List<String>, String> {
 
         @Override
-        public String convertToDatabaseColumn(List<PainType> attribute) {
+        public String convertToDatabaseColumn(List<String> attribute) {
             if (attribute == null || attribute.isEmpty()) return "";
-            return attribute.stream().map(Enum::name).collect(Collectors.joining(","));
+            return String.join(",", attribute);
         }
 
         @Override
-        public List<PainType> convertToEntityAttribute(String dbData) {
+        public List<String> convertToEntityAttribute(String dbData) {
             if (dbData == null || dbData.isBlank()) return List.of();
             return Arrays.stream(dbData.split(","))
-                    .map(PainType::valueOf)
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
                     .collect(Collectors.toList());
         }
     }
