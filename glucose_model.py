@@ -52,7 +52,7 @@ print(DEVICE)
 
 
 # 로컬 실행용 데이터 불러오기
-# 이 노트북 파일과 같은 폴더에 AZT1D.csv를 두면 그대로 실행됩니다.
+# 이 노트북 파일과 같은 폴더에 AZT1D.csv 두기
 csv_path = r"C:\Users\user\Desktop\200OK-main\AZT1D.csv"
 df = pd.read_csv(csv_path)
 
@@ -484,10 +484,6 @@ def predict_one_sample_original(model, X_test, scaler, sample_idx, device):
 
 
 # ##11. 모델 학습
-# 
-
-# In[53]:
-
 
 best_val_loss = float("inf")
 
