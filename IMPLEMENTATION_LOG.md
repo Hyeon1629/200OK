@@ -4,6 +4,32 @@
 
 ---
 
+## [2026-06-02] 백엔드 대기 중 프론트 단독 작업 배치 (알림 / 결제 점검 / 테스트)
+
+### 배경
+백엔드 스키마 회신·실모델(수요일) 대기 동안, 의존성 없는 순수 프론트 작업을 우선 처리.
+
+### 작업 내용
+| 영역 | 변경 |
+|------|------|
+| 혈당 로컬 알림 | 수동 입력이 위험(DANGER) 범위면 본인 기기 알림(`GlucoseAlertNotifier`). 저/고혈당 구분. 삼성헬스 대량 동기화 제외(스팸 방지). `POST_NOTIFICATIONS`(33+) 권한 + 채널(Application) |
+| 알림 설정 | `NotificationPrefs`(마스터 ON/OFF + 주의 포함) + `NotificationSettingsActivity`. 메뉴 "알림 설정"을 시스템 직행 → 앱 내 화면으로 교체. 알림은 설정값 반영 |
+| 결제 점검 | (버그) PAID 구독관리 진입 시 복원 Success 로 자동 finish → 화면 즉시 닫힘. MenuFragment: PAID 는 Play 구독센터 딥링크. SubscriptionActivity: `purchaseInitiated` 로 신규/복원 구분 |
+| 결제 하드닝 | `launchBillingFlow` 에 obfuscatedAccountId(userId SHA-256). onResume 은 구매 진행/완료 중 retry 스킵(경합 방지) |
+| 테스트 | `GlucoseEvaluatorTest` 경계값(저혈당/공복/식후2h/그외). `testImplementation junit` 추가 |
+| 품질 | 새 알림 코드의 lint MissingPermission 오탐 억제(@SuppressLint + 주석). `lintDebug` 에러 0 |
+
+### 주요 결정 / 메모
+- **가족 푸시는 범위 외** — 크로스 디바이스라 푸시 인프라(FCM/SNS)+백엔드 필요. 본인 로컬 알림만 구현.
+- 결제 상태머신은 `BillingState` 하나에 상품가용성+구매상태가 섞여 경합 소지 → 실결제 테스트 가능 시 분리 리팩토링 권장(이번엔 가드로만 완화).
+- 빌드 검증: `assembleDebug` / `testDebugUnitTest` / `lintDebug` 모두 통과.
+
+### 신규/수정 파일
+- 신규: `util/GlucoseAlertNotifier.kt`, `util/NotificationPrefs.kt`, `ui/menu/notification/NotificationSettingsActivity.kt`, `res/layout/activity_notification_settings.xml`, `test/.../GlucoseEvaluatorTest.kt`
+- 수정: `CheckDangApplication.kt`, `AndroidManifest.xml`, `ui/glucose/GlucoseFragment.kt`, `ui/menu/MenuFragment.kt`, `ui/menu/subscription/SubscriptionActivity.kt`, `data/billing/BillingRepository.kt`, `build.gradle.kts`
+
+---
+
 ## [2026-06-01] AI 종합 리포트 화면 골격 (Gemini · provisional)
 
 ### 배경
