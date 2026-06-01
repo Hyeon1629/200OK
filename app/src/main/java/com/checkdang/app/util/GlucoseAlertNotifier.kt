@@ -1,5 +1,6 @@
 package com.checkdang.app.util
 
+import android.annotation.SuppressLint
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -54,6 +55,9 @@ object GlucoseAlertNotifier {
      *  - 주의(WARNING): 마스터 ON + "주의 포함" ON 일 때만 발송
      * 권한이 없으면 조용히 무시(알림은 부가 기능 — 본 흐름을 막지 않음).
      */
+    // 권한은 아래 hasPermission() 으로 명시 확인 후 notify 하므로 안전. lint 가 함수 간 검사를
+    // 추적하지 못해 MissingPermission 을 오탐하는 것을 억제(+notify 는 runCatching 으로 한 번 더 보호).
+    @SuppressLint("MissingPermission")
     fun notifyIfNeeded(context: Context, record: GlucoseRecord) {
         val status = record.status
         if (status == GlucoseStatus.NORMAL) return
