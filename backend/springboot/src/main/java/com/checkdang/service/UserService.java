@@ -74,9 +74,9 @@ public class UserService {
         if (email != null && !email.isBlank()) return email;
 
         String cognitoUsername = jwt.getClaimAsString("cognito:username");
-        if (cognitoUsername != null && cognitoUsername.startsWith("KakaoOIDC_")) {
+        if (cognitoUsername != null && cognitoUsername.toLowerCase().startsWith("kakaooidc_")) {
             // TODO: 비즈 앱 전환 후 카카오계정(이메일) 동의항목 활성화 + Cognito email Required 복원 시 제거
-            String kakaoId = cognitoUsername.substring("KakaoOIDC_".length());
+            String kakaoId = cognitoUsername.substring(cognitoUsername.indexOf('_') + 1);
             return "kakao_" + kakaoId + "@checkdang.local";
         }
         throw new IllegalArgumentException("Cognito 토큰에 email 클레임이 없습니다.");
@@ -86,8 +86,9 @@ public class UserService {
     private User.Provider resolveProvider(Jwt jwt) {
         String username = jwt.getClaimAsString("cognito:username");
         if (username != null) {
-            if (username.startsWith("Google_")) return User.Provider.GOOGLE;
-            if (username.startsWith("KakaoOIDC_")) return User.Provider.KAKAO;
+            String lower = username.toLowerCase();
+            if (lower.startsWith("google_")) return User.Provider.GOOGLE;
+            if (lower.startsWith("kakaooidc_")) return User.Provider.KAKAO;
         }
         return User.Provider.LOCAL;
     }
