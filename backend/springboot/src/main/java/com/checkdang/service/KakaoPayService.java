@@ -143,6 +143,7 @@ public class KakaoPayService {
                 .itemName(record.getItemName())
                 .amount(record.getAmount())
                 .premiumMonths(record.getPremiumMonths())
+                .isPremium(true)
                 .premiumExpiresAt(premiumExpiresAt)
                 .approvedAt(approvedAt)
                 .build();

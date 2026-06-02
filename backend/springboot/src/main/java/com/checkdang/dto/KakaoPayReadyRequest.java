@@ -7,5 +7,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class KakaoPayReadyRequest {
 
-    private Integer premiumMonths; // 1 또는 12 (미입력 시 기본 1개월)
+    private String subscriptionId;  // "premium_monthly" (수신만, 1개월 단일 확정)
+    private Integer premiumMonths;  // 레거시 호환용
 }
