@@ -1,52 +1,26 @@
 {
   "project_info": {
-    "project_number": "1060017596857",
-    "project_id": "ok-project-494806",
-    "storage_bucket": "ok-project-494806.firebasestorage.app"
+    "project_number": "477360099821",
+    "project_id": "checkdang-65238",
+    "storage_bucket": "checkdang-65238.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1060017596857:android:9e078f2ea14994ef57ae68",
+        "mobilesdk_app_id": "1:477360099821:android:63c0f0b7f3c13396bdd7e4",
         "android_client_info": {
           "package_name": "com.checkdang.app"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "1060017596857-aqqi89ueevjj5qde46k2laravqmeod4a.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.checkdang.app",
-            "certificate_hash": "b2fb27161f5b6539a095a676469c331b6c54afdc"
-          }
-        },
-        {
-          "client_id": "1060017596857-t16ke1j7botm9mdeeci4hkaa18325nqn.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.checkdang.app",
-            "certificate_hash": "b4982bd4f905ea4386c4ebcea32f2543e7902789"
-          }
-        },
-        {
-          "client_id": "1060017596857-ma0noia4ll2fb00msospc7aut1o84n1q.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBKrdsoDarybYOOxY24iNUGwvwS1vUIReM"
+          "current_key": "AIzaSyAF2kaRoC5I1l_yf2wXPE697G0pvLBIAjU"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "1060017596857-ma0noia4ll2fb00msospc7aut1o84n1q.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

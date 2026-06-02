@@ -64,6 +64,12 @@ dependencies {
     // Google Play Billing — 인앱 구독 결제 (STEP 10)
     implementation("com.android.billingclient:billing-ktx:7.1.1")
 
+    // === Firebase Cloud Messaging (FCM) — 푸시 알림 (Firebase 프로젝트: checkdang-65238) ===
+    // BoM 사용 시 개별 Firebase 라이브러리 버전 명시 금지(BoM 이 호환 버전 관리).
+    // google-services 플러그인 + app/google-services.json 으로 구성값 주입.
+    implementation(platform("com.google.firebase:firebase-bom:34.13.0"))
+    implementation("com.google.firebase:firebase-messaging")
+
     // === Markwon — Markdown 렌더링 (이용약관/개인정보처리방침 등 정적 문서) ===
     implementation("io.noties.markwon:core:4.6.2")
     implementation("io.noties.markwon:linkify:4.6.2")

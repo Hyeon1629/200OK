@@ -4,6 +4,36 @@
 
 ---
 
+## [2026-06-03] FCM 푸시 알림 — 클라이언트 배선 (토큰 업로드는 백엔드 엔드포인트 대기)
+
+### 배경
+백엔드 팀 요청(13주차 주간보고서): Firebase 연동. 용도 확인 결과 **FCM 푸시 알림**. 백엔드가 보유한 Firebase 프로젝트 `checkdang-65238` 로 앱을 등록해야 푸시 타겟팅 가능. 백엔드가 `google-services.json` 다운로드 실패로 본문을 텍스트로 전달.
+
+### 사전 확인 (이미 있던 것)
+- `google-services` Gradle 플러그인: 루트·앱 모듈에 **이미 적용돼 있었음**(`libs.plugins.google.services`) → 1·2번(플러그인 추가)은 불요.
+- `app/google-services.json`: **다른/오래된 프로젝트**(`ok-project-494806`)로 존재 → 교체 대상.
+- 코드 내 `default_web_client_id`·`GoogleSignIn`·FCM 사용 **전무** → 빈 `oauth_client` json 으로 교체해도 컴파일/로그인 안 깨짐(Google 로그인은 Cognito Hosted UI 브라우저 경유).
+- 기존 알림 인프라 존재: `util/GlucoseAlertNotifier`(채널/아이콘 `ic_bell`/권한 가드), `POST_NOTIFICATIONS` 매니페스트 선언 → 패턴 재사용.
+
+### 작업 내용
+| 파일 | 변경 |
+|------|------|
+| `app/google-services.json` | `ok-project-494806` → **`checkdang-65238`** 교체(백엔드 제공값). package_name=com.checkdang.app 일치 확인 |
+| `app/build.gradle.kts` | `firebase-bom:34.13.0`(platform) + `firebase-messaging` 추가(인라인 스타일) |
+| `push/CheckDangMessagingService.kt` 🆕 | `FirebaseMessagingService` — `onNewToken`→`PushTokenStore`, `onMessageReceived`(notification/data 폴백→알림 표시). companion 에 push 채널(`push_default`)/권한 헬퍼 |
+| `push/PushTokenStore.kt` 🆕 | 토큰 SharedPreferences 캐시 + logcat(`FcmToken`) 노출 + **백엔드 업로드 stub**(TODO) |
+| `AndroidManifest.xml` | 서비스 등록(`MESSAGING_EVENT`) + 백그라운드 기본 채널/아이콘 메타데이터 |
+| `CheckDangApplication.kt` | push 채널 생성 + 시작 시 `FirebaseMessaging.token` 1회 조회→등록(onNewToken 은 변경 시만 호출되므로) |
+| `MainActivity.kt` | 진입 시 `POST_NOTIFICATIONS` 런타임 요청(탭 무관하게 푸시 권한 확보) |
+
+### 주요 결정 / 메모
+- **CLAUDE.md "Firebase 의존성 추가 금지" 제약 교차** — 단 플러그인 이미 도입 + 백엔드 공식 요청 + 제약 비절대(기존 합의). 진행 타당.
+- **토큰 업로드만 stub 처리(의도적 분리)** — 백엔드 **토큰 등록 엔드포인트 계약 미확정**이 유일한 블로커. stub 이라 "백엔드 API 호출 금지" 제약도 아직 안 건드림. 현재는 `FcmToken` 로그로 토큰 노출 → 백엔드가 그 값으로 콘솔/서버 테스트 푸시 가능. 엔드포인트 확정 시 `PushTokenStore.register()` TODO 자리 한 줄 연결.
+- **백엔드 회신 대기**: ① 토큰 등록 API(URL/메서드/인증=Cognito Bearer?/바디) ② 푸시 형식(notification형 vs data형). 클라는 둘 다 처리하게 구현해 둠.
+- 빌드 검증: `assembleDebug` BUILD SUCCESSFUL.
+
+---
+
 ## [2026-06-03] AI 생활습관 리포트 — 500 해결 확인 / 실연동 검증 (리포트 건 종료)
 
 ### 배경

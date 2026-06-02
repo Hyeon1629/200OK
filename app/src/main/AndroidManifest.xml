@@ -148,6 +148,23 @@
             android:exported="false"
             android:parentActivityName=".ui.main.MainActivity" />
 
+        <!-- FCM 푸시 수신 (Firebase 프로젝트: checkdang-65238) -->
+        <service
+            android:name=".push.CheckDangMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- 백그라운드 notification 메시지의 기본 채널/아이콘(시스템 트레이 표시용) -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="push_default" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_bell" />
+
         <!-- 카카오 OAuth 리다이렉트 처리 -->
         <activity
             android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
