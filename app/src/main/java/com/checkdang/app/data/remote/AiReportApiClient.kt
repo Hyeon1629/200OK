@@ -2,8 +2,10 @@ package com.checkdang.app.data.remote
 
 import com.checkdang.app.data.mock.SessionHolder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -29,6 +31,15 @@ object AiReportApiClient {
 
     /** 분석 기간(일). 기본 7. 백엔드 규칙 1~30(초과 시 30 클램프). */
     private const val DEFAULT_DAYS = 7
+
+    /**
+     * 총 시도 횟수(최초 1 + 재시도 1). Gemini API 가 가끔 5xx 를 내려(백엔드 회신 2026-06-03)
+     * 일시 오류는 1회 재시도로 흡수한다. 4xx(인증/데이터 부족)는 재시도 무의미 → 즉시 실패.
+     */
+    private const val MAX_ATTEMPTS = 2
+
+    /** 재시도 전 짧은 백오프(ms). 첫 호출 ~8-10초 대비 무시 가능한 수준. */
+    private const val RETRY_DELAY_MS = 800L
 
     /**
      * 종합 리포트 응답.
@@ -69,28 +80,61 @@ object AiReportApiClient {
             )
         }
 
-    private fun get(path: String): String {
+    /**
+     * 리포트 GET. **5xx(서버/Gemini 일시 오류)·네트워크 오류는 [MAX_ATTEMPTS] 회까지 재시도**한다.
+     * 끝까지 5xx 면 `HTTP 5xx` 예외 → ViewModel 이 안내문 표시. 4xx 는 즉시 실패(재시도 무의미).
+     */
+    private suspend fun get(path: String): String {
+        var lastError: Exception? = null
+        repeat(MAX_ATTEMPTS) { attempt ->
+            val resp = try {
+                requestOnce(path)
+            } catch (e: IOException) {
+                // 연결/읽기 실패(타임아웃 등) — 일시적일 수 있어 재시도 대상.
+                lastError = e
+                if (attempt < MAX_ATTEMPTS - 1) {
+                    delay(RETRY_DELAY_MS)
+                    return@repeat
+                }
+                throw e
+            }
+            when (resp.code) {
+                in 200..299 -> return resp.body
+                in 500..599 -> {
+                    // 서버/Gemini 일시 오류 — 1회 재시도. 끝내 실패하면 아래에서 throw.
+                    lastError = Exception("HTTP ${resp.code}: ${resp.body}")
+                    if (attempt < MAX_ATTEMPTS - 1) delay(RETRY_DELAY_MS)
+                }
+                else -> throw Exception("HTTP ${resp.code}: ${resp.body}") // 4xx 즉시 실패
+            }
+        }
+        throw lastError ?: Exception("리포트 요청에 실패했어요.")
+    }
+
+    /** 단일 HTTP 시도. 응답 코드와 본문(성공=inputStream / 실패=errorStream)을 그대로 반환. */
+    private fun requestOnce(path: String): Resp {
         val conn = (URL("$BASE_URL$path").openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             setRequestProperty("Accept", "application/json")
             // Spring 경로 — 로그인 사용자 Cognito ID Token Bearer 만 부착(게스트는 호출 안 함).
             SessionHolder.accessToken?.let { setRequestProperty("Authorization", "Bearer $it") }
             connectTimeout = 15_000
-            readTimeout    = 60_000   // Gemini 추론이 길 수 있어 넉넉히(식단조언과 동일)
+            // 첫 호출 ~8-10초(백엔드 회신 2026-06-03), 출력 길이 고정이라 데이터량 무관 → 60s 면 충분.
+            readTimeout = 60_000
         }
         try {
             val code = conn.responseCode
-            val text = if (code in 200..299) {
+            val body = if (code in 200..299) {
                 conn.inputStream.bufferedReader().readText()
             } else {
                 conn.errorStream?.bufferedReader()?.readText().orEmpty()
             }
-            if (code !in 200..299) {
-                throw Exception("HTTP $code: $text")
-            }
-            return text
+            return Resp(code, body)
         } finally {
             conn.disconnect()
         }
     }
+
+    /** 1회 HTTP 응답(코드 + 본문). */
+    private data class Resp(val code: Int, val body: String)
 }

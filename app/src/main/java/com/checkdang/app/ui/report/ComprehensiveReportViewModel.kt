@@ -66,16 +66,20 @@ class ComprehensiveReportViewModel : ViewModel() {
         /** 전체 0 건인데 백엔드 report 마저 비어 온 경우의 안내(정상 응답이면 거의 안 쓰임). */
         const val ALL_EMPTY_FALLBACK =
             "## 종합 리포트\n\n아직 기록된 데이터가 없어요. 식단·수면·운동을 먼저 기록하면 AI가 분석해 드릴게요."
+
+        /** 5xx 판별(500/502/503/504 등). Gemini 일시 오류가 5xx 로 내려옴(백엔드 회신 2026-06-03). */
+        val SERVER_ERROR = Regex("HTTP 5\\d\\d")
     }
 
     // 에러 형식: Spring GlobalExceptionHandler { success:false, data:null, message:"<한국어>" }.
-    // 코드 매핑(백엔드 회신 2026-06-02): 401=토큰 없음/만료, 400=사용자 없음 등, 500=Gemini 키 등.
+    // 코드 매핑(백엔드 회신 2026-06-02): 401=토큰 없음/만료, 400=사용자 없음 등, 5xx=Gemini 일시 오류.
+    // 5xx 는 AiReportApiClient 가 이미 1회 재시도하므로, 여기 도달 = 재시도까지 실패한 경우.
     private fun messageFor(t: Throwable): String {
         val msg = t.message.orEmpty()
         return when {
             "HTTP 401" in msg || "HTTP 403" in msg -> "로그인 후 이용할 수 있어요."
             "HTTP 400" in msg -> "분석할 데이터가 부족해요. 식단·수면·운동을 먼저 기록해주세요."
-            "HTTP 500" in msg -> "리포트 생성 중 문제가 발생했어요. 잠시 후 다시 시도해주세요."
+            SERVER_ERROR.containsMatchIn(msg) -> "리포트 생성 중 문제가 발생했어요. 잠시 후 다시 시도해주세요."
             else -> "리포트를 불러오지 못했어요. 잠시 후 다시 시도해주세요."
         }
     }
