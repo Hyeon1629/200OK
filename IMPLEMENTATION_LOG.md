@@ -4,6 +4,27 @@
 
 ---
 
+## [2026-06-02] AI 생활습관 리포트 — 항목별 "기록 없음" 표시 (sourceCount 활용)
+
+### 배경
+기존엔 200 응답의 `report`만 그대로 렌더. "데이터가 있는 항목만 분석하고, 없는 항목은 '○○ 기록이 없습니다'로 표시"하자는 요청 → 백엔드 회신 스키마(`회신-종합리포트-스키마.md`)의 응답 메타 **`sourceCount: { diets, sleeps, exercises }`**(항목별 건수)를 활용해 처리. "있는 항목 분석"은 백엔드(`report`)가, "없는 항목 안내"는 프론트가 담당.
+
+### 작업 내용
+| 항목 | 변경 |
+|------|------|
+| API 클라이언트 | `AiReportApiClient`: 반환형을 `String` → **`ComprehensiveReport(report, sourceCount)`** 로 변경. `SourceCount(diets, sleeps, exercises)` 신규. `sourceCount`/누락 필드는 0 기본값으로 방어 파싱 |
+| 표시 합성 | `ComprehensiveReportViewModel.buildMarkdown()` 신규 — 건수 0 항목을 상단 안내 블록("⚠️ 기록이 없어 분석에서 제외된 항목 / - ○○ 기록이 없습니다")으로 합성 후 `report` 앞에 결합. 전 항목 0 + 빈 report(200)면 안내만 단독 표시 |
+| 상태/화면 | `ReportUiState.Loaded(markdown)`·Activity 렌더 로직 변경 없음(합성 결과를 그대로 Markwon 렌더) |
+
+### 주요 결정 / 메모
+- 빈 데이터 신호로 **`sourceCount` 채택** — report 마크다운을 섹션 단위로 surgically 파싱하는 방식은 헤더(영/한) 의존이라 취약 → 건수 기반이 견고. 백엔드가 빈 섹션을 누락하든 포함하든 안내는 항상 표시됨.
+- 라벨 매핑: `diets`→식단 / `sleeps`→수면 / `exercises`→운동.
+- **전체 0건 케이스 보완**(백엔드 회신 `회신-종합리포트-빈섹션처리.md` §5): 3종 모두 0건이면 백엔드가 Gemini 미호출 + 고정 안내 메시지(200)를 `report`로 반환. 이때 프론트 "제외된 항목" 블록을 또 붙이면 중복 → **전체 0건이면 백엔드 report만 노출**(폴백 상수 `ALL_EMPTY_FALLBACK`). 일부만 0건일 때만 안내 블록 prepend.
+- 백엔드 회신 확인: 0건 섹션 `report` 포함 여부 (B)→(A) 수정 완료(커밋 `dec1cf5`, **배포 대기**). 헤더 영문 고정. 응답 스키마/`sourceCount` 계약 불변 → 프론트 현행 유지로 충분(추가 파싱 불요). 배포 후 실샘플로 검증 예정.
+- 빌드 검증: `compileDebugKotlin` BUILD SUCCESSFUL.
+
+---
+
 ## [2026-06-02] AI 생활습관 리포트 — 백엔드 스키마 회신 반영 (실연동 확정)
 
 ### 배경

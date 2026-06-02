@@ -31,15 +31,42 @@ object AiReportApiClient {
     private const val DEFAULT_DAYS = 7
 
     /**
-     * 종합 리포트 마크다운 본문을 반환. 실패 시 예외 → 호출 측(ViewModel)이 Error 상태로 표시.
+     * 종합 리포트 응답.
+     *
+     * @param report    Gemini 가 생성한 마크다운 본문(데이터가 있는 항목만 분석).
+     * @param sourceCount 항목별 원천 데이터 건수. 0 인 항목은 분석에서 제외돼 화면에
+     *                    "○○ 기록이 없습니다" 안내로 표시한다.
+     */
+    data class ComprehensiveReport(
+        val report: String,
+        val sourceCount: SourceCount,
+    )
+
+    /** 분석에 사용된 항목별 데이터 건수(식단/수면/운동). */
+    data class SourceCount(
+        val diets: Int,
+        val sleeps: Int,
+        val exercises: Int,
+    )
+
+    /**
+     * 종합 리포트(마크다운 본문 + 항목별 건수)를 반환. 실패 시 예외 → 호출 측(ViewModel)이 Error 표시.
      *
      * @param days 분석 기간(일). 토큰만으로 userId 추출 — 그 외 파라미터 불필요.
      */
-    suspend fun getComprehensiveReport(days: Int = DEFAULT_DAYS): String =
+    suspend fun getComprehensiveReport(days: Int = DEFAULT_DAYS): ComprehensiveReport =
         withContext(Dispatchers.IO) {
-            val text = get("$PATH?days=$days")
-            // 응답은 메타(from/to/sourceCount)로 감싸여 있으나 표시 불요 — report 필드만 렌더.
-            JSONObject(text).getString("report")
+            val json = JSONObject(get("$PATH?days=$days"))
+            // 메타(from/to) 는 표시 불요. report + sourceCount 만 사용.
+            val sc = json.optJSONObject("sourceCount")
+            ComprehensiveReport(
+                report = json.optString("report").trim(),
+                sourceCount = SourceCount(
+                    diets = sc?.optInt("diets") ?: 0,
+                    sleeps = sc?.optInt("sleeps") ?: 0,
+                    exercises = sc?.optInt("exercises") ?: 0,
+                ),
+            )
         }
 
     private fun get(path: String): String {
