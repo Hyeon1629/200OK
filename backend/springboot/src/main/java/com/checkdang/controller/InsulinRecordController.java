@@ -4,6 +4,7 @@ import com.checkdang.dto.ApiResponse;
 import com.checkdang.dto.InsulinRecordRequest;
 import com.checkdang.dto.InsulinRecordResponse;
 import com.checkdang.service.InsulinRecordService;
+import com.checkdang.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,13 +18,14 @@ import org.springframework.web.bind.annotation.*;
 public class InsulinRecordController {
 
     private final InsulinRecordService insulinRecordService;
+    private final UserService userService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<InsulinRecordResponse>> save(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody InsulinRecordRequest request) {
 
-        InsulinRecordResponse response = insulinRecordService.save(jwt.getClaimAsString("email"), request);
+        InsulinRecordResponse response = insulinRecordService.save(userService.resolveEmail(jwt), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
     }
 }

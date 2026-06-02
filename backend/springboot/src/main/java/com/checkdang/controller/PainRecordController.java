@@ -5,6 +5,7 @@ import com.checkdang.dto.ApiResponse;
 import com.checkdang.dto.PainRecordRequest;
 import com.checkdang.dto.PainRecordResponse;
 import com.checkdang.service.PainRecordService;
+import com.checkdang.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -22,13 +23,14 @@ import java.util.List;
 public class PainRecordController {
 
     private final PainRecordService painRecordService;
+    private final UserService userService;
 
     /** 통증 기록 저장 */
     @PostMapping
     public ResponseEntity<ApiResponse<PainRecordResponse>> save(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody PainRecordRequest request) {
-        PainRecordResponse response = painRecordService.save(jwt.getClaimAsString("email"), request);
+        PainRecordResponse response = painRecordService.save(userService.resolveEmail(jwt), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
     }
 
@@ -39,7 +41,7 @@ public class PainRecordController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
             @RequestParam(required = false) PainRecord.BodyPart bodyPart) {
-        String email = jwt.getClaimAsString("email");
+        String email = userService.resolveEmail(jwt);
         List<PainRecordResponse> result;
         if (bodyPart != null) {
             result = painRecordService.getMyRecordsByBodyPart(email, bodyPart);
@@ -55,14 +57,14 @@ public class PainRecordController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PainRecordResponse>> getById(
             @AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.ok(painRecordService.getById(jwt.getClaimAsString("email"), id)));
+        return ResponseEntity.ok(ApiResponse.ok(painRecordService.getById(userService.resolveEmail(jwt), id)));
     }
 
     /** 삭제 */
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> delete(
             @AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
-        painRecordService.delete(jwt.getClaimAsString("email"), id);
+        painRecordService.delete(userService.resolveEmail(jwt), id);
         return ResponseEntity.ok(ApiResponse.ok());
     }
 }

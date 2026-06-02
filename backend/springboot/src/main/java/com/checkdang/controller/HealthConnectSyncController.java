@@ -10,6 +10,7 @@ import com.checkdang.dto.SyncResponse;
 import com.checkdang.service.DietService;
 import com.checkdang.service.ExerciseService;
 import com.checkdang.service.SleepService;
+import com.checkdang.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -30,12 +31,13 @@ public class HealthConnectSyncController {
     private final DietService dietService;
     private final SleepService sleepService;
     private final ExerciseService exerciseService;
+    private final UserService userService;
 
     @PostMapping("/diets")
     public ResponseEntity<SyncResponse> syncDiets(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody @Valid List<DietSyncRequest> requests) {
-        String userEmail = jwt.getClaimAsString("email");
+        String userEmail = userService.resolveEmail(jwt);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(dietService.syncFromSamsungHealth(userEmail, requests));
     }
@@ -45,7 +47,7 @@ public class HealthConnectSyncController {
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
-        String userEmail = jwt.getClaimAsString("email");
+        String userEmail = userService.resolveEmail(jwt);
         return ResponseEntity.ok(dietService.getDiets(userEmail, from, to));
     }
 
@@ -53,7 +55,7 @@ public class HealthConnectSyncController {
     public ResponseEntity<SyncResponse> syncSleeps(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody @Valid List<SleepSyncRequest> requests) {
-        String userEmail = jwt.getClaimAsString("email");
+        String userEmail = userService.resolveEmail(jwt);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(sleepService.syncFromSamsungHealth(userEmail, requests));
     }
@@ -63,7 +65,7 @@ public class HealthConnectSyncController {
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
-        String userEmail = jwt.getClaimAsString("email");
+        String userEmail = userService.resolveEmail(jwt);
         return ResponseEntity.ok(sleepService.getSleeps(userEmail, from, to));
     }
 
@@ -71,7 +73,7 @@ public class HealthConnectSyncController {
     public ResponseEntity<SyncResponse> syncExercises(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody @Valid List<ExerciseSyncRequest> requests) {
-        String userEmail = jwt.getClaimAsString("email");
+        String userEmail = userService.resolveEmail(jwt);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(exerciseService.syncFromSamsungHealth(userEmail, requests));
     }
@@ -81,7 +83,7 @@ public class HealthConnectSyncController {
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
-        String userEmail = jwt.getClaimAsString("email");
+        String userEmail = userService.resolveEmail(jwt);
         return ResponseEntity.ok(exerciseService.getExercises(userEmail, from, to));
     }
 }

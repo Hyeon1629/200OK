@@ -11,6 +11,7 @@ import com.checkdang.repository.SleepRepository;
 import com.checkdang.repository.UserRepository;
 import com.checkdang.service.AiAnalysisClient;
 import com.checkdang.service.AiAnalysisService;
+import com.checkdang.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +41,7 @@ public class GeminiReportController {
     private final ExerciseRepository exerciseRepository;
     private final AiAnalysisClient aiAnalysisClient;
     private final AiAnalysisService aiAnalysisService;
+    private final UserService userService;
 
     @GetMapping("/health")
     public ResponseEntity<AiHealthReportResponse> getHealthReport(
@@ -53,7 +55,7 @@ public class GeminiReportController {
         LocalDateTime reportTo = to == null ? LocalDateTime.now() : to;
         LocalDateTime reportFrom = from == null ? reportTo.minusDays(Math.max(1, Math.min(days, 30))) : from;
 
-        User user = userRepository.findByEmail(jwt.getClaimAsString("email"))
+        User user = userRepository.findByEmail(userService.resolveEmail(jwt))
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
         String userId = String.valueOf(user.getId());
 

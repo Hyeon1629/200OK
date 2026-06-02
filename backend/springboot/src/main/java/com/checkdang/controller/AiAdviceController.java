@@ -8,6 +8,7 @@ import com.checkdang.repository.UserRepository;
 import com.checkdang.service.AiAnalysisClient;
 import com.checkdang.service.AiAnalysisService;
 import com.checkdang.service.DietService;
+import com.checkdang.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,6 +31,7 @@ public class AiAdviceController {
     private final AiAnalysisClient aiAnalysisClient;
     private final UserRepository userRepository;
     private final AiAnalysisService aiAnalysisService;
+    private final UserService userService;
 
     @GetMapping("/diet-advice")
     public AiAdviceResponse getDietAdvice(
@@ -37,7 +39,7 @@ public class AiAdviceController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to
     ) {
-        String userEmail = jwt.getClaimAsString("email");
+        String userEmail = userService.resolveEmail(jwt);
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
         String userId = String.valueOf(user.getId());
