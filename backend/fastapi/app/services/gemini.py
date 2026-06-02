@@ -75,17 +75,23 @@ Write the report in Korean Markdown for direct frontend rendering.
 Use only the database values below as evidence.
 Do not provide a definitive medical diagnosis. If there are warning signs, recommend consulting a medical professional.
 
-Follow this exact structure:
+Section rules (IMPORTANT):
+- A record section shows "- none" when there is no data for that type.
+- Generate the analysis section ONLY for data types that have actual records.
+- If a data type shows "- none", OMIT its section entirely (do not output its header or any line for it).
+- Base "## Summary" and "## Recommended Actions" only on the data types that have records.
+
+Use these sections (include a "## Xxx Analysis" section only when that data exists):
 ## Summary
-- 2 or 3 key changes
-## Diet Analysis
+- 2 or 3 key changes (based only on available data)
+## Diet Analysis        ← include only if Diet records exist
 - Analyze carbohydrates, sugar, calories, protein, sodium, and meal timing
-## Sleep Analysis
+## Sleep Analysis       ← include only if Sleep records exist
 - Analyze sleep duration and quality
-## Exercise Analysis
+## Exercise Analysis    ← include only if Exercise records exist
 - Analyze exercise volume and recovery
 ## Recommended Actions
-- 3 concrete actions the user can try today
+- 3 concrete actions the user can try today (based only on available data)
 
 User: {user_name} / {user_email}
 Analysis period: {data.get("from") or "-"} ~ {data.get("to") or "-"}

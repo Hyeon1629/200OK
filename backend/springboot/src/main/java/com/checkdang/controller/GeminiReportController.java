@@ -83,6 +83,15 @@ public class GeminiReportController {
                 .limit(MAX_ROWS_PER_SECTION)
                 .toList();
 
+        // 식단·수면·운동 3종 모두 0건이면 Gemini 호출 없이 안내 리포트 반환 (불필요한 호출·비용 방지)
+        if (diets.isEmpty() && sleeps.isEmpty() && exercises.isEmpty()) {
+            return ResponseEntity.ok(new AiHealthReportResponse(
+                    reportFrom, reportTo,
+                    new AiReportSourceCount(0, 0, 0),
+                    "## 종합 리포트\n\n아직 기록된 데이터가 없어요. 식단·운동·수면을 먼저 기록하면 AI가 분석해 드릴게요."
+            ));
+        }
+
         Map<String, Object> reportData = buildReportData(user, reportFrom, reportTo, diets, sleeps, exercises);
         String report = aiAnalysisClient.analyzeHealthReport(reportData);
         aiAnalysisService.save(userId, AiAnalysis.AnalysisType.HEALTH_REPORT, reportFrom, reportTo, report);
