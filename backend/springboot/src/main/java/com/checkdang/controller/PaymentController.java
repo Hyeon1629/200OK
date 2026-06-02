@@ -11,6 +11,7 @@ import com.checkdang.dto.KakaoPayReadyRequest;
 import com.checkdang.dto.KakaoPayReadyResponse;
 import com.checkdang.service.GooglePlayBillingService;
 import com.checkdang.service.KakaoPayService;
+import com.checkdang.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,6 +27,7 @@ public class PaymentController {
 
     private final KakaoPayService kakaoPayService;
     private final GooglePlayBillingService googlePlayBillingService;
+    private final UserService userService;
 
     // 결제 준비: 카카오 결제 페이지 URL 발급
     @PostMapping("/kakao/ready")
@@ -33,7 +35,7 @@ public class PaymentController {
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody KakaoPayReadyRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(
-                kakaoPayService.ready(jwt.getClaimAsString("email"), request)));
+                kakaoPayService.ready(userService.resolveEmail(jwt), request)));
     }
 
     // 결제 승인: 카카오 결제 완료 후 최종 확정
@@ -42,7 +44,7 @@ public class PaymentController {
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody KakaoPayApproveRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(
-                kakaoPayService.approve(jwt.getClaimAsString("email"), request)));
+                kakaoPayService.approve(userService.resolveEmail(jwt), request)));
     }
 
     // 결제 취소: 카카오 결제 페이지에서 취소 시 리다이렉트
@@ -62,7 +64,7 @@ public class PaymentController {
     public ResponseEntity<ApiResponse<List<PaymentRecord>>> getHistory(
             @AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(ApiResponse.ok(
-                kakaoPayService.getHistory(jwt.getClaimAsString("email"))));
+                kakaoPayService.getHistory(userService.resolveEmail(jwt))));
     }
 
     // Google Play: Android 앱이 구매 완료 후 purchaseToken 전송 → 검증 후 프리미엄 부여
@@ -71,7 +73,7 @@ public class PaymentController {
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody GooglePlayVerifyRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(
-                googlePlayBillingService.verify(jwt.getClaimAsString("email"), request)));
+                googlePlayBillingService.verify(userService.resolveEmail(jwt), request)));
     }
 
     // Google Play: Pub/Sub RTDN 수신 — 구독 갱신/취소/만료 등 상태 변화 처리 (JWT 불필요)

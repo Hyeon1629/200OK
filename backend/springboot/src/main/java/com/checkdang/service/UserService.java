@@ -69,7 +69,7 @@ public class UserService {
         return localUsers.size();
     }
 
-    private String resolveEmail(Jwt jwt) {
+    public String resolveEmail(Jwt jwt) {
         String email = jwt.getClaimAsString("email");
         if (email != null && !email.isBlank()) return email;
 
