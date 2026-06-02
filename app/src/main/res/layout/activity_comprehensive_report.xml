@@ -14,7 +14,7 @@
         android:layout_height="?attr/actionBarSize"
         android:background="@color/background_primary"
         android:elevation="2dp"
-        app:title="AI 종합 리포트"
+        app:title="AI 생활습관 리포트"
         app:titleTextColor="@color/text_primary"
         app:titleTextAppearance="@style/TextAppearance.CheckDang.Title2" />
 
@@ -43,7 +43,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="AI가 종합 리포트를 작성하고 있어요…"
+                android:text="AI가 생활습관 리포트를 작성하고 있어요…"
                 android:textAppearance="@style/TextAppearance.CheckDang.Body2"
                 android:textColor="@color/text_secondary" />
         </LinearLayout>
@@ -101,7 +101,7 @@
                     android:lineSpacingMultiplier="1.2"
                     android:textColor="@color/text_primary"
                     android:textSize="15sp"
-                    tools:text="## 종합 요약\n최근 7일 혈당은 안정적입니다…" />
+                    tools:text="## Summary\n최근 7일 식단·수면·운동 분석…" />
 
                 <TextView
                     android:layout_width="match_parent"

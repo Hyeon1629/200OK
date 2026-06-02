@@ -34,11 +34,14 @@ class ComprehensiveReportViewModel : ViewModel() {
         }
     }
 
+    // 에러 형식: Spring GlobalExceptionHandler { success:false, data:null, message:"<한국어>" }.
+    // 코드 매핑(백엔드 회신 2026-06-02): 401=토큰 없음/만료, 400=사용자 없음 등, 500=Gemini 키 등.
     private fun messageFor(t: Throwable): String {
         val msg = t.message.orEmpty()
         return when {
             "HTTP 401" in msg || "HTTP 403" in msg -> "로그인 후 이용할 수 있어요."
-            "HTTP 404" in msg -> "아직 생성된 리포트가 없어요."
+            "HTTP 400" in msg -> "분석할 데이터가 부족해요. 식단·수면·운동을 먼저 기록해주세요."
+            "HTTP 500" in msg -> "리포트 생성 중 문제가 발생했어요. 잠시 후 다시 시도해주세요."
             else -> "리포트를 불러오지 못했어요. 잠시 후 다시 시도해주세요."
         }
     }

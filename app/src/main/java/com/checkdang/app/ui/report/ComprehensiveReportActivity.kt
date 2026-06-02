@@ -15,9 +15,10 @@ import io.noties.markwon.linkify.LinkifyPlugin
 import kotlinx.coroutines.launch
 
 /**
- * AI 종합 리포트 화면. Gemini 가 생성한 건강 종합 리포트(마크다운)를 렌더한다.
+ * AI 생활습관 리포트 화면. Gemini 가 생성한 식단·수면·운동 종합 리포트(마크다운)를 렌더한다.
+ * (혈당·통증은 현재 백엔드 리포트 로직 미포함 — 후속 작업 예정.)
  *
- * 진입: Home 대시보드 'AI 종합 리포트' 카드.
+ * 진입: Home 대시보드 'AI 생활습관 리포트' 카드.
  * 로그인 사용자 전용 — 게스트는 진입 시 안내만 표시하고 호출하지 않는다.
  */
 class ComprehensiveReportActivity : AppCompatActivity() {
@@ -96,7 +97,7 @@ class ComprehensiveReportActivity : AppCompatActivity() {
         binding.layoutLoading.visibility = View.GONE
         binding.scrollContent.visibility = View.GONE
         binding.layoutError.visibility   = View.VISIBLE
-        binding.tvError.text = "AI 종합 리포트는 로그인 후 이용할 수 있어요."
+        binding.tvError.text = "AI 생활습관 리포트는 로그인 후 이용할 수 있어요."
         binding.btnRetry.visibility = View.GONE
     }
 }

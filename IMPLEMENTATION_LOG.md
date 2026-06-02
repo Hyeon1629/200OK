@@ -4,6 +4,31 @@
 
 ---
 
+## [2026-06-02] AI 생활습관 리포트 — 백엔드 스키마 회신 반영 (실연동 확정)
+
+### 배경
+`2026-06-01` provisional 골격에 대해 백엔드(kgh) 스키마 회신 도착(`회신-종합리포트-스키마.md`). 응답은 (a) 마크다운 확정이나 엔드포인트·응답구조·에러형식이 가정값과 달라 정정. 추가로 **현재 리포트는 식단/수면/운동만 분석**(혈당·통증 미포함) 확인.
+
+### 작업 내용
+| 항목 | 변경 |
+|------|------|
+| 엔드포인트 | `AiReportApiClient`: `/api/ai/comprehensive-report` → **`GET /api/ai/reports/health?days=7`**(기본 7, 1~30). `getComprehensiveReport(days)` 파라미터화 |
+| 응답 파싱 | 응답이 `{ from, to, sourceCount, report }`(ApiResponse 래퍼 없는 raw)로 메타가 감쌈. `report`는 여전히 최상위 → 기존 `getString("report")` 그대로 동작, 주석/doc만 확정 스키마로 갱신 |
+| 에러 파싱 | Spring `{ success:false, data:null, message }` 형식 기준 코드 매핑 정정 — `ComprehensiveReportViewModel`: 401/403=로그인, **400=데이터 부족**, **500=생성 중 문제**, 그외 일반 |
+| UI 문구 | 식단/수면/운동만 분석 → 오해 제거. 홈 카드 "AI 종합 리포트 / 혈당·라이프스타일·통증을 한눈에" → **"AI 생활습관 리포트 / 식단·수면·운동을 한눈에"**. 툴바·로딩·게스트 안내·Activity KDoc 동일 정정 |
+
+### 주요 결정 / 메모
+- **혈당·통증 포함은 후속**(이번 출시 미포함) — 백엔드 §5 회신 요청에 1번(후속) 선택. 식단/수면/운동으로 먼저 실연동. (후속 시 혈당=FastAPI/DynamoDB 합류, 통증=RDS 조회 추가)
+- **문구 변경은 백엔드 "제안"** — 회신 §3은 "생활습관 종합 리포트" 정도를 제안(강제 아님). 최종 결정은 프론트, 실제 채택 문구 "AI 생활습관 리포트"는 로딩문구 일관성 위해 선택.
+- 회신 답변 초안 작성(`회신답변-종합리포트-스키마.md`): ①②OK + 데이터 0건 시 200 빈리포트 vs 400 여부 추가 질문.
+- 캐싱 확인(같은 기간 재호출 <1초), readTimeout 60s 유지.
+- 빌드 검증: `assembleDebug` BUILD SUCCESSFUL.
+
+### 신규/수정 파일
+- 수정: `data/remote/AiReportApiClient.kt`, `ui/report/ComprehensiveReportViewModel.kt`, `ui/report/ComprehensiveReportActivity.kt`, `res/layout/activity_comprehensive_report.xml`, `res/layout/fragment_home.xml`
+
+---
+
 ## [2026-06-02] 백엔드 대기 중 프론트 단독 작업 배치 (알림 / 결제 점검 / 테스트)
 
 ### 배경
