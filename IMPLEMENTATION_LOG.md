@@ -31,6 +31,7 @@
 - **토큰 업로드만 stub 처리(의도적 분리)** — 백엔드 **토큰 등록 엔드포인트 계약 미확정**이 유일한 블로커. stub 이라 "백엔드 API 호출 금지" 제약도 아직 안 건드림. 현재는 `FcmToken` 로그로 토큰 노출 → 백엔드가 그 값으로 콘솔/서버 테스트 푸시 가능. 엔드포인트 확정 시 `PushTokenStore.register()` TODO 자리 한 줄 연결.
 - **백엔드 회신 대기**: ① 토큰 등록 API(URL/메서드/인증=Cognito Bearer?/바디) ② 푸시 형식(notification형 vs data형). 클라는 둘 다 처리하게 구현해 둠.
 - 빌드 검증: `assembleDebug` BUILD SUCCESSFUL.
+- **상태(2026-06-03 종료)**: 앱 클라이언트 배선 완료 + 토큰 발급 logcat 검증 OK. **백엔드 회신(토큰 등록 API 계약 + 테스트 푸시 발송) 대기로 보류** — 회신 시 `PushTokenStore.register()` TODO 한 줄 연결 + `FcmToken` 진단 로그 제거로 마무리.
 
 ---
 
