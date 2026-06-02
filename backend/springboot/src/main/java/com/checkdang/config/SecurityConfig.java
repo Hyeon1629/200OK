@@ -72,12 +72,23 @@ public class SecurityConfig {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
             var authorities = authoritiesConverter.convert(jwt);
-            if (authorities == null || authorities.isEmpty()) {
+            // Cognito가 IdP 등록 시 자동 생성하는 그룹(_Google, _KakaoOIDC)은 cognito:groups에
+            // 자동 포함되지만 앱 role이 아니므로 제외한다. 이를 제외하지 않으면 소셜 로그인 사용자의
+            // authorities가 비어있지 않아 ROLE_PATIENT 폴백이 걸리지 않아 보호 API에서 403이 난다.
+            var appRoles = (authorities == null
+                    ? java.util.stream.Stream.<org.springframework.security.core.GrantedAuthority>empty()
+                    : authorities.stream())
+                    .filter(a -> {
+                        String r = a.getAuthority();
+                        return !r.endsWith("_Google") && !r.endsWith("_KakaoOIDC");
+                    })
+                    .toList();
+            if (appRoles.isEmpty()) {
                 return java.util.List.of(
                         new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_PATIENT")
                 );
             }
-            return authorities;
+            return appRoles;
         });
         return converter;
     }
