@@ -75,6 +75,12 @@ Write the report in Korean Markdown for direct frontend rendering.
 Use only the database values below as evidence.
 Do not provide a definitive medical diagnosis. If there are warning signs, recommend consulting a medical professional.
 
+Length rules (IMPORTANT — keep it short to avoid truncation):
+- Write a CONCISE report. Each section: 2-3 short bullet points max, one sentence per bullet.
+- Use bullet points only — no paragraphs, no repetition, no filler.
+- Do not restate raw data; give only the key takeaway/insight.
+- Whole report under ~800 Korean characters.
+
 Section rules (IMPORTANT):
 - A record section shows "- none" when there is no data for that type.
 - Generate the analysis section ONLY for data types that have actual records.
