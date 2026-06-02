@@ -31,7 +31,7 @@
               "AppClientId": "21herirtq1gr5frptrpmrv45ga",
               "SignInRedirectURI": "checkdang://signin/",
               "SignOutRedirectURI": "checkdang://signout/",
-              "Scopes": ["openid"]
+              "Scopes": ["openid", "email"]
             },
             "authenticationFlowType": "USER_SRP_AUTH"
           }
