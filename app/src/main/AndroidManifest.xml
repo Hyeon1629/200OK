@@ -135,8 +135,17 @@
 
         <activity
             android:name=".ui.menu.subscription.SubscriptionActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.main.MainActivity" />
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:parentActivityName=".ui.main.MainActivity">
+            <!-- 카카오페이 결제 콜백: checkdang://payment/success?pg_token=xxx 등 -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="checkdang" android:host="payment" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".ui.report.ComprehensiveReportActivity"

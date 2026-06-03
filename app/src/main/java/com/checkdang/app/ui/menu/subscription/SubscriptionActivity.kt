@@ -1,8 +1,11 @@
 package com.checkdang.app.ui.menu.subscription
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
@@ -12,6 +15,7 @@ import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.ProductDetails
 import com.checkdang.app.R
 import com.checkdang.app.data.billing.BillingState
+import com.checkdang.app.data.billing.KakaoPayState
 import com.checkdang.app.data.billing.ProductIds
 import com.checkdang.app.databinding.ActivitySubscriptionBinding
 import com.google.android.material.snackbar.Snackbar
@@ -25,7 +29,7 @@ class SubscriptionActivity : AppCompatActivity() {
     private var selectedYearly = true
 
     // 이번 세션에서 사용자가 직접 "구독 시작"을 눌렀는지. 복원(기존 구매 재조회)으로 들어온
-    // Success 와 신규 구매 Success 를 구분해, 복원 시엔 자동 종료/“시작되었어요” 문구를 막는다.
+    // Success 와 신규 구매 Success 를 구분해, 복원 시엔 자동 종료/"시작되었어요" 문구를 막는다.
     private var purchaseInitiated = false
 
     private val benefits = listOf(
@@ -47,6 +51,15 @@ class SubscriptionActivity : AppCompatActivity() {
         setupSubscribeButton()
         setupRetryButton()
         observeBillingState()
+        observeKakaoState()
+
+        // 딥링크로 직접 실행된 경우 처리
+        handlePaymentDeepLink(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handlePaymentDeepLink(intent)
     }
 
     override fun onResume() {
@@ -55,6 +68,30 @@ class SubscriptionActivity : AppCompatActivity() {
         // 단, 구매 진행/완료 중에는 재조회(Ready)로 결과 상태를 덮어쓰지 않도록 스킵(경합 방지).
         if (!purchaseInitiated && viewModel.state.value !is BillingState.Purchasing) {
             viewModel.retry()
+        }
+        // KakaoPay 앱에서 결제 없이 돌아온 경우(뒤로 가기) → 대기 상태 해제
+        if (viewModel.kakaoState.value is KakaoPayState.WaitingForCallback) {
+            viewModel.resetKakaoState()
+        }
+    }
+
+    private fun handlePaymentDeepLink(intent: Intent) {
+        val data = intent.data ?: return
+        if (data.scheme != "checkdang" || data.host != "payment") return
+
+        when (data.lastPathSegment) {
+            "success" -> {
+                val pgToken = data.getQueryParameter("pg_token") ?: run {
+                    showSnackbar("결제 토큰을 받지 못했어요")
+                    return
+                }
+                viewModel.approveKakaoPay(pgToken)
+            }
+            "cancel" -> viewModel.handleKakaoCancel()
+            "fail" -> {
+                viewModel.resetKakaoState()
+                showSnackbar("결제에 실패했어요")
+            }
         }
     }
 
@@ -94,10 +131,30 @@ class SubscriptionActivity : AppCompatActivity() {
 
     private fun setupSubscribeButton() {
         binding.btnSubscribe.setOnClickListener {
-            val productId = if (selectedYearly) ProductIds.PREMIUM_YEARLY else ProductIds.PREMIUM_MONTHLY
-            purchaseInitiated = true
-            viewModel.startPurchase(this, productId)
+            showPaymentMethodDialog()
         }
+    }
+
+    private fun showPaymentMethodDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("결제 수단 선택")
+            .setItems(arrayOf("Google Play", "카카오페이")) { _, which ->
+                when (which) {
+                    0 -> startGooglePlay()
+                    1 -> startKakaoPay()
+                }
+            }
+            .show()
+    }
+
+    private fun startGooglePlay() {
+        val productId = if (selectedYearly) ProductIds.PREMIUM_YEARLY else ProductIds.PREMIUM_MONTHLY
+        purchaseInitiated = true
+        viewModel.startPurchase(this, productId)
+    }
+
+    private fun startKakaoPay() {
+        viewModel.startKakaoPay(ProductIds.PREMIUM_MONTHLY)
     }
 
     private fun setupRetryButton() {
@@ -107,6 +164,8 @@ class SubscriptionActivity : AppCompatActivity() {
         }
     }
 
+    // ── 상태 관찰 ──────────────────────────────────────────────────────────
+
     private fun observeBillingState() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -114,6 +173,16 @@ class SubscriptionActivity : AppCompatActivity() {
             }
         }
     }
+
+    private fun observeKakaoState() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.kakaoState.collect { renderKakao(it) }
+            }
+        }
+    }
+
+    // ── Google Play 상태 렌더 (기존 로직 그대로) ────────────────────────────
 
     private fun render(state: BillingState) {
         when (state) {
@@ -126,8 +195,10 @@ class SubscriptionActivity : AppCompatActivity() {
             is BillingState.Ready -> {
                 binding.pbLoading.visibility = View.GONE
                 binding.layoutError.visibility = View.GONE
-                binding.btnSubscribe.isEnabled = true
-                binding.btnSubscribe.text = "구독 시작하기"
+                if (viewModel.kakaoState.value == KakaoPayState.Idle) {
+                    binding.btnSubscribe.isEnabled = true
+                    binding.btnSubscribe.text = "구독 시작하기"
+                }
                 applyPrices(state.products)
             }
             BillingState.Purchasing -> {
@@ -141,7 +212,6 @@ class SubscriptionActivity : AppCompatActivity() {
                 binding.layoutError.visibility = View.GONE
                 binding.btnSubscribe.isEnabled = false
                 if (purchaseInitiated) {
-                    // 신규 구매 완료 → 안내 후 화면 종료
                     binding.btnSubscribe.text = "구독 완료"
                     Snackbar.make(binding.root, "구독이 시작되었어요", Snackbar.LENGTH_SHORT).show()
                     binding.root.postDelayed({
@@ -149,7 +219,6 @@ class SubscriptionActivity : AppCompatActivity() {
                         finish()
                     }, 1500)
                 } else {
-                    // 기존 구매 복원 → 종료하지 않고 "구독 중" 으로만 반영
                     binding.btnSubscribe.text = "구독 중"
                 }
             }
@@ -171,6 +240,73 @@ class SubscriptionActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    // ── KakaoPay 상태 렌더 ─────────────────────────────────────────────────
+
+    private fun renderKakao(state: KakaoPayState) {
+        when (state) {
+            KakaoPayState.Idle -> Unit
+
+            KakaoPayState.Loading -> {
+                binding.pbLoading.visibility = View.VISIBLE
+                binding.btnSubscribe.isEnabled = false
+                binding.btnSubscribe.text = "결제 준비 중..."
+            }
+
+            is KakaoPayState.ReadyToLaunch -> {
+                binding.pbLoading.visibility = View.GONE
+                openKakaoPayApp(state.redirectUrl)
+                viewModel.onKakaoAppLaunched()
+            }
+
+            KakaoPayState.WaitingForCallback -> {
+                binding.pbLoading.visibility = View.GONE
+                binding.btnSubscribe.isEnabled = false
+                binding.btnSubscribe.text = "결제 진행 중..."
+            }
+
+            KakaoPayState.Approving -> {
+                binding.pbLoading.visibility = View.VISIBLE
+                binding.btnSubscribe.isEnabled = false
+                binding.btnSubscribe.text = "결제 확인 중..."
+            }
+
+            KakaoPayState.Success -> {
+                binding.pbLoading.visibility = View.GONE
+                binding.btnSubscribe.isEnabled = false
+                binding.btnSubscribe.text = "구독 완료"
+                Snackbar.make(binding.root, "구독이 시작되었어요", Snackbar.LENGTH_SHORT).show()
+                binding.root.postDelayed({
+                    viewModel.resetKakaoState()
+                    finish()
+                }, 1500)
+            }
+
+            KakaoPayState.Cancelled -> {
+                binding.pbLoading.visibility = View.GONE
+                binding.btnSubscribe.isEnabled = true
+                binding.btnSubscribe.text = "구독 시작하기"
+                Snackbar.make(binding.root, "결제가 취소되었어요", Snackbar.LENGTH_SHORT).show()
+                viewModel.resetKakaoState()
+            }
+
+            is KakaoPayState.Error -> {
+                binding.pbLoading.visibility = View.GONE
+                binding.btnSubscribe.isEnabled = true
+                binding.btnSubscribe.text = "구독 시작하기"
+                Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG).show()
+                viewModel.resetKakaoState()
+            }
+        }
+    }
+
+    private fun openKakaoPayApp(url: String) {
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    }
+
+    private fun showSnackbar(msg: String) {
+        Snackbar.make(binding.root, msg, Snackbar.LENGTH_SHORT).show()
     }
 
     private fun applyPrices(products: List<ProductDetails>) {

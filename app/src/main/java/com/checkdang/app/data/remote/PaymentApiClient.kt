@@ -24,9 +24,40 @@ data class VerifyResult(
     val message: String?
 )
 
+data class KakaoReadyResult(
+    val nextRedirectAppUrl: String,
+    val orderId: String
+)
+
+data class KakaoApproveResult(
+    val isPremium: Boolean
+)
+
 object PaymentApiClient {
 
     private const val BASE_URL = "https://api.checkdang.xyz"
+
+    suspend fun kakaoReady(subscriptionId: String): KakaoReadyResult = withContext(Dispatchers.IO) {
+        val body = JSONObject().apply { put("subscriptionId", subscriptionId) }
+        val text = post("/api/payment/kakao/ready", body)
+        val root = JSONObject(text)
+        val data = root.optJSONObject("data") ?: root
+        KakaoReadyResult(
+            nextRedirectAppUrl = data.getString("nextRedirectAppUrl"),
+            orderId            = data.getString("orderId")
+        )
+    }
+
+    suspend fun kakaoApprove(orderId: String, pgToken: String): KakaoApproveResult = withContext(Dispatchers.IO) {
+        val body = JSONObject().apply {
+            put("orderId", orderId)
+            put("pgToken", pgToken)
+        }
+        val text = post("/api/payment/kakao/approve", body)
+        val root = JSONObject(text)
+        val data = root.optJSONObject("data") ?: root
+        KakaoApproveResult(isPremium = data.optBoolean("isPremium", false))
+    }
 
     suspend fun verifyGooglePurchase(
         purchaseToken: String,

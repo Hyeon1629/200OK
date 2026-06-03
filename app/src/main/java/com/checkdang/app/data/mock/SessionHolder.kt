@@ -41,6 +41,9 @@ object SessionHolder {
     // 보호 API 호출 시 `X-Guest-Identity-Id` 헤더로 백엔드 `GuestIdentityFilter` 가 검증.
     var guestIdentityId: String? = null
 
+    // 카카오페이 ready → approve 간 orderId 임시 보관 (메모리만 사용)
+    var kakaoPendingOrderId: String? = null
+
     fun toggleTierForDemo() {
         tier = if (tier == UserTier.PAID) UserTier.FREE else UserTier.PAID
     }
@@ -57,6 +60,7 @@ object SessionHolder {
         refreshToken   = null
         userId         = null
         guestIdentityId = null
+        kakaoPendingOrderId = null
     }
 
     val dummyProfile = PatientProfile(
