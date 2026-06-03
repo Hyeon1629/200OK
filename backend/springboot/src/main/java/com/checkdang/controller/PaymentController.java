@@ -13,10 +13,13 @@ import com.checkdang.service.GooglePlayBillingService;
 import com.checkdang.service.KakaoPayService;
 import com.checkdang.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
 
 import java.util.List;
 
@@ -47,16 +50,26 @@ public class PaymentController {
                 kakaoPayService.approve(userService.resolveEmail(jwt), request)));
     }
 
-    // 결제 취소: 카카오 결제 페이지에서 취소 시 리다이렉트
-    @GetMapping("/kakao/cancel")
-    public ResponseEntity<ApiResponse<Void>> kakaoCancel() {
-        return ResponseEntity.ok(ApiResponse.error("결제가 취소되었습니다."));
+    // 카카오페이 → 백엔드 콜백 → 앱 딥링크 redirect
+    @GetMapping("/kakao/callback/success")
+    public ResponseEntity<Void> kakaoCallbackSuccess(@RequestParam("pg_token") String pgToken) {
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create("checkdang://payment/success?pg_token=" + pgToken))
+                .build();
     }
 
-    // 결제 실패: 카카오 결제 실패 시 리다이렉트
-    @GetMapping("/kakao/fail")
-    public ResponseEntity<ApiResponse<Void>> kakaoFail() {
-        return ResponseEntity.ok(ApiResponse.error("결제에 실패했습니다."));
+    @GetMapping("/kakao/callback/cancel")
+    public ResponseEntity<Void> kakaoCallbackCancel() {
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create("checkdang://payment/cancel"))
+                .build();
+    }
+
+    @GetMapping("/kakao/callback/fail")
+    public ResponseEntity<Void> kakaoCallbackFail() {
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create("checkdang://payment/fail"))
+                .build();
     }
 
     // 결제 이력 조회

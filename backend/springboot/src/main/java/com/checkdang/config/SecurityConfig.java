@@ -37,8 +37,9 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
-                                "/api/payment/kakao/cancel",
-                                "/api/payment/kakao/fail",
+                                "/api/payment/kakao/callback/success",
+                                "/api/payment/kakao/callback/cancel",
+                                "/api/payment/kakao/callback/fail",
                                 "/api/payment/google/rtdn"
                         ).permitAll()
                         .requestMatchers("/api/home/**")
