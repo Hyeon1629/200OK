@@ -69,7 +69,7 @@ public class UserService {
         return localUsers.size();
     }
 
-    private String resolveEmail(Jwt jwt) {
+    public String resolveEmail(Jwt jwt) {
         String email = jwt.getClaimAsString("email");
         if (email != null && !email.isBlank()) return email;
         throw new IllegalArgumentException("Cognito 토큰에 email 클레임이 없습니다.");
