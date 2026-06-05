@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from typing import Any, Optional
 
 import httpx
@@ -8,6 +8,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from app.auth import verify_token
+from app.services import gemini
 from app.services.dynamodb import get_items_by_user, save_item
 from app.services.gemini import analyze_diet, analyze_health_report
 
@@ -180,6 +181,46 @@ async def get_latest_prediction(user_id: str, date: str):
     return _normalize_item(items[0])
 
 
-@router.post("/ai/analyze/pain/{user_id}", dependencies=[Depends(verify_token)])
-async def analyze_pain(user_id: str):
-    pass
+class PainAnalyzeRequest(BaseModel):
+    """Spring PainAnalysisService 가 보내는 페이로드.
+
+    혈당(glucose)은 여기 없고, FastAPI가 user_id+date로 DynamoDB에서 직접 조회해 합친다.
+    """
+
+    user_id: str
+    date: str  # "YYYY-MM-DD" (통증 발생일)
+    pain: dict[str, Any]
+    pain_history: list[dict[str, Any]] = Field(default_factory=list)  # 최근 1주일 같은 부위
+    diets: list[dict[str, Any]] = Field(default_factory=list)
+    exercises: list[dict[str, Any]] = Field(default_factory=list)
+    sleeps: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class PainAnalyzeResponse(BaseModel):
+    ai_cause: str
+    ai_first_aid: str
+
+
+@router.post("/analyze/pain", response_model=PainAnalyzeResponse)
+def post_analyze_pain(request: PainAnalyzeRequest) -> PainAnalyzeResponse:
+    """통증 AI 분석 — Spring 내부 위임 전용(무인증, /analyze/* 정책).
+
+    혈당(DynamoDB blood_glucose_record)을 전날~당일 자체 조회해 payload에 합친 뒤
+    Gemini(gemini.analyze_pain)로 원인분석/조치를 생성한다.
+    프롬프트 본문(gemini.analyze_pain)은 AI 담당 deliverable.
+    """
+    # 혈당 전날~당일 자체 조회
+    target = date.fromisoformat(request.date)
+    glucose: list[dict[str, Any]] = []
+    for d in (target - timedelta(days=1), target):
+        glucose += get_items_by_user("blood_glucose_record", request.user_id, d.isoformat())
+
+    payload = request.model_dump()
+    payload["glucose"] = glucose
+
+    # gemini.analyze_pain(payload) -> {"ai_cause", "ai_first_aid"} (AI 담당 구현)
+    result = _wrap_gemini_call(gemini.analyze_pain, payload)
+    return PainAnalyzeResponse(
+        ai_cause=str(result.get("ai_cause", "")),
+        ai_first_aid=str(result.get("ai_first_aid", "")),
+    )
