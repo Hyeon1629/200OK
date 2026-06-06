@@ -51,6 +51,16 @@ public class PainAnalysisService {
             throw new IllegalArgumentException("본인의 통증 기록만 분석할 수 있습니다.");
         }
 
+        // 캐시: 이미 분석된 통증이면 저장분 반환 (Gemini 재호출 안 함 — 비용 절감)
+        if (pain.getAiCause() != null && !pain.getAiCause().isBlank()
+                && pain.getAiFirstAid() != null && !pain.getAiFirstAid().isBlank()) {
+            return PainAnalysisResponse.builder()
+                    .painRecordId(pain.getId())
+                    .aiCause(pain.getAiCause())
+                    .aiFirstAid(pain.getAiFirstAid())
+                    .build();
+        }
+
         // 날짜 범위: 식단/운동/수면/혈당 = 전날 00:00 ~ 당일 23:59
         LocalDate painDate = pain.getRecordedAt().toLocalDate();
         LocalDateTime from = painDate.minusDays(1).atStartOfDay();
