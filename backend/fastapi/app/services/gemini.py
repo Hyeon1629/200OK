@@ -234,7 +234,12 @@ def analyze_health_report(data: dict[str, Any]) -> str:
 
 
 def analyze_pain(payload: dict[str, Any]) -> dict[str, str]:
-    """통증 + 생활데이터를 받아 원인분석/조치를 반환한다."""
+    """통증 + 생활데이터를 받아 원인분석/조치를 반환한다.
+
+    gemini-2.5-flash는 thinking 모델이라 max_output_tokens가 thinking+출력 합산 예산으로 동작한다.
+    payload가 크면 thinking 토큰(실측 ~1.2k~1.7k)이 예산을 잠식해 출력 JSON이 잘려(finish_reason=
+    MAX_TOKENS) 파싱이 실패하므로, thinking이 동적으로 늘어도 출력이 잘리지 않게 8000으로 둔다.
+    """
     prompt = _build_pain_prompt(payload)
-    text = _generate_text(prompt, max_output_tokens=1500)
+    text = _generate_text(prompt, max_output_tokens=8000)
     return _parse_pain_result(text)
