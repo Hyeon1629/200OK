@@ -4,6 +4,25 @@
 
 ---
 
+## [2026-06-06] 홈 혈당·라이프스타일·주간차트 실데이터 연결 (placeholder 해소)
+
+### 배경
+홈 요약 카드들이 placeholder(`getGlucoseSummary()`/`getLifestyleSummary()`=null, `getWeeklyGlucose()`=empty)로 비어 있던 기존 미배선 상태. 데이터 소스는 이미 존재(혈당=`MockDataProvider.recordsFlow`, 라이프스타일=`HealthRepository`)했으나 홈이 연결을 안 하고 있었음 → 각 탭과 동일 소스에 연결.
+
+### 작업 내용
+| 파일 | 변경 |
+|------|------|
+| `ui/home/HomeViewModel.kt` | 혈당 요약/주간(7일 일별평균)을 `recordsFlow` 에서 파생(StateFlow). 라이프스타일은 `HealthRepository.get{Exercise,Meal,Sleep}Summary()` async 로드(`loadLifestyle()`). `buildGlucoseSummary`/`buildWeekly`/`labelFor`/`startOfDay` 헬퍼 |
+| `ui/home/HomeFragment.kt` | `.value` 1회 읽기 → flow 4종(혈당/라이프스타일/주간/인슐린) `repeatOnLifecycle` 구독. 진입 시 `loadLifestyle()` 재로드. 주간차트는 데이터 없는 날(0f) 점 제외 |
+
+### 주요 결정 / 메모
+- **혈당/주간/인슐린 = 로컬 실데이터 즉시 반영**(입력하면 홈에 최신값·오늘 횟수·평균·7일 그래프 갱신).
+- **라이프스타일 = 현재 HealthRepository 소스 반영** — Health Connect 연결 전엔 `MockHealthDataSource` 샘플(45/60분·1640kcal·7.2h), 라이프스타일 탭에서 HC 연결 후 진입하면 실데이터. (싱글톤 소스라 탭 전환으로 전파)
+- 혈당 탭/라이프스타일 탭 로직 불변(같은 소스 공유만). 회귀 위험 낮음.
+- 빌드 검증: `assembleDebug` BUILD SUCCESSFUL.
+
+---
+
 ## [2026-06-06] 홈 "오늘 인슐린" 요약 카드 추가
 
 ### 배경
