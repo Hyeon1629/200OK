@@ -7,6 +7,7 @@ import com.checkdang.app.data.health.HealthRepository
 import com.checkdang.app.data.mock.MockDataProvider
 import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.model.GlucoseRecord
+import com.checkdang.app.data.model.InsulinRecord
 import com.checkdang.app.data.remote.BloodGlucosePrediction
 import com.checkdang.app.data.remote.BloodGlucosePredictionApiClient
 import com.checkdang.app.data.remote.GlucoseSyncStore
@@ -24,6 +25,12 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 data class WeeklyStats(val average: Int, val max: Int, val min: Int)
+
+/** "기록" 타임라인 항목 — 혈당과 인슐린을 시간순으로 함께 표시하기 위한 합집합 타입. */
+sealed class TimelineEntry(val time: Long) {
+    data class Glucose(val record: GlucoseRecord) : TimelineEntry(record.measuredAt)
+    data class Insulin(val record: InsulinRecord) : TimelineEntry(record.injectedAt)
+}
 
 /** ML 혈당 예측 화면 상태. */
 sealed interface PredictionUiState {
@@ -50,6 +57,17 @@ class GlucoseViewModel : ViewModel() {
         MockDataProvider.recordsFlow, _samsungRecords
     ) { mock, samsung ->
         (mock + samsung).distinctBy { it.id }.sortedByDescending { it.measuredAt }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /**
+     * "기록" 탭 타임라인 = 혈당(직접 입력 + 삼성헬스) + 인슐린(직접 입력)을 시간 역순으로 병합.
+     * 혈당 전용 [records] 는 PDF/차트/통계가 사용하므로 그대로 두고, 표시용으로만 합친다.
+     */
+    val timeline: StateFlow<List<TimelineEntry>> = combine(
+        records, MockDataProvider.insulinRecordsFlow
+    ) { glucose, insulin ->
+        (glucose.map { TimelineEntry.Glucose(it) } + insulin.map { TimelineEntry.Insulin(it) })
+            .sortedByDescending { it.time }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     /** 차트 기간 필터: 7 / 30 / 90일 */

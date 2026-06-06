@@ -20,6 +20,7 @@ import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.databinding.FragmentGlucoseBinding
 import com.checkdang.app.ui.glucose.export.GlucosePdfExporter
 import com.checkdang.app.ui.glucose.input.GlucoseInputBottomSheet
+import com.checkdang.app.ui.glucose.input.InsulinInputBottomSheet
 import com.checkdang.app.util.GlucoseAlertNotifier
 import com.checkdang.app.util.GlucoseEvaluator
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -78,21 +79,45 @@ class GlucoseFragment : Fragment() {
     private fun setupClickListeners() {
         binding.btnPdf.setOnClickListener { showExportChooser() }
 
-        binding.fabAdd.setOnClickListener {
-            // 위험 범위 입력 시 로컬 알림을 띄울 수 있도록, 입력 전에 알림 권한을 확보해둔다.
-            ensureNotificationPermission()
-            val sheet = GlucoseInputBottomSheet()
-            sheet.onRecordSaved = { record ->
-                viewModel.pushManualRecord(record)
-                // 저/고혈당(DANGER) 이면 본인 기기 로컬 알림(수동 입력 1건 한정).
-                GlucoseAlertNotifier.notifyIfNeeded(requireContext(), record)
-                val statusColor = GlucoseEvaluator.getColor(record.status, requireContext())
-                Snackbar.make(binding.root, "기록이 저장되었어요", Snackbar.LENGTH_SHORT)
-                    .setBackgroundTint(statusColor)
-                    .show()
+        binding.fabAdd.setOnClickListener { showAddChooser() }
+    }
+
+    /** FAB → 혈당 / 인슐린 입력 선택. */
+    private fun showAddChooser() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("무엇을 기록할까요?")
+            .setItems(arrayOf("혈당 입력", "인슐린 입력")) { _, which ->
+                when (which) {
+                    0 -> openGlucoseInput()
+                    1 -> openInsulinInput()
+                }
             }
-            sheet.show(childFragmentManager, GlucoseInputBottomSheet.TAG)
+            .show()
+    }
+
+    private fun openGlucoseInput() {
+        // 위험 범위 입력 시 로컬 알림을 띄울 수 있도록, 입력 전에 알림 권한을 확보해둔다.
+        ensureNotificationPermission()
+        val sheet = GlucoseInputBottomSheet()
+        sheet.onRecordSaved = { record ->
+            viewModel.pushManualRecord(record)
+            // 저/고혈당(DANGER) 이면 본인 기기 로컬 알림(수동 입력 1건 한정).
+            GlucoseAlertNotifier.notifyIfNeeded(requireContext(), record)
+            val statusColor = GlucoseEvaluator.getColor(record.status, requireContext())
+            Snackbar.make(binding.root, "기록이 저장되었어요", Snackbar.LENGTH_SHORT)
+                .setBackgroundTint(statusColor)
+                .show()
         }
+        sheet.show(childFragmentManager, GlucoseInputBottomSheet.TAG)
+    }
+
+    private fun openInsulinInput() {
+        val sheet = InsulinInputBottomSheet()
+        sheet.onRecordSaved = { record ->
+            Snackbar.make(binding.root, "인슐린 ${record.unitsLabel}U 기록이 저장되었어요", Snackbar.LENGTH_SHORT)
+                .show()
+        }
+        sheet.show(childFragmentManager, InsulinInputBottomSheet.TAG)
     }
 
     /** API 33+ 에서 알림 권한이 없으면 1회 요청. 그 이하 버전은 권한 불요. */

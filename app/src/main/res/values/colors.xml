@@ -20,6 +20,7 @@
     <color name="status_normal">#4CAF50</color>
     <color name="status_warning">#FF9800</color>
     <color name="status_danger">#F44336</color>
+    <color name="insulin_accent">#3F51B5</color>
 
     <!-- Status Background (alpha ~15%) -->
     <color name="status_normal_bg">#264CAF50</color>

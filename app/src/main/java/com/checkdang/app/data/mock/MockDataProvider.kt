@@ -8,6 +8,8 @@ import com.checkdang.app.data.model.ExerciseSummary
 import com.checkdang.app.data.model.FamilyMember
 import com.checkdang.app.data.model.GlucoseRecord
 import com.checkdang.app.data.model.GlucoseSummary
+import com.checkdang.app.data.model.InsulinRecord
+import com.checkdang.app.data.model.InsulinType
 import com.checkdang.app.data.model.LifestyleSummary
 import com.checkdang.app.data.model.MealSummary
 import com.checkdang.app.data.model.PainRecord
@@ -31,6 +33,7 @@ object MockDataProvider {
     private const val TAG = "MockDataProvider"
     private const val PREFS_NAME = "mock_data_store"
     private const val KEY_GLUCOSE_RECORDS = "glucose_records"
+    private const val KEY_INSULIN_RECORDS = "insulin_records"
     private const val KEY_PAIN_RECORDS    = "pain_records"
 
     private var prefs: SharedPreferences? = null
@@ -43,6 +46,7 @@ object MockDataProvider {
         prefs = context.applicationContext
             .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         restoreGlucose()
+        restoreInsulin()
         restorePain()
     }
 
@@ -103,6 +107,58 @@ object MockDataProvider {
             })
         }
         store.edit().putString(KEY_GLUCOSE_RECORDS, arr.toString()).apply()
+    }
+
+    // ── Insulin Records ──────────────────────────────────────────────────────
+
+    private val _insulinRecords: MutableList<InsulinRecord> = mutableListOf()
+
+    private val _insulinRecordsFlow = MutableStateFlow<List<InsulinRecord>>(
+        _insulinRecords.sortedByDescending { it.injectedAt }
+    )
+    val insulinRecordsFlow: StateFlow<List<InsulinRecord>> = _insulinRecordsFlow.asStateFlow()
+
+    fun addInsulinRecord(record: InsulinRecord) {
+        _insulinRecords.add(record)
+        _insulinRecordsFlow.value = _insulinRecords.sortedByDescending { it.injectedAt }
+        persistInsulin()
+    }
+
+    private fun restoreInsulin() {
+        val raw = prefs?.getString(KEY_INSULIN_RECORDS, null) ?: return
+        runCatching {
+            val arr = JSONArray(raw)
+            val list = mutableListOf<InsulinRecord>()
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                list += InsulinRecord(
+                    id         = o.getString("id"),
+                    units      = o.getDouble("units").toFloat(),
+                    type       = InsulinType.valueOf(o.getString("type")),
+                    injectedAt = o.getLong("injectedAt"),
+                    memo       = if (o.isNull("memo")) null else o.optString("memo")
+                )
+            }
+            _insulinRecords.clear()
+            _insulinRecords.addAll(list)
+            _insulinRecordsFlow.value = _insulinRecords.sortedByDescending { it.injectedAt }
+            Log.i(TAG, "restoreInsulin: loaded ${list.size} records")
+        }.onFailure { Log.w(TAG, "restoreInsulin failed: ${it.message}") }
+    }
+
+    private fun persistInsulin() {
+        val store = prefs ?: return
+        val arr = JSONArray()
+        _insulinRecords.forEach { r ->
+            arr.put(JSONObject().apply {
+                put("id",         r.id)
+                put("units",      r.units.toDouble())
+                put("type",       r.type.name)
+                put("injectedAt", r.injectedAt)
+                if (r.memo != null) put("memo", r.memo) else put("memo", JSONObject.NULL)
+            })
+        }
+        store.edit().putString(KEY_INSULIN_RECORDS, arr.toString()).apply()
     }
 
     // ── Summary / Lifestyle ──────────────────────────────────────────────────
@@ -189,11 +245,14 @@ object MockDataProvider {
      */
     fun clearAllUserData() {
         _records.clear()
+        _insulinRecords.clear()
         _painRecords.clear()
         _recordsFlow.value = emptyList()
+        _insulinRecordsFlow.value = emptyList()
         _painRecordsFlow.value = emptyList()
         prefs?.edit()
             ?.remove(KEY_GLUCOSE_RECORDS)
+            ?.remove(KEY_INSULIN_RECORDS)
             ?.remove(KEY_PAIN_RECORDS)
             ?.apply()
     }

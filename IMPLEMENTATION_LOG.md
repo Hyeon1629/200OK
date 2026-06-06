@@ -4,6 +4,33 @@
 
 ---
 
+## [2026-06-06] 인슐린 수동 입력 최소 기능 추가 (혈당 기록 타임라인에 병행)
+
+### 배경
+시연 항목에 "인슐린 수동 입력→저장" 이 필요한데 앱에 인슐린 로직이 **전무**(GlucoseRecord에 필드 없음, 코드 전역 검색 0건)했다. 혈당 입력 패턴을 그대로 미러링해 최소 기능을 추가.
+
+### 설계
+- **혈당 `records` 흐름은 불변** — PDF/차트/통계가 의존하므로 건드리지 않고, 표시용 **타임라인만 병합**(혈당+인슐린 시간순). 인슐린은 백엔드 push 안 함(인슐린 도메인 미정) — MockDataProvider SharedPreferences 로컬 영속만.
+
+### 작업 내용
+| 파일 | 변경 |
+|------|------|
+| `data/model/InsulinRecord.kt` 🆕 | `InsulinRecord(units, type, injectedAt, memo)` + `InsulinType`(속효성/지속형/혼합형/기타) + `unitsLabel`(.0 제거) |
+| `data/mock/MockDataProvider.kt` | 인슐린 저장(`insulinRecordsFlow`/`addInsulinRecord`/`restoreInsulin`/`persistInsulin`, `KEY_INSULIN_RECORDS`) + init/clear 반영 |
+| `ui/glucose/GlucoseViewModel.kt` | `TimelineEntry`(Glucose/Insulin) sealed + `timeline` StateFlow(records ⊕ 인슐린, 시간 역순) |
+| `ui/glucose/list/GlucoseRecordAdapter.kt` | `ListItem` 에 GlucoseItem/InsulinItem 분리, `buildListItems(List<TimelineEntry>)`, 뷰타입 3종 + InsulinViewHolder |
+| `ui/glucose/list/GlucoseListFragment.kt` | `records` → `timeline` 구독 |
+| `ui/glucose/GlucoseFragment.kt` | FAB → 선택 다이얼로그(혈당/인슐린). 인슐린 저장 시 스낵바 |
+| `ui/glucose/input/InsulinInputBottomSheet.kt` 🆕 + `res/layout/bottom_sheet_insulin_input.xml` 🆕 | 주입량(U, 0.5~100)·종류 칩·시각·메모 입력 → 저장 |
+| `res/layout/item_insulin_record.xml` 🆕 + `colors.xml` | 인슐린 리스트 아이템(💉, 인디고 `insulin_accent`) |
+
+### 주요 결정 / 메모
+- 혈당과 한 "기록" 탭에 시간순 병합 → 시연 시 혈당·인슐린이 같은 타임라인에 쌓이는 모습. 혈당은 상태색/칩, 인슐린은 인디고 바 + "N U" 로 시각 구분.
+- 인슐린은 알림/예측/PDF/백엔드 동기화 대상 아님(최소 기능). 추후 백엔드 인슐린 도메인 생기면 동기화 추가.
+- 빌드 검증: `assembleDebug` BUILD SUCCESSFUL(APK 패키징까지).
+
+---
+
 ## [2026-06-06] 통증 AI 분석 실연동 (Mock → 백엔드 2단계 호출, AI팀 Gemini PR 계약 반영)
 
 ### 배경
