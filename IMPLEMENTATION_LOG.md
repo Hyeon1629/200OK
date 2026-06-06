@@ -4,6 +4,25 @@
 
 ---
 
+## [2026-06-06] 상태바 겹침 수정 — 전 화면 fitsSystemWindows 인셋 처리
+
+### 배경
+온보딩 화면 상단 배너가 상태바(시계·아이콘)와 겹침(시연 스크린샷). 원인: 기기(One UI/Android 15+)가 엣지투엣지로 그리는데 액티비티 루트가 시스템바 인셋을 처리하지 않음(테마 `statusBarColor=white` 무시됨). 메인 포함 전반 동일 문제.
+
+### 작업 내용
+| 파일 | 변경 |
+|------|------|
+| `activity_main.xml` | 루트에 `fitsSystemWindows="true"` + 배경 white → 홈 등 BottomNav 5개 탭 전부 상태바 아래로, BottomNav 는 내비바 위로 |
+| `activity_onboarding.xml` | 루트에 `fitsSystemWindows="true"` + 배경(배너 겹침 해소) |
+| 툴바/진입 화면 12종 | `activity_ai_analysis / comprehensive_report / exercise_detail / family / legal_document / login / meal_detail / notification_settings / profile / sleep_detail / subscription / terms` 루트에 `fitsSystemWindows="true"` 추가 |
+
+### 주요 결정 / 메모
+- `fitsSystemWindows="true"` 는 인셋 없으면 패딩 0이라 무해, 엣지투엣지면 상태바/내비바 높이만큼 패딩 → 상태바 겹침 해소 + 하단 버튼·BottomNav 내비바 위로.
+- 미적용: `activity_splash`(풀블리드 의도), `activity_design_system`(개발용).
+- 빌드 검증: `assembleDebug` BUILD SUCCESSFUL.
+
+---
+
 ## [2026-06-06] 홈 혈당·라이프스타일·주간차트 실데이터 연결 (placeholder 해소)
 
 ### 배경

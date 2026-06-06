@@ -4,6 +4,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background_primary"
+    android:fitsSystemWindows="true"
     android:orientation="vertical">
 
     <!-- 게스트 안내 배너 (비회원 진입 시만 노출) -->
