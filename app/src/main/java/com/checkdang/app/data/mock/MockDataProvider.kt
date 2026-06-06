@@ -3,10 +3,7 @@ package com.checkdang.app.data.mock
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import com.checkdang.app.data.model.AIAnalysisResult
 import com.checkdang.app.data.model.BodyPart
-import com.checkdang.app.data.model.Correlation
-import com.checkdang.app.data.model.CorrelationLevel
 import com.checkdang.app.data.model.ExerciseSummary
 import com.checkdang.app.data.model.FamilyMember
 import com.checkdang.app.data.model.GlucoseRecord
@@ -14,7 +11,6 @@ import com.checkdang.app.data.model.GlucoseSummary
 import com.checkdang.app.data.model.LifestyleSummary
 import com.checkdang.app.data.model.MealSummary
 import com.checkdang.app.data.model.PainRecord
-import com.checkdang.app.data.model.PainTaxonomy
 import com.checkdang.app.data.model.SleepSummary
 import com.checkdang.app.util.MealTiming
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -200,55 +196,6 @@ object MockDataProvider {
             ?.remove(KEY_GLUCOSE_RECORDS)
             ?.remove(KEY_PAIN_RECORDS)
             ?.apply()
-    }
-
-    // TODO(backend): 실제 AI 분석 API로 교체 — 현재는 부위/유형 기반 규칙 기반 목 분석
-    fun analyzePainMock(record: PainRecord): AIAnalysisResult {
-        val partLabel = record.bodyPart.label
-        val correlations = buildCorrelations(record)
-        return AIAnalysisResult(
-            painRecord     = record,
-            summary        = "${partLabel} 통증 패턴 분석 결과, 최근 혈당 변동 및 수면 부족과의 연관성이 감지되었습니다. " +
-                             "통증 강도 ${record.intensity}/5 수준으로 지속적인 모니터링이 권장됩니다.",
-            correlations   = correlations,
-            recommendation = "규칙적인 스트레칭과 충분한 수면(7~8시간)을 유지하세요. " +
-                             "혈당을 안정적으로 관리하면 신경 관련 통증 완화에 도움이 될 수 있습니다. " +
-                             "통증이 지속되거나 악화될 경우 전문의 상담을 권장합니다."
-        )
-    }
-
-    private fun buildCorrelations(record: PainRecord): List<Correlation> {
-        val list = mutableListOf<Correlation>()
-        // Glucose correlation — always include
-        list += Correlation(
-            factor      = "혈당 변동성",
-            level       = if (record.intensity >= 4) CorrelationLevel.HIGH else CorrelationLevel.MEDIUM,
-            description = "최근 7일간 혈당 변동폭이 크게 나타났습니다. 고혈당 상태는 신경 염증을 악화시킬 수 있습니다."
-        )
-        // Sleep correlation
-        list += Correlation(
-            factor      = "수면 부족",
-            level       = CorrelationLevel.MEDIUM,
-            description = "수면 시간이 권장 기준(7~8시간)보다 낮은 날과 통증 기록이 겹치는 경향이 있습니다."
-        )
-        // Exercise correlation depending on body part
-        if (record.bodyPart in listOf(BodyPart.LOWER_BACK, BodyPart.LEFT_KNEE, BodyPart.RIGHT_KNEE,
-                BodyPart.LEFT_THIGH_FRONT, BodyPart.RIGHT_THIGH_FRONT)) {
-            list += Correlation(
-                factor      = "운동 강도",
-                level       = CorrelationLevel.LOW,
-                description = "기록된 운동 세션과 해당 부위 통증 사이의 낮은 상관관계가 발견되었습니다."
-            )
-        }
-        // 통증 성질 기반 상관관계 — 신경성 태그가 있으면 신경 민감도 추가
-        if (record.qualityTags.any { it in PainTaxonomy.NEURAL_TAGS }) {
-            list += Correlation(
-                factor      = "신경 민감도",
-                level       = CorrelationLevel.HIGH,
-                description = "저림·타는 느낌·방사통 등은 신경 관련 증상일 수 있으며, 혈당 조절과 밀접한 연관이 있습니다."
-            )
-        }
-        return list
     }
 
     // ── Family Members ───────────────────────────────────────────────────────
