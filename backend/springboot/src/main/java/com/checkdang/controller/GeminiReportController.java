@@ -59,16 +59,7 @@ public class GeminiReportController {
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
         String userId = String.valueOf(user.getId());
 
-        Optional<String> cached = aiAnalysisService.findCached(
-                userId, AiAnalysis.AnalysisType.HEALTH_REPORT, reportFrom, reportTo);
-        if (cached.isPresent()) {
-            return ResponseEntity.ok(new AiHealthReportResponse(
-                    reportFrom, reportTo,
-                    new AiReportSourceCount(0, 0, 0),
-                    cached.get()
-            ));
-        }
-
+        // 1) 소스 카운트 먼저 (싼 DB 조회 — Gemini 아님)
         List<Diet> diets = dietRepository
                 .findByUserIdAndRecordedAtBetweenOrderByRecordedAtDesc(userId, reportFrom, reportTo)
                 .stream()
@@ -85,24 +76,33 @@ public class GeminiReportController {
                 .limit(MAX_ROWS_PER_SECTION)
                 .toList();
 
-        // 식단·수면·운동 3종 모두 0건이면 Gemini 호출 없이 안내 리포트 반환 (불필요한 호출·비용 방지)
+        AiReportSourceCount sourceCount =
+                new AiReportSourceCount(diets.size(), sleeps.size(), exercises.size());
+
+        // 2) 3종 모두 0건이면 캐시·Gemini 없이 안내 (옛 리포트가 0/0/0으로 새어 나가는 것 방지)
         if (diets.isEmpty() && sleeps.isEmpty() && exercises.isEmpty()) {
             return ResponseEntity.ok(new AiHealthReportResponse(
-                    reportFrom, reportTo,
-                    new AiReportSourceCount(0, 0, 0),
+                    reportFrom, reportTo, sourceCount,
                     "## 종합 리포트\n\n아직 기록된 데이터가 없어요. 식단·운동·수면을 먼저 기록하면 AI가 분석해 드릴게요."
             ));
         }
 
+        // 3) 데이터가 있을 때만 캐시 조회 — HIT 시에도 실제 sourceCount 반환
+        Optional<String> cached = aiAnalysisService.findCached(
+                userId, AiAnalysis.AnalysisType.HEALTH_REPORT, reportFrom, reportTo);
+        if (cached.isPresent()) {
+            return ResponseEntity.ok(new AiHealthReportResponse(
+                    reportFrom, reportTo, sourceCount, cached.get()
+            ));
+        }
+
+        // 4) MISS → Gemini 생성 + 저장
         Map<String, Object> reportData = buildReportData(user, reportFrom, reportTo, diets, sleeps, exercises);
         String report = aiAnalysisClient.analyzeHealthReport(reportData);
         aiAnalysisService.save(userId, AiAnalysis.AnalysisType.HEALTH_REPORT, reportFrom, reportTo, report);
 
         return ResponseEntity.ok(new AiHealthReportResponse(
-                reportFrom,
-                reportTo,
-                new AiReportSourceCount(diets.size(), sleeps.size(), exercises.size()),
-                report
+                reportFrom, reportTo, sourceCount, report
         ));
     }
 
