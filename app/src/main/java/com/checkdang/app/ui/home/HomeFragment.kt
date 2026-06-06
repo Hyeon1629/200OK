@@ -9,6 +9,9 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.checkdang.app.R
 import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.model.GlucoseSummary
@@ -25,6 +28,7 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IFillFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -47,7 +51,28 @@ class HomeFragment : Fragment() {
         setupGlucoseCard(viewModel.glucoseSummary.value)
         setupLifestyleSection(viewModel.lifestyleSummary.value)
         setupWeeklyChart(viewModel.weeklyGlucose.value)
+        observeInsulin()
         setupClickListeners()
+    }
+
+    // ── 오늘 인슐린 요약 ────────────────────────────────────────────────────
+    private fun observeInsulin() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.todayInsulin.collect { s ->
+                    if (s.count == 0) {
+                        binding.tvInsulinTotal.text = "0 U"
+                        binding.tvInsulinSub.text = "오늘 기록 없음"
+                    } else {
+                        val total = if (s.totalUnits % 1f == 0f) s.totalUnits.toInt().toString()
+                                    else s.totalUnits.toString()
+                        binding.tvInsulinTotal.text = "$total U"
+                        binding.tvInsulinSub.text =
+                            "${s.count}회" + (s.lastLabel?.let { " · 최근 $it" } ?: "")
+                    }
+                }
+            }
+        }
     }
 
     // ── 헤더 ──────────────────────────────────────────────────────────────
@@ -209,6 +234,9 @@ class HomeFragment : Fragment() {
             startActivity(android.content.Intent(requireContext(), ComprehensiveReportActivity::class.java))
         }
         binding.cardGlucose.setOnClickListener {
+            bottomNav.selectedItemId = R.id.nav_glucose
+        }
+        binding.cardInsulin.setOnClickListener {
             bottomNav.selectedItemId = R.id.nav_glucose
         }
         binding.btnAddGlucose.setOnClickListener {

@@ -248,6 +248,63 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- ── 오늘 인슐린 요약 카드 ── -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_insulin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="@color/background_primary"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="18dp">
+
+                <View
+                    android:layout_width="4dp"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="12dp"
+                    android:background="@color/insulin_accent" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="💉 오늘 인슐린"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Body2"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/tv_insulin_sub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                        android:textColor="@color/text_secondary"
+                        tools:text="2회 · 최근 속효성 6U" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_insulin_total"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.CheckDang.Title2"
+                    android:textColor="@color/insulin_accent"
+                    tools:text="20 U" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- ── 라이프스타일 섹션 타이틀 ── -->
         <TextView
             android:layout_width="wrap_content"

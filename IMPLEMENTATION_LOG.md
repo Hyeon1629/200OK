@@ -4,6 +4,25 @@
 
 ---
 
+## [2026-06-06] 홈 "오늘 인슐린" 요약 카드 추가
+
+### 배경
+인슐린 최소 기능에 이어, 홈에서 오늘 주입 합계를 한눈에 보이도록 노출 요청. 확인 결과 홈 요약 카드(혈당/라이프스타일/주간차트)는 현재 모두 빈 placeholder(`getGlucoseSummary()` 등 null/empty — 기존 미배선). → 인슐린은 기존 카드에 얹지 않고 **실데이터로 동작하는 독립 카드**로 추가.
+
+### 작업 내용
+| 파일 | 변경 |
+|------|------|
+| `res/layout/fragment_home.xml` | 메인 혈당 카드 아래 `card_insulin` 추가(💉 오늘 인슐린 / 횟수·최근 / 합계 U, 인디고 액센트) |
+| `ui/home/HomeViewModel.kt` | `InsulinDaySummary` + `todayInsulin` StateFlow(`insulinRecordsFlow` → 오늘 합계/횟수/최근 1건) |
+| `ui/home/HomeFragment.kt` | `todayInsulin` 라이브 구독 바인딩(입력 즉시 반영), 카드 탭 → 혈당 탭 이동 |
+
+### 주요 결정 / 메모
+- 오늘 입력 인슐린 실데이터에서 집계 → 입력 즉시 라이브 갱신(flow). 기록 0건이면 "오늘 기록 없음 / 0 U".
+- 기존 혈당/차트 로직 불변(회귀 0). 홈 혈당·라이프스타일 카드의 빈 placeholder 는 별개 기존 이슈로 미해결.
+- 빌드 검증: `assembleDebug` BUILD SUCCESSFUL.
+
+---
+
 ## [2026-06-06] 인슐린 수동 입력 최소 기능 추가 (혈당 기록 타임라인에 병행)
 
 ### 배경
