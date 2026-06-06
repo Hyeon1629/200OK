@@ -72,6 +72,14 @@ public class UserService {
     public String resolveEmail(Jwt jwt) {
         String email = jwt.getClaimAsString("email");
         if (email != null && !email.isBlank()) return email;
+
+        // 카카오: email 미동의/빈 값일 때 cognito:username(kakaooidc_{id}) 기반 합성 이메일로 sub 기반 가입.
+        // 기존 카카오 회원과 동일 포맷(kakao_{id}@checkdang.local)이라 중복 없이 매칭됨. (email Optional)
+        String cognitoUsername = jwt.getClaimAsString("cognito:username");
+        if (cognitoUsername != null && cognitoUsername.toLowerCase().startsWith("kakaooidc_")) {
+            String kakaoId = cognitoUsername.substring(cognitoUsername.indexOf('_') + 1);
+            return "kakao_" + kakaoId + "@checkdang.local";
+        }
         throw new IllegalArgumentException("Cognito 토큰에 email 클레임이 없습니다.");
     }
 
