@@ -4,6 +4,37 @@
 
 ---
 
+## [2026-06-06] 통증 AI 분석 실연동 (Mock → 백엔드 2단계 호출, AI팀 Gemini PR 계약 반영)
+
+### 배경
+AI팀(lsy) PR `lsy_gemini`→`kgh3` 로 FastAPI `gemini.analyze_pain` 가 채워지며 통증 분석 백엔드 체인(**앱 → Spring `PainAnalysisService` → FastAPI `/analyze/pain` → Gemini**)이 완성·계약 확정. 직전까지 프론트는 `MockDataProvider.analyzePainMock`(delay 1.5s 자리표시자) 사용 → 실연동으로 교체. (6대 프론트 현황 중 통증만 유일하게 Mock 으로 남아있던 실작업.)
+
+### 계약 (백엔드 `kgh3` 기준)
+| 단계 | 호출 | 요청/응답 |
+|------|------|-----------|
+| 1 저장 | `POST /api/pain-records` | body `{bodyPart, intensity, qualityTags, situationTags}` → 201 `ApiResponse<{id,…}>` |
+| 2 분석 | `POST /api/ai/pain-analysis/{painRecordId}` | (body 없음) → `ApiResponse<{painRecordId, aiCause, aiFirstAid}>` |
+
+- **BodyPart enum 이름이 앱↔백엔드 100% 일치**(`PainRecord.BodyPart`), `qualityTags`/`situationTags` 도 `PainTaxonomy` 동일 어휘 → 추가 매핑 불요.
+- 응답 래퍼는 Spring 공통 `{success, data, message}`(PaymentApiClient 와 동일 패턴).
+
+### 작업 내용
+| 파일 | 변경 |
+|------|------|
+| `data/remote/PainAnalysisApiClient.kt` 🆕 | 2단계(저장→분석) 호출. `PainAnalysisResult(painRecordId, aiCause, aiFirstAid)`. Cognito Bearer, readTimeout 60s(Gemini), 비2xx 는 `message` 담아 예외 |
+| `ui/bodymap/analysis/AIAnalysisActivity.kt` | `analyzePainMock`+`delay(1500)` 제거 → 실 API. **로딩/결과/에러 3상태** + 게스트 차단(`userId==null`) + 재시도. 인라인 `CorrelationAdapter` 삭제 |
+| `res/layout/activity_ai_analysis.xml` | 결과 화면을 **예상 원인(`tv_ai_cause`) + 집에서 할 수 있는 조치(`tv_ai_first_aid`)** 2블록으로 재구성. 연관요인 RecyclerView 제거(백엔드 출력에 대응 없음). 에러 상태 레이아웃(`layout_error`/`tv_error`/`btn_retry`/`btn_error_close`) 추가 |
+
+### 주요 결정 / 메모
+- **프로비저널 배선** — `kgh3` 가 아직 머지·배포 전이라 `api.checkdang.xyz` 에서 E2E 검증 불가. 배포되면 코드 변경 없이 동작(종합리포트 골격 때와 동일 패턴).
+- **응답 형태 변화 반영** — 새 백엔드는 `aiCause`/`aiFirstAid` 자유텍스트 2개만 제공. 기존 Mock 의 summary/correlations/recommendation 구조는 대응 출력이 없어 화면에서 제거.
+- **게스트 차단** — 기존 AI/FastAPI 게스트 미지원 정책 그대로(`SessionHolder.userId == null` → 안내만 표시, 네트워크 호출 스킵).
+- **로컬 목록 유지** — 바디맵 기록 리스트가 아직 `MockDataProvider` 로컬 소스라 `addPainRecord` 유지(백엔드에도 1단계에서 별도 저장). 추후 `GET /api/pain-records` 로 전환 가능.
+- **후속(별건)**: 미사용이 된 Mock 통증 분석 코드(`analyzePainMock`/`Correlation`/`CorrelationLevel`/`AIAnalysisResult`/`item_correlation.xml`) 정리. + `data/remote/ApiConstants.kt` 는 **미참조 + 옛 Cognito 값**(`db7haykk4`/`chekdang://callback` 오타)이라 정리/확인 필요(현행 `amplifyconfiguration.json` 과 모순).
+- 빌드 검증: `compileDebugKotlin` BUILD SUCCESSFUL.
+
+---
+
 ## [2026-06-03] AI 리포트 — 5xx 1회 재시도 + 5xx 안내문 확장 (백엔드 회신 반영)
 
 ### 배경
