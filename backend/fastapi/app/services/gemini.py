@@ -1,5 +1,7 @@
+import json
 import logging
 import os
+import re
 from typing import Any
 
 from dotenv import load_dotenv
@@ -63,6 +65,11 @@ def _format_records(records: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def _json_dumps(value: Any) -> str:
+    """프롬프트에 넣을 데이터를 한글이 깨지지 않는 JSON 문자열로 변환한다."""
+    return json.dumps(value, ensure_ascii=False, indent=2, default=str)
+
+
 def _build_health_report_prompt(data: dict[str, Any]) -> str:
     """종합 헬스 리포트 프롬프트를 생성한다."""
     user = data.get("user") or {}
@@ -113,6 +120,95 @@ Analysis period: {data.get("from") or "-"} ~ {data.get("to") or "-"}
 """
 
 
+def _build_pain_prompt(payload: dict[str, Any]) -> str:
+    """통증 분석 프롬프트를 생성한다."""
+    pain = payload.get("pain") or {}
+    optional_sections: list[str] = []
+
+    section_map = [
+        ("pain_history", "최근 1주일 같은 부위 통증 기록"),
+        ("diets", "전날~당일 식단 기록"),
+        ("exercises", "전날~당일 운동 기록"),
+        ("sleeps", "전날~당일 수면 기록"),
+        ("glucose", "전날~당일 혈당 기록"),
+    ]
+    for key, title in section_map:
+        records = payload.get(key) or []
+        if records:
+            optional_sections.append(f"[{title}]\n{_format_records(records)}")
+
+    extra_data = "\n\n".join(optional_sections) or "추가 생활 데이터 없음"
+
+    return f"""
+너는 CheckDang 앱의 통증 분석 AI야.
+아래 payload만 근거로 이번 통증의 가능한 원인과 집에서 할 수 있는 간단 조치를 한국어로 작성해.
+
+분석 원칙:
+- 의학적 확정 진단처럼 말하지 말고, 가능한 요인 중심으로 설명한다.
+- 데이터가 없는 항목은 추정하거나 언급하지 않는다.
+- 최근 1주일 같은 부위 통증 기록이 있으면 재발 여부와 강도 추세(악화/완화/유지)를 함께 반영한다.
+- 식단, 운동, 수면, 혈당 기록이 있으면 통증과 관련 있을 수 있는 생활 패턴만 선별한다.
+- 응급 신호(심한 흉통, 마비, 호흡곤란, 고열, 외상 후 극심한 통증 등)가 의심되면 전문 진료 권고를 포함한다.
+- 답변은 짧고 바로 앱에 저장할 수 있게 쓴다.
+
+출력 규칙:
+- 반드시 JSON 객체 하나만 출력한다.
+- 코드펜스와 Markdown을 쓰지 않는다.
+- 키는 정확히 "ai_cause", "ai_first_aid" 두 개만 사용한다.
+- 각 값은 문자열이며, 각각 2~4문장 이내로 작성한다.
+
+출력 예:
+{{
+  "ai_cause": "가능한 원인 설명",
+  "ai_first_aid": "집에서 할 수 있는 간단 조치"
+}}
+
+[기본 정보]
+user_id={payload.get("user_id") or "-"}
+date={payload.get("date") or "-"}
+
+[이번 통증]
+{_json_dumps(pain)}
+
+{extra_data}
+"""
+
+
+def _extract_json_object(text: str) -> dict[str, Any]:
+    """Gemini 응답에서 JSON 객체를 추출해 파싱한다."""
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\s*```$", "", cleaned)
+
+    try:
+        parsed = json.loads(cleaned)
+    except json.JSONDecodeError:
+        match = re.search(r"\{.*\}", cleaned, flags=re.DOTALL)
+        if not match:
+            raise
+        parsed = json.loads(match.group(0))
+
+    if not isinstance(parsed, dict):
+        raise ValueError("Gemini pain analysis response must be a JSON object.")
+    return parsed
+
+
+def _parse_pain_result(text: str) -> dict[str, str]:
+    """Gemini 통증 분석 응답을 백엔드 계약에 맞게 정규화한다."""
+    parsed = _extract_json_object(text)
+    ai_cause = str(parsed.get("ai_cause") or "").strip()
+    ai_first_aid = str(parsed.get("ai_first_aid") or "").strip()
+
+    if not ai_cause or not ai_first_aid:
+        raise ValueError("Gemini pain analysis response is missing required fields.")
+
+    return {
+        "ai_cause": ai_cause,
+        "ai_first_aid": ai_first_aid,
+    }
+
+
 def analyze_diet(diets: list[dict[str, Any]]) -> str:
     """식단 데이터를 받아 Gemini로 한국어 분석 결과를 반환한다."""
     prompt = f"""
@@ -135,3 +231,10 @@ def analyze_health_report(data: dict[str, Any]) -> str:
     """식단·수면·운동 데이터를 종합해 Markdown 헬스 리포트를 반환한다."""
     prompt = _build_health_report_prompt(data)
     return _generate_text(prompt, max_output_tokens=4000)
+
+
+def analyze_pain(payload: dict[str, Any]) -> dict[str, str]:
+    """통증 + 생활데이터를 받아 원인분석/조치를 반환한다."""
+    prompt = _build_pain_prompt(payload)
+    text = _generate_text(prompt, max_output_tokens=1500)
+    return _parse_pain_result(text)
