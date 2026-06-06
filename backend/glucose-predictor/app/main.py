@@ -17,6 +17,7 @@ import json
 import logging
 import os
 import pickle
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -104,28 +105,84 @@ class PredictResponse(BaseModel):
     source: str  # "body" | "db"
 
 
-def _fetch_glucose_from_db(user_id: str, date: str, required_len: int) -> list[float]:
-    """DynamoDB blood_glucose_record 에서 24h 시계열 조회 (timestamp 오름차순 level 추출)."""
-    user_date = f"{user_id}#{date}"
-    response = _state["dynamodb_table"].query(
-        KeyConditionExpression=Key("user_date").eq(user_date),
-    )
-    items = response.get("Items", [])
-    # timestamp 오름차순 정렬
-    items.sort(key=lambda x: x.get("timestamp", ""))
-    levels = [float(item["level"]) for item in items if "level" in item]
+# 보간 입력 품질 가드 — 측정이 너무 적거나 구간이 짧으면 거짓 예측 방지 위해 거부
+MIN_READINGS = 6
+MIN_COVERAGE_HOURS = 12
+STEP_SECONDS = 5 * 60  # 모델 입력 5분 간격
 
-    if len(levels) < required_len:
+
+def _parse_ts(value) -> Optional[datetime]:
+    try:
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        return dt.replace(tzinfo=None)  # naive 통일 (상대 간격만 사용)
+    except Exception:
+        return None
+
+
+def _query_levels(user_id: str, date: str) -> list[tuple[datetime, float]]:
+    """해당 날짜의 (timestamp, level) 목록."""
+    response = _state["dynamodb_table"].query(
+        KeyConditionExpression=Key("user_date").eq(f"{user_id}#{date}"),
+    )
+    out: list[tuple[datetime, float]] = []
+    for item in response.get("Items", []):
+        if "level" not in item or "timestamp" not in item:
+            continue
+        ts = _parse_ts(item["timestamp"])
+        if ts is None:
+            continue
+        try:
+            out.append((ts, float(item["level"])))
+        except (TypeError, ValueError):
+            continue
+    return out
+
+
+def _fetch_glucose_from_db(user_id: str, date: str, required_len: int) -> list[float]:
+    """blood_glucose_record(date + 전날)를 읽어 최신 측정 기준 직전 24h를 5분 그리드로 선형 보간.
+
+    운영 혈당은 1시간 주기·수동 입력이라 그대로는 288개(5분×24h)가 안 모인다.
+    따라서 시간축 선형 보간(numpy.interp)으로 required_len 개 입력을 구성한다.
+    ⚠️ 보간값은 저장하지 않으며(메모리 1회용), 실제 5분 변동이 아니라 예측 신뢰도는 제한적.
+    품질 가드: 측정 < MIN_READINGS 또는 구간 < MIN_COVERAGE_HOURS 면 422.
+    """
+    prev_date = (datetime.fromisoformat(date) - timedelta(days=1)).date().isoformat()
+    readings = _query_levels(user_id, prev_date) + _query_levels(user_id, date)
+
+    # 동일 timestamp 평균으로 중복 제거 + 시간순 정렬
+    grouped: dict[datetime, list[float]] = {}
+    for ts, lv in readings:
+        grouped.setdefault(ts, []).append(lv)
+    pts = sorted((ts, sum(v) / len(v)) for ts, v in grouped.items())
+
+    if len(pts) < MIN_READINGS:
         raise HTTPException(
             status_code=422,
             detail=(
-                f"혈당 데이터가 {required_len} step에 미달합니다 "
-                f"(user_date={user_date}, 실제={len(levels)} step). "
-                f"24시간 분량(5분 간격 288 측정값)이 필요합니다."
+                f"예측에 필요한 혈당 측정이 부족합니다 "
+                f"(최소 {MIN_READINGS}회 필요, 실제 {len(pts)}회). 혈당을 더 기록해 주세요."
             ),
         )
-    # 마지막 required_len 개만 사용
-    return levels[-required_len:]
+    span_hours = (pts[-1][0] - pts[0][0]).total_seconds() / 3600.0
+    if span_hours < MIN_COVERAGE_HOURS:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"혈당 기록 구간이 짧습니다 "
+                f"(최소 {MIN_COVERAGE_HOURS}시간 필요, 실제 {span_hours:.1f}시간)."
+            ),
+        )
+
+    # 5분 그리드: 최신 측정 시각에서 직전 24h (required_len 점). 범위 밖은 양끝 값으로 clamp.
+    end = pts[-1][0].timestamp()
+    x_target = np.array(
+        [end - (required_len - 1 - i) * STEP_SECONDS for i in range(required_len)],
+        dtype=np.float64,
+    )
+    x_known = np.array([p[0].timestamp() for p in pts], dtype=np.float64)
+    y_known = np.array([p[1] for p in pts], dtype=np.float64)
+    levels = np.interp(x_target, x_known, y_known)
+    return [float(v) for v in levels]
 
 
 @app.post("/predict/blood-glucose/{user_id}", response_model=PredictResponse)
@@ -150,7 +207,7 @@ def predict_blood_glucose(
         source = "body"
     else:
         glucose_raw = _fetch_glucose_from_db(user_id, date, input_len)
-        source = "db"
+        source = "db_interp"
 
     # 정규화 → tensor (1, input_len, 1)
     arr = np.array(glucose_raw, dtype=np.float32).reshape(-1, 1)
