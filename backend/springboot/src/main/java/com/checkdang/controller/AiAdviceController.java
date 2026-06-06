@@ -39,6 +39,22 @@ public class AiAdviceController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to
     ) {
+        return advise(jwt, from, to);
+    }
+
+    /**
+     * (구 demo) 파라미터 없이 호출돼도 로그인 사용자의 실제 식단(기본 최근 7일)으로 분석한다.
+     * 과거엔 "김밥과 라면" 고정 샘플을 반환했으나, 프론트가 이 경로를 그대로 쓰면서 실데이터를
+     * 받도록 실엔드포인트와 동일 로직으로 위임한다. (인증 필수 경로 — JWT 이미 전달됨)
+     */
+    @GetMapping("/demo-diet-advice")
+    public AiAdviceResponse getDemoDietAdvice(@AuthenticationPrincipal Jwt jwt) {
+        LocalDateTime to = LocalDateTime.now();
+        LocalDateTime from = to.minusDays(7);
+        return advise(jwt, from, to);
+    }
+
+    private AiAdviceResponse advise(Jwt jwt, LocalDateTime from, LocalDateTime to) {
         String userEmail = userService.resolveEmail(jwt);
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
@@ -52,30 +68,6 @@ public class AiAdviceController {
         List<DietResponse> diets = dietService.getDiets(userEmail, from, to);
         String answer = aiAnalysisClient.analyzeDiet(diets);
         aiAnalysisService.save(userId, AiAnalysis.AnalysisType.DIET_ADVICE, from, to, answer);
-        return new AiAdviceResponse(answer);
-    }
-
-    @GetMapping("/demo-diet-advice")
-    public AiAdviceResponse getDemoDietAdvice() {
-        List<DietResponse> diets = List.of(
-                DietResponse.builder()
-                        .userId("android-demo-user")
-                        .sourceId("android-demo-lunch")
-                        .mealType(com.checkdang.domain.Diet.MealType.LUNCH)
-                        .foodName("김밥과 라면")
-                        .calories(950.0)
-                        .carbohydrate(125.0)
-                        .protein(22.0)
-                        .totalFat(34.0)
-                        .sugar(12.0)
-                        .dietaryFiber(6.0)
-                        .sodium(1850.0)
-                        .recordedAt(LocalDateTime.now())
-                        .dataSource(com.checkdang.domain.Diet.DataSource.MANUAL)
-                        .build()
-        );
-
-        String answer = aiAnalysisClient.analyzeDiet(diets);
         return new AiAdviceResponse(answer);
     }
 }
