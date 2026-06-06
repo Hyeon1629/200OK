@@ -4,6 +4,27 @@
 
 ---
 
+## [2026-06-06] Gemini 클라이언트 readTimeout 60s→90s (백엔드 max_token↑ + thinking 대응)
+
+### 배경
+백엔드 회신: Gemini 오류(잘림) 지속 → **max_output_tokens 상향 + thinking 유지**로 수정. 출력이 길어지고 추론 시간이 늘어 응답 지연 증가. 프론트 확인 요청.
+
+### 확인 결과
+- **잘림**: 프론트는 받은 텍스트 그대로 렌더 → 백엔드 max_token 상향으로 해결, 프론트 수정 불요.
+- **타임아웃**: Gemini 3개 클라이언트 모두 readTimeout 60s 였음. 지연 증가로 마진 축소 → **90s 로 상향**(데모 중 타임아웃 예방).
+- **재시도**: 리포트는 5xx/IO 1회 재시도 유지(견고). 식단·통증은 무재시도(실패 시 수동 재시도) — 현행 유지.
+
+### 작업 내용
+| 파일 | 변경 |
+|------|------|
+| `AiReportApiClient.kt` | readTimeout 60s→90s + "출력 길이 고정" 옛 주석 정정 |
+| `AiAdviceApiClient.kt` | readTimeout 60s→90s |
+| `PainAnalysisApiClient.kt` | readTimeout 60s→90s |
+
+빌드 검증: `compileDebugKotlin` BUILD SUCCESSFUL.
+
+---
+
 ## [2026-06-06] 상태바 겹침 수정 — 전 화면 fitsSystemWindows 인셋 처리
 
 ### 배경

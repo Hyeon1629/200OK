@@ -78,7 +78,7 @@ object PainAnalysisApiClient {
             // Spring 경로 — 로그인 사용자의 Cognito ID Token Bearer 만 부착(게스트 미지원).
             SessionHolder.accessToken?.let { setRequestProperty("Authorization", "Bearer $it") }
             connectTimeout = 15_000
-            readTimeout = 60_000   // 분석 단계는 Gemini 추론이 길 수 있어 넉넉히
+            readTimeout = 90_000   // Gemini 추론(max_token↑ + thinking, 2026-06-06)이 길 수 있어 넉넉히
             if (body != null) {
                 setRequestProperty("Content-Type", "application/json")
                 doOutput = true

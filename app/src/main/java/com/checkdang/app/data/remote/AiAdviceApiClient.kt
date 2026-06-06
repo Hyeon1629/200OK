@@ -26,7 +26,8 @@ object AiAdviceApiClient {
             // (게스트는 이 기능을 호출하지 않으므로 게스트 헤더는 두지 않는다.)
             SessionHolder.accessToken?.let { setRequestProperty("Authorization", "Bearer $it") }
             connectTimeout = 15_000
-            readTimeout = 60_000
+            // Gemini 생성 시간(백엔드 max_token↑ + thinking, 2026-06-06) 대비 90s.
+            readTimeout = 90_000
         }
 
         try {
