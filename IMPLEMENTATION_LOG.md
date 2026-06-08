@@ -4,6 +4,37 @@
 
 ---
 
+## [2026-06-08] 프론트엔드 잔여 작업 상태 스냅샷 (시연 보고 기준)
+
+코드 변경 없음 — 현재 남은 작업/대기 상태만 기록(시연 보고·교차검증 결과).
+
+### 기능 6항목 상태 (프론트엔드 코드 기준)
+
+| # | 항목 | 프론트 상태 | 코드 근거 | E2E(백엔드·AI) 의존 |
+|---|------|------------|-----------|---------------------|
+| 1 | Gemini 종합 리포트 | ✅ 완료(배선) | `AiReportApiClient.getComprehensiveReport()` ← `ComprehensiveReportViewModel` | 백엔드 리포트 안정화(6/6 기준 500·캐싱 이슈) — 시연 전 확인 |
+| 2 | Gemini 통증 | ✅ 완료(저장→분석 2단계) | `PainAnalysisApiClient.analyze()` ← `AIAnalysisActivity` | 백엔드 Gemini 통증 배포·E2E(kgh3) — 시연 전 확인 |
+| 3 | Gemini 식단 | ✅ 완료(배선) | `AiAdviceApiClient.getDietAdviceForDemo()` ← `MealDetailActivity` | 데모 엔드포인트, 데이터 불일치 이슈 해소 확인(6/6) — 양호 |
+| 4 | AI 모델 출력(혈당 예측) | ✅ 완료(FastAPI 실연동) | `BloodGlucosePredictionApiClient.predict()/latest()` ← `GlucoseViewModel` → 36점 차트 | 모델 배포·동작 중. AI팀 성능 개선 진행(=6번) |
+| 5 | 가족 알림 연동 | ⏳ 미완료(배선만) | `PushTokenStore.register()` 업로드 stub(`TODO(push-backend)`) | 백엔드 토큰 등록 엔드포인트 회신 대기 |
+| 6 | 모델 개발 | ➖ 해당 없음 | 프론트 영역 아님 | AI팀 평가지표·성능 개선 중 |
+
+### 남은 작업 정리
+
+- **프론트가 추가 코드 작성**이 필요한 항목: **5번뿐** — 백엔드 엔드포인트 회신 시 `PushTokenStore.register()` 업로드 1줄 연결 + 진단 로그(`Log.i("FcmToken")`) 제거.
+- **출시 전(시연 범위 밖) 별도 잔여 작업**:
+  - 🔴 법무 자리표시자 실값 교체 + 검토 (`privacy_policy.md`/`terms_of_service.md`, `TODO(legal)`)
+  - 🔴 민감정보(건강) 별도 동의 화면 추가 (보호법 §23, 미구현)
+  - 🟠 개발자용 PAID/FREE 토글 release 빌드 제거 (`MenuFragment.kt`, `TODO(release)`)
+  - 🟠 카카오 로그인 임시 우회 원복 (email Optional + sub 기반 → 정식)
+  - ⚪ Android 13+ Themed Icon(monochrome) (`TODO(icon)`)
+
+### 메모
+- "완료"는 **프론트엔드 코드 기준**. 통증·혈당은 "프론트 완료 / 백엔드·AI 진행 중"으로 설명해야 보고-시연 내레이션이 충돌하지 않음.
+- 시연 전 확인 우선순위: **1·2번 > 3번** (백엔드 Gemini 응답 상태 1회 점검 권장).
+
+---
+
 ## [2026-06-06] Gemini 클라이언트 readTimeout 60s→90s (백엔드 max_token↑ + thinking 대응)
 
 ### 배경
