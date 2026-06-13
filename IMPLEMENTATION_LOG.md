@@ -4,6 +4,26 @@
 
 ---
 
+## [2026-06-13] 삼성헬스 혈당 단위 변환 버그 수정 (mmol/L → mg/dL)
+
+### 배경 / 발견
+실기 테스트 중 사용자가 입력하지 않은 5월 14/15/17일 혈당이 **5~6 mg/dL**(생리학적 불가값)로 표시됨. 추적 결과 로컬 SharedPreferences 에는 없고(오늘 입력 1건뿐), **삼성헬스 직접 연동(`switchToSamsungHealth`)** 으로 끌어온 실제 사용자 혈당이었음. `SamsungHealthMapper.toGlucoseRecords` 가 **mmol/L 값을 mg/dL 변환 없이 `.toInt()`** 로 잘라서 발생.
+
+### 단위 확정 (실기 logcat)
+임시 진단 로그(`GlucoseUnitDiag`) 로 raw 값 확인: `5.5507 / 6.2723 / 6.6609` → 명백한 **mmol/L**. ×18.0182 시 100 / 113 / 120 mg/dL 정상값. 진단 로그는 확정 후 제거(add→remove).
+
+### 작업 내용
+| 파일 | 변경 |
+|------|------|
+| `data/samsunghealth/SamsungHealthMapper.kt` | `mgdlFromMmol(mmol) = (mmol * 18.0182).roundToInt()` 헬퍼 추가. `toGlucoseRecords` 의 series/단일 경로 모두 `.toInt()` → `mgdlFromMmol(...)`. `import kotlin.math.roundToInt` |
+
+### 주요 결정 / 메모
+- **실기 검증 완료** — 수정 후 5월 기록이 100~120 mg/dL 정상 표시 확인.
+- **파급(별건, 백엔드 핸드오프)**: `refresh()` 가 끌어온 혈당을 `pushGlucoseToServer` 로 백엔드에도 push → **잘못된 5,6 값이 이미 백엔드 DB 에 들어갔을 수 있음.** 삼성 레코드 id 는 결정적(`uid-timestamp`)이라 `GlucoseSyncStore` 가 이미 전송됨으로 간주 → **앱이 정정값을 재전송하지 않음.** 백엔드(kgh)가 해당 레코드 정리/재계산 필요. AI 리포트/예측 데이터 미스매치의 원인 중 하나일 가능성.
+- 빌드 검증: `assembleDebug` BUILD SUCCESSFUL + 실기 설치 확인.
+
+---
+
 ## [2026-06-13] 혈당 PDF 일지에 인슐린 주입 기록 추가
 
 ### 배경
