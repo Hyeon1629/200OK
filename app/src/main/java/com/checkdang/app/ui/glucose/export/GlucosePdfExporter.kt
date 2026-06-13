@@ -12,6 +12,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import com.checkdang.app.data.model.GlucoseRecord
+import com.checkdang.app.data.model.InsulinRecord
 import com.checkdang.app.util.GlucoseEvaluator
 import com.checkdang.app.util.GlucoseStatus
 import java.io.File
@@ -44,6 +45,11 @@ object GlucosePdfExporter {
     private const val COL_VALUE = 360f
     private const val COL_STATUS = 470f
 
+    // 인슐린 표 컬럼 x
+    private const val COL_INS_UNITS = 230f
+    private const val COL_INS_TYPE = 320f
+    private const val COL_INS_MEMO = 410f
+
     private val fileStamp = SimpleDateFormat("yyyyMMdd_HHmm", Locale.KOREAN)
     private fun fileName() = "혈당리포트_${fileStamp.format(Date())}.pdf"
 
@@ -51,16 +57,21 @@ object GlucosePdfExporter {
 
     // ── ① 공유 ──────────────────────────────────────────────────────────────
     /** cacheDir 에 PDF 를 쓰고 공유용 chooser [Intent] 를 만들어 반환한다. (파일 IO 포함 → 백그라운드에서 호출) */
-    fun buildShareIntent(context: Context, records: List<GlucoseRecord>, nickname: String): Intent {
+    fun buildShareIntent(
+        context: Context,
+        records: List<GlucoseRecord>,
+        insulin: List<InsulinRecord>,
+        nickname: String,
+    ): Intent {
         val dir = File(context.cacheDir, "reports").apply { mkdirs() }
         val file = File(dir, fileName())
-        file.outputStream().use { render(records, nickname, it) }
+        file.outputStream().use { render(records, insulin, nickname, it) }
 
         val uri = FileProvider.getUriForFile(context, authority(context), file)
         val send = Intent(Intent.ACTION_SEND).apply {
             type = "application/pdf"
             putExtra(Intent.EXTRA_STREAM, uri)
-            putExtra(Intent.EXTRA_SUBJECT, "${nickname}님 혈당 기록")
+            putExtra(Intent.EXTRA_SUBJECT, "${nickname}님 혈당·인슐린 기록")
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         return Intent.createChooser(send, "혈당 리포트 공유")
@@ -69,7 +80,12 @@ object GlucosePdfExporter {
 
     // ── ② 기기 저장 ─────────────────────────────────────────────────────────
     /** Downloads/체크당 에 저장하고 사용자에게 보여줄 경로 문자열을 반환(실패 시 null). 백그라운드에서 호출. */
-    fun saveToDownloads(context: Context, records: List<GlucoseRecord>, nickname: String): String? = runCatching {
+    fun saveToDownloads(
+        context: Context,
+        records: List<GlucoseRecord>,
+        insulin: List<InsulinRecord>,
+        nickname: String,
+    ): String? = runCatching {
         val name = fileName()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val resolver = context.contentResolver
@@ -80,7 +96,7 @@ object GlucosePdfExporter {
                 put(MediaStore.Downloads.IS_PENDING, 1)
             }
             val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return null
-            resolver.openOutputStream(uri)?.use { render(records, nickname, it) } ?: return null
+            resolver.openOutputStream(uri)?.use { render(records, insulin, nickname, it) } ?: return null
             values.clear()
             values.put(MediaStore.Downloads.IS_PENDING, 0)
             resolver.update(uri, values, null, null)
@@ -88,18 +104,24 @@ object GlucosePdfExporter {
             @Suppress("DEPRECATION")
             val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             val dir = File(downloads, "체크당").apply { mkdirs() }
-            File(dir, name).outputStream().use { render(records, nickname, it) }
+            File(dir, name).outputStream().use { render(records, insulin, nickname, it) }
         }
         "다운로드/체크당/$name"
     }.getOrNull()
 
     // ── PDF 렌더링 ────────────────────────────────────────────────────────────
-    private fun render(records: List<GlucoseRecord>, nickname: String, out: OutputStream) {
+    private fun render(
+        records: List<GlucoseRecord>,
+        insulin: List<InsulinRecord>,
+        nickname: String,
+        out: OutputStream,
+    ) {
         val dateFmt = SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN)
         val timeFmt = SimpleDateFormat("HH:mm", Locale.KOREAN)
         val genFmt = SimpleDateFormat("yyyy.MM.dd HH:mm", Locale.KOREAN)
 
         val sorted = records.sortedByDescending { it.measuredAt }
+        val sortedInsulin = insulin.sortedByDescending { it.injectedAt }
 
         val title = paint("#1A1A1A", 22f, bold = true)
         val sub = paint("#6E6E73", 11f)
@@ -124,15 +146,27 @@ object GlucosePdfExporter {
             return yTop + 22f
         }
 
+        fun drawInsulinHeader(yTop: Float): Float {
+            canvas.drawRect(MARGIN, yTop - 13f, PAGE_W - MARGIN, yTop + 6f, headerBg)
+            canvas.drawText("날짜", COL_DATE, yTop, bodySec)
+            canvas.drawText("시간", COL_TIME, yTop, bodySec)
+            canvas.drawText("주입량", COL_INS_UNITS, yTop, bodySec)
+            canvas.drawText("종류", COL_INS_TYPE, yTop, bodySec)
+            canvas.drawText("메모", COL_INS_MEMO, yTop, bodySec)
+            return yTop + 22f
+        }
+
         // === 헤더 ===
         var y = 60f
-        canvas.drawText("혈당 기록 리포트", MARGIN, y, title)
+        canvas.drawText("혈당·인슐린 기록 리포트", MARGIN, y, title)
         y += 22f
         canvas.drawText("${nickname}님 · 생성일 ${genFmt.format(Date())}", MARGIN, y, sub)
         y += 15f
         val period = if (sorted.isEmpty()) "기록 없음"
         else "${dateFmt.format(Date(sorted.last().measuredAt))} ~ ${dateFmt.format(Date(sorted.first().measuredAt))}"
-        canvas.drawText("측정 기간: $period  ·  총 ${sorted.size}건", MARGIN, y, sub)
+        val countLine = "측정 기간: $period  ·  혈당 ${sorted.size}건" +
+            if (sortedInsulin.isNotEmpty()) "  ·  인슐린 ${sortedInsulin.size}건" else ""
+        canvas.drawText(countLine, MARGIN, y, sub)
         y += 18f
         canvas.drawLine(MARGIN, y, PAGE_W - MARGIN, y, linePaint)
         y += 28f
@@ -181,6 +215,42 @@ object GlucosePdfExporter {
         }
         if (sorted.isEmpty()) {
             canvas.drawText("표시할 혈당 기록이 없습니다.", MARGIN, y, bodySec)
+        }
+
+        // === 인슐린 주입 기록 ===
+        if (sortedInsulin.isNotEmpty()) {
+            // 섹션 제목 + 헤더가 들어갈 자리가 부족하면 새 페이지로 시작
+            if (y > BOTTOM_LIMIT - 70f) {
+                doc.finishPage(page)
+                page = doc.startPage(pageInfo(++pageNo))
+                canvas = page.canvas
+                y = 60f
+            } else {
+                y += 14f
+            }
+            canvas.drawText("인슐린 주입 기록", MARGIN, y, section)
+            y += 22f
+            y = drawInsulinHeader(y)
+
+            for (ins in sortedInsulin) {
+                if (y > BOTTOM_LIMIT) {
+                    doc.finishPage(page)
+                    page = doc.startPage(pageInfo(++pageNo))
+                    canvas = page.canvas
+                    y = drawInsulinHeader(60f)
+                }
+                val memo = ins.memo?.takeIf { it.isNotBlank() }?.let {
+                    if (it.length > 18) it.take(18) + "…" else it
+                } ?: "-"
+                canvas.drawText(dateFmt.format(Date(ins.injectedAt)), COL_DATE, y, body)
+                canvas.drawText(timeFmt.format(Date(ins.injectedAt)), COL_TIME, y, body)
+                canvas.drawText("${ins.unitsLabel} U", COL_INS_UNITS, y, body)
+                canvas.drawText(ins.type.label, COL_INS_TYPE, y, body)
+                canvas.drawText(memo, COL_INS_MEMO, y, bodySec)
+                y += 8f
+                canvas.drawLine(MARGIN, y, PAGE_W - MARGIN, y, linePaint)
+                y += 16f
+            }
         }
 
         // 면책 문구 (마지막 페이지 하단)

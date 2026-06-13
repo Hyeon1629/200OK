@@ -16,6 +16,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.checkdang.app.R
+import com.checkdang.app.data.mock.MockDataProvider
 import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.databinding.FragmentGlucoseBinding
 import com.checkdang.app.ui.glucose.export.GlucosePdfExporter
@@ -165,11 +166,12 @@ class GlucoseFragment : Fragment() {
     private fun exportShare() {
         val ctx = requireContext().applicationContext
         val records = viewModel.records.value
+        val insulin = MockDataProvider.insulinRecordsFlow.value
         val nickname = nickname()
         viewLifecycleOwner.lifecycleScope.launch {
             runCatching {
                 withContext(Dispatchers.IO) {
-                    GlucosePdfExporter.buildShareIntent(ctx, records, nickname)
+                    GlucosePdfExporter.buildShareIntent(ctx, records, insulin, nickname)
                 }
             }.onSuccess { startActivity(it) }
                 .onFailure { Toast.makeText(requireContext(), "PDF 생성에 실패했어요", Toast.LENGTH_SHORT).show() }
@@ -188,10 +190,11 @@ class GlucoseFragment : Fragment() {
     private fun exportSave() {
         val ctx = requireContext().applicationContext
         val records = viewModel.records.value
+        val insulin = MockDataProvider.insulinRecordsFlow.value
         val nickname = nickname()
         viewLifecycleOwner.lifecycleScope.launch {
             val path = withContext(Dispatchers.IO) {
-                GlucosePdfExporter.saveToDownloads(ctx, records, nickname)
+                GlucosePdfExporter.saveToDownloads(ctx, records, insulin, nickname)
             }
             if (path != null) Snackbar.make(binding.root, "저장됨 · $path", Snackbar.LENGTH_LONG).show()
             else Toast.makeText(requireContext(), "저장에 실패했어요", Toast.LENGTH_SHORT).show()
