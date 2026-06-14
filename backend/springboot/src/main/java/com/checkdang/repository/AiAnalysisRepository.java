@@ -13,4 +13,7 @@ public interface AiAnalysisRepository extends JpaRepository<AiAnalysis, Long> {
             AiAnalysis.AnalysisType analysisType,
             LocalDateTime periodFrom,
             LocalDateTime periodTo);
+
+    // 데이터(식단/수면/운동) 변경 시 해당 사용자의 AI 본문 캐시를 통째로 무효화하기 위한 삭제.
+    void deleteByUserId(String userId);
 }

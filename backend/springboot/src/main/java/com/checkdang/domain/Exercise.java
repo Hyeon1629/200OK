@@ -9,7 +9,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "exercise_record")
+@Table(name = "exercise_record",
+        uniqueConstraints = @UniqueConstraint(name = "uk_exercise_user_source", columnNames = {"user_id", "source_id"}))
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor

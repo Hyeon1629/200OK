@@ -43,12 +43,14 @@ public class AiAdviceController {
     }
 
     /**
-     * (구 demo) 파라미터 없이 호출돼도 로그인 사용자의 실제 식단(기본 최근 7일)으로 분석한다.
-     * 과거엔 "김밥과 라면" 고정 샘플을 반환했으나, 프론트가 이 경로를 그대로 쓰면서 실데이터를
-     * 받도록 실엔드포인트와 동일 로직으로 위임한다. (인증 필수 경로 — JWT 이미 전달됨)
+     * 파라미터 없이 로그인 사용자의 실제 식단(기본 최근 7일)을 분석하는 정식 경로.
+     * 이 메서드는 실제 DB를 읽으므로 이름이 'demo'였던 구 경로(`/demo-diet-advice`)는
+     * 의미가 맞지 않아 deprecated 처리하고, 정식 경로 `/diet-advice/recent`를 함께 매핑한다.
+     * 프론트는 준비되면 정식 경로로 1줄 교체하면 되고, 그 전까지 구 경로도 동일하게 동작한다.
+     * (인증 필수 경로 — JWT 이미 전달됨)
      */
-    @GetMapping("/demo-diet-advice")
-    public AiAdviceResponse getDemoDietAdvice(@AuthenticationPrincipal Jwt jwt) {
+    @GetMapping({"/diet-advice/recent", "/demo-diet-advice"})
+    public AiAdviceResponse getRecentDietAdvice(@AuthenticationPrincipal Jwt jwt) {
         LocalDateTime to = LocalDateTime.now();
         LocalDateTime from = to.minusDays(7);
         return advise(jwt, from, to);
