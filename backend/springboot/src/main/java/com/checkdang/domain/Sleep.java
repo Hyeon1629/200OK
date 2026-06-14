@@ -11,7 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "sleep_data")
+@Table(name = "sleep_data",
+        uniqueConstraints = @UniqueConstraint(name = "uk_sleep_user_source", columnNames = {"user_id", "source_id"}))
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor

@@ -22,6 +22,7 @@ public class SleepService {
 
     private final SleepRepository sleepRepository;
     private final UserRepository userRepository;
+    private final AiAnalysisService aiAnalysisService;
 
     @Transactional
     public SyncResponse syncFromSamsungHealth(String userEmail, List<SleepSyncRequest> requests) {
@@ -57,6 +58,11 @@ public class SleepService {
             }
 
             saved++;
+        }
+
+        // 새 수면 기록이 들어왔으면 이 사용자의 AI 캐시(종합리포트 등)를 무효화한다.
+        if (saved > 0) {
+            aiAnalysisService.evictUser(String.valueOf(user.getId()));
         }
 
         return SyncResponse.of(saved, requests.size());

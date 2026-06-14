@@ -37,6 +37,17 @@ public class AiAnalysisService {
     }
 
     /**
+     * 사용자의 AI 본문 캐시(리포트·식단조언 전부)를 무효화한다.
+     * 식단/수면/운동이 동기화·삭제되면 같은 기간 키여도 내용물이 달라지므로,
+     * 이후 호출이 저장된 옛 본문이 아니라 새 데이터로 다시 생성되도록 캐시를 비운다.
+     * (식단 변경이 종합 리포트에도 영향을 주므로 종류를 가리지 않고 통째로 제거)
+     */
+    @Transactional
+    public void evictUser(String userId) {
+        aiAnalysisRepository.deleteByUserId(userId);
+    }
+
+    /**
      * 캐시 키 정규화 — 기간을 '일(day)' 단위로 절삭한다.
      * 리포트는 to=now() 라 매 호출 timestamp 가 달라 캐시 적중이 0% 였다.
      * 같은 날·같은 기간(days) 호출이 동일 키로 묶여 하루 1회만 Gemini 를 호출하고

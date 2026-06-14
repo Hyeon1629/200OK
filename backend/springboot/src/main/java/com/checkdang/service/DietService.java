@@ -21,6 +21,7 @@ public class DietService {
 
     private final DietRepository dietRepository;
     private final UserRepository userRepository;
+    private final AiAnalysisService aiAnalysisService;
 
     @Transactional
     public SyncResponse syncFromSamsungHealth(String userEmail, List<DietSyncRequest> requests) {
@@ -47,6 +48,11 @@ public class DietService {
                     .dataSource(Diet.DataSource.SAMSUNG_HEALTH)
                     .build());
             saved++;
+        }
+
+        // 새 식단이 들어왔으면 이 사용자의 AI 캐시(식단조언·종합리포트)를 무효화한다.
+        if (saved > 0) {
+            aiAnalysisService.evictUser(String.valueOf(user.getId()));
         }
 
         return SyncResponse.of(saved, requests.size());
