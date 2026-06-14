@@ -162,7 +162,7 @@
                     android:padding="8dp" />
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Gemini AI 식단 조언 (데모: /api/ai/demo-diet-advice) -->
+            <!-- Gemini AI 식단 조언 (/api/ai/diet-advice/recent) -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_ai_advice"
                 android:layout_width="match_parent"
