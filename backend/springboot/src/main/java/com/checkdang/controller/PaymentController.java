@@ -72,6 +72,13 @@ public class PaymentController {
                 .build();
     }
 
+    // Mock 테스트용: 본인 isPremium 초기화 (mockMode=true 일 때만 동작)
+    @PostMapping("/kakao/mock/reset")
+    public ResponseEntity<ApiResponse<Void>> mockReset(@AuthenticationPrincipal Jwt jwt) {
+        kakaoPayService.resetPremiumForTesting(userService.resolveEmail(jwt));
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
     // 결제 이력 조회
     @GetMapping("/history")
     public ResponseEntity<ApiResponse<List<PaymentRecord>>> getHistory(

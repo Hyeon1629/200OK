@@ -59,6 +59,16 @@ public class KakaoPayService {
     private static final String KAKAO_READY_URL = "https://open-api.kakaopay.com/online/v1/payment/ready";
     private static final String KAKAO_APPROVE_URL = "https://open-api.kakaopay.com/online/v1/payment/approve";
 
+    public void resetPremiumForTesting(String userEmail) {
+        if (!mockMode) throw new IllegalArgumentException("Mock 모드에서만 사용 가능합니다.");
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        user.setIsPremium(false);
+        user.setPremiumExpiresAt(null);
+        userRepository.save(user);
+        log.info("[MOCK] isPremium 초기화 - email: {}", userEmail);
+    }
+
     public List<PaymentRecord> getHistory(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
@@ -116,24 +126,33 @@ public class KakaoPayService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
+        if (mockMode) {
+            log.info("[MOCK] 카카오페이 결제 승인 (DB 미반영) - orderId: {}", request.getOrderId());
+            return KakaoPayApproveResponse.builder()
+                    .orderId(request.getOrderId())
+                    .itemName("체크당 프리미엄 1개월")
+                    .amount(premiumPrice)
+                    .premiumMonths(1)
+                    .isPremium(true)
+                    .premiumExpiresAt(Instant.now().plus(30, ChronoUnit.DAYS))
+                    .approvedAt(Instant.now().toString())
+                    .build();
+        }
+
         PaymentRecord record = paymentRecordRepository
                 .findByUserIdAndOrderIdAndStatus(
                         String.valueOf(user.getId()), request.getOrderId(), PaymentRecord.PaymentStatus.READY)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 주문입니다."));
 
-        if (mockMode) {
-            log.info("[MOCK] 카카오페이 결제 승인 스킵 - orderId: {}, tid: {}", record.getOrderId(), record.getTid());
-        } else {
-            Map<String, Object> body = new HashMap<>();
-            body.put("cid", cid);
-            body.put("tid", record.getTid());
-            body.put("partner_order_id", record.getOrderId());
-            body.put("partner_user_id", String.valueOf(user.getId()));
-            body.put("pg_token", request.getPgToken());
+        Map<String, Object> body = new HashMap<>();
+        body.put("cid", cid);
+        body.put("tid", record.getTid());
+        body.put("partner_order_id", record.getOrderId());
+        body.put("partner_user_id", String.valueOf(user.getId()));
+        body.put("pg_token", request.getPgToken());
 
-            // 예외 발생 시 DynamoDB putItem은 롤백 없음 → READY 상태 유지 (재시도 가능)
-            callKakaoApi(KAKAO_APPROVE_URL, body, "결제 승인");
-        }
+        // 예외 발생 시 DynamoDB putItem은 롤백 없음 → READY 상태 유지 (재시도 가능)
+        callKakaoApi(KAKAO_APPROVE_URL, body, "결제 승인");
 
         String approvedAt = Instant.now().toString();
         record.setStatus(PaymentRecord.PaymentStatus.APPROVED.name());
