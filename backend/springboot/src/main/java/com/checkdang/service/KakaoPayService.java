@@ -51,6 +51,11 @@ public class KakaoPayService {
     @Value("${kakao.pay.premium-price}")
     private Integer premiumPrice;
 
+    @Value("${kakao.pay.mock-mode:false}")
+    private boolean mockMode;
+    // 카카오페이 온라인 결제 CID(가맹점 코드) 미발급 상태에서 시연용으로 사용.
+    // true면 실제 카카오 API 호출 없이 가짜 tid/redirect URL을 생성해 결제 흐름 전체를 시뮬레이션.
+
     private static final String KAKAO_READY_URL = "https://open-api.kakaopay.com/online/v1/payment/ready";
     private static final String KAKAO_APPROVE_URL = "https://open-api.kakaopay.com/online/v1/payment/approve";
 
@@ -82,7 +87,9 @@ public class KakaoPayService {
         body.put("cancel_url", cancelUrl);
         body.put("fail_url", failUrl);
 
-        Map<String, Object> kakaoResponse = callKakaoApi(KAKAO_READY_URL, body, "결제 준비");
+        Map<String, Object> kakaoResponse = mockMode
+                ? mockReadyResponse(orderId)
+                : callKakaoApi(KAKAO_READY_URL, body, "결제 준비");
         String tid = (String) kakaoResponse.get("tid");
 
         paymentRecordRepository.save(PaymentRecord.builder()
@@ -114,15 +121,19 @@ public class KakaoPayService {
                         String.valueOf(user.getId()), request.getOrderId(), PaymentRecord.PaymentStatus.READY)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 주문입니다."));
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("cid", cid);
-        body.put("tid", record.getTid());
-        body.put("partner_order_id", record.getOrderId());
-        body.put("partner_user_id", String.valueOf(user.getId()));
-        body.put("pg_token", request.getPgToken());
+        if (mockMode) {
+            log.info("[MOCK] 카카오페이 결제 승인 스킵 - orderId: {}, tid: {}", record.getOrderId(), record.getTid());
+        } else {
+            Map<String, Object> body = new HashMap<>();
+            body.put("cid", cid);
+            body.put("tid", record.getTid());
+            body.put("partner_order_id", record.getOrderId());
+            body.put("partner_user_id", String.valueOf(user.getId()));
+            body.put("pg_token", request.getPgToken());
 
-        // 예외 발생 시 DynamoDB putItem은 롤백 없음 → READY 상태 유지 (재시도 가능)
-        callKakaoApi(KAKAO_APPROVE_URL, body, "결제 승인");
+            // 예외 발생 시 DynamoDB putItem은 롤백 없음 → READY 상태 유지 (재시도 가능)
+            callKakaoApi(KAKAO_APPROVE_URL, body, "결제 승인");
+        }
 
         String approvedAt = Instant.now().toString();
         record.setStatus(PaymentRecord.PaymentStatus.APPROVED.name());
@@ -147,6 +158,17 @@ public class KakaoPayService {
                 .premiumExpiresAt(premiumExpiresAt)
                 .approvedAt(approvedAt)
                 .build();
+    }
+
+    private Map<String, Object> mockReadyResponse(String orderId) {
+        log.info("[MOCK] 카카오페이 결제 준비 응답 생성 - orderId: {}", orderId);
+        String deepLink = "checkdang://payment/success?pg_token=mock_token";
+        return Map.of(
+                "tid", "MOCK_TID_" + orderId,
+                "next_redirect_app_url", deepLink,
+                "next_redirect_mobile_url", deepLink,
+                "next_redirect_pc_url", deepLink
+        );
     }
 
     private Map<String, Object> callKakaoApi(String url, Map<String, Object> body, String action) {

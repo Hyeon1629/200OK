@@ -39,6 +39,7 @@ kakao:
     cancel-url: ${KAKAO_PAY_CANCEL_URL}
     fail-url: ${KAKAO_PAY_FAIL_URL}
     premium-price: ${KAKAO_PAY_PREMIUM_PRICE:9900}
+    mock-mode: ${KAKAO_PAY_MOCK_MODE:false}
 
 aws:
   region: ${AWS_REGION}
