@@ -9,11 +9,21 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    // 상태코드 보존 — ResponseStatusException(예: 예측 422 데이터부족)이 catch-all에 걸려
+    // 500으로 둔갑하지 않도록 원래 status/reason 그대로 반환.
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResponseStatus(ResponseStatusException e) {
+        log.warn("{}: {}", e.getStatusCode(), e.getReason());
+        String message = e.getReason() != null ? e.getReason() : "요청을 처리할 수 없습니다.";
+        return ResponseEntity.status(e.getStatusCode()).body(ApiResponse.error(message));
+    }
 
     // 400 — 잘못된 요청
     @ExceptionHandler(IllegalArgumentException.class)
