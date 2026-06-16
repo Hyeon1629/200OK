@@ -28,7 +28,8 @@ from boto3.dynamodb.conditions import Key
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from app.model import Seq2SeqGRU
+from app.model import Seq2SeqGRU, DirectMultistepGRU
+from app.features import build_features, InsufficientDataError
 
 
 logger = logging.getLogger(__name__)
@@ -56,23 +57,34 @@ app = FastAPI(title="checkdang glucose predictor")
 def load_artifacts() -> None:
     """metadata 로 모델 재구성 → state_dict load → scaler load."""
     metadata_path = ARTIFACTS_DIR / "metadata.json"
-    pt_path = ARTIFACTS_DIR / "best_seq2seq_gru.pt"
     scaler_path = ARTIFACTS_DIR / "scaler.pkl"
-
-    if not metadata_path.exists() or not pt_path.exists() or not scaler_path.exists():
-        raise RuntimeError(f"artifacts 누락 — {ARTIFACTS_DIR} 확인 필요")
 
     with metadata_path.open() as f:
         metadata = json.load(f)
     _state["metadata"] = metadata
 
-    model = Seq2SeqGRU(
-        input_dim=1,
-        hidden_dim=metadata["hidden_dim"],
-        num_layers=metadata["num_layers"],
-        output_len=metadata["output_len"],
-        dropout=metadata["dropout"],
-    )
+    # 가중치 파일명은 metadata 로 지정(v2=best.pt, v1=best_seq2seq_gru.pt)
+    pt_path = ARTIFACTS_DIR / metadata.get("weights_file", "best_seq2seq_gru.pt")
+    if not metadata_path.exists() or not pt_path.exists() or not scaler_path.exists():
+        raise RuntimeError(f"artifacts 누락 — {ARTIFACTS_DIR} 확인 필요")
+
+    arch = metadata.get("arch", "seq2seq")
+    if arch == "direct_multistep":
+        model = DirectMultistepGRU(
+            input_dim=metadata["encoder_input_dim"],
+            hidden_dim=metadata["hidden_dim"],
+            num_layers=metadata["num_layers"],
+            output_len=metadata["output_len"],
+            dropout=metadata["dropout"],
+        )
+    else:  # v1 단변량 Seq2Seq (롤백 경로)
+        model = Seq2SeqGRU(
+            encoder_input_dim=metadata.get("encoder_input_dim", 1),
+            hidden_dim=metadata["hidden_dim"],
+            num_layers=metadata["num_layers"],
+            output_len=metadata["output_len"],
+            dropout=metadata["dropout"],
+        )
     model.load_state_dict(torch.load(pt_path, map_location="cpu"))
     model.eval()
     _state["model"] = model
@@ -95,14 +107,23 @@ def health() -> dict:
     return {"status": "ok" if ready else "loading", "model_loaded": ready}
 
 
+class Event(BaseModel):
+    timestamp: str   # ISO-8601
+    value: float
+
+
 class PredictRequest(BaseModel):
-    glucose: list[float]
+    # v2(7피처, 아키텍처 A): Spring 이 RDS 에서 모아 보내는 carbs/bolus 이벤트.
+    carbs: list[Event] = []
+    bolus: list[Event] = []
+    # v1 호환: glucose 288 직접 전달(있으면 사용)
+    glucose: Optional[list[float]] = None
 
 
 class PredictResponse(BaseModel):
     predictions: list[float]
     horizon_minutes: int
-    source: str  # "body" | "db"
+    source: str  # "body" | "db_interp" | "db+events"
 
 
 # 보간 입력 품질 가드 — 측정이 너무 적거나 구간이 짧으면 거짓 예측 방지 위해 거부
@@ -185,6 +206,20 @@ def _fetch_glucose_from_db(user_id: str, date: str, required_len: int) -> list[f
     return [float(v) for v in levels]
 
 
+def _events(items) -> list[tuple[datetime, float]]:
+    """[Event] → [(datetime, value)] (timestamp 파싱 실패분 제외)."""
+    out: list[tuple[datetime, float]] = []
+    for e in items or []:
+        ts = _parse_ts(e.timestamp)
+        if ts is None:
+            continue
+        try:
+            out.append((ts, float(e.value)))
+        except (TypeError, ValueError):
+            continue
+    return out
+
+
 @app.post("/predict/blood-glucose/{user_id}", response_model=PredictResponse)
 def predict_blood_glucose(
     user_id: str,
@@ -192,35 +227,46 @@ def predict_blood_glucose(
     body: Optional[PredictRequest] = None,
 ) -> PredictResponse:
     metadata = _state["metadata"]
-    model: Seq2SeqGRU = _state["model"]
+    model = _state["model"]
     scaler = _state["scaler"]
     input_len = metadata["input_len"]
-    output_len = metadata["output_len"]
+    arch = metadata.get("arch", "seq2seq")
 
-    if body is not None and body.glucose:
-        if len(body.glucose) != input_len:
-            raise HTTPException(
-                status_code=422,
-                detail=f"body.glucose 길이가 {input_len} 이 아닙니다 (실제={len(body.glucose)}).",
-            )
-        glucose_raw = body.glucose
-        source = "body"
+    if arch == "direct_multistep":
+        # 7피처: glucose=DynamoDB 자체조회, carbs/bolus=요청 body(아키텍처 A).
+        prev_date = (datetime.fromisoformat(date) - timedelta(days=1)).date().isoformat()
+        glucose_pts = _query_levels(user_id, prev_date) + _query_levels(user_id, date)
+        carbs = _events(body.carbs) if body is not None else []
+        bolus = _events(body.bolus) if body is not None else []
+        try:
+            feats = build_features(glucose_pts, carbs, bolus, input_len=input_len, scaler=scaler)
+        except InsufficientDataError as e:
+            raise HTTPException(status_code=422, detail=str(e))
+        src = torch.tensor(feats, dtype=torch.float32).unsqueeze(0)  # (1, input_len, 7)
+        with torch.no_grad():
+            pred_scaled = model(src)
+        source = "db+events"
     else:
-        glucose_raw = _fetch_glucose_from_db(user_id, date, input_len)
-        source = "db_interp"
+        # v1 단변량 Seq2Seq 경로 (롤백 호환)
+        if body is not None and body.glucose:
+            if len(body.glucose) != input_len:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"body.glucose 길이가 {input_len} 이 아닙니다 (실제={len(body.glucose)}).",
+                )
+            glucose_raw = body.glucose
+            source = "body"
+        else:
+            glucose_raw = _fetch_glucose_from_db(user_id, date, input_len)
+            source = "db_interp"
+        arr = np.array(glucose_raw, dtype=np.float32).reshape(-1, 1)
+        arr_scaled = scaler.transform(arr).reshape(1, input_len, 1)
+        src = torch.tensor(arr_scaled, dtype=torch.float32)
+        with torch.no_grad():
+            pred_scaled = model(src, target=None, teacher_forcing_ratio=0.0)
 
-    # 정규화 → tensor (1, input_len, 1)
-    arr = np.array(glucose_raw, dtype=np.float32).reshape(-1, 1)
-    arr_scaled = scaler.transform(arr).reshape(1, input_len, 1)
-    src = torch.tensor(arr_scaled, dtype=torch.float32)
-
-    with torch.no_grad():
-        pred_scaled = model(src, target=None, teacher_forcing_ratio=0.0)
-
-    # inverse_transform → list[float]
     pred_arr = pred_scaled.cpu().numpy().reshape(-1, 1)
     pred_original = scaler.inverse_transform(pred_arr).reshape(-1)
-
     return PredictResponse(
         predictions=[float(v) for v in pred_original],
         horizon_minutes=metadata["horizon_minutes"],
