@@ -39,7 +39,7 @@ sealed interface PredictionUiState {
     object Loading : PredictionUiState
     /** 예측 결과 표시. */
     data class Loaded(val prediction: BloodGlucosePrediction) : PredictionUiState
-    /** 저장된 예측이 없음(404). "예측하기" 유도. */
+    /** 아직 예측 전. on-demand 전용이라 진입 시 기본 상태 — "예측하기" 유도. */
     object Empty : PredictionUiState
     data class Error(val message: String) : PredictionUiState
 }
@@ -104,37 +104,27 @@ class GlucoseViewModel : ViewModel() {
     val prediction: StateFlow<PredictionUiState> = _prediction.asStateFlow()
 
     /**
-     * 화면 진입 시: 오늘자 최신 예측 1건을 조회해 표시.
-     * 200 → Loaded, 404 → Empty(예측하기 유도), 그 외 오류 → Error.
-     * 게스트(userId == null)는 예측 API 대상이 아니므로 Empty 로 둔다(HealthSync 와 동일 정책).
+     * 화면 진입 시 상태. 예측은 on-demand 전용(저장/조회 API 없음 — 2026-06-16 계약)이라
+     * 진입 시엔 네트워크 호출 없이 "예측하기" 유도 상태(Empty)만 둔다.
+     * 이미 결과를 들고 있으면 재진입 시 그대로 유지한다.
      */
     fun loadLatestPrediction() {
-        // 이미 결과를 들고 있으면 재진입 시 깜빡임 없이 유지.
         if (_prediction.value is PredictionUiState.Loaded) return
-        val userId = SessionHolder.userId ?: run {
-            _prediction.value = PredictionUiState.Empty
-            return
-        }
-        viewModelScope.launch {
-            _prediction.value = PredictionUiState.Loading
-            _prediction.value = runCatching { BloodGlucosePredictionApiClient.latest(userId, today()) }
-                .map { if (it == null) PredictionUiState.Empty else PredictionUiState.Loaded(it) }
-                .getOrElse { PredictionUiState.Error(messageFor(it)) }
-        }
+        _prediction.value = PredictionUiState.Empty
     }
 
     /**
-     * "예측하기": 오늘자 예측 실행(+백엔드 자동 저장). body 생략 → 백엔드가
-     * DynamoDB 혈당 288개를 조회해 추론한다. 288개 미달이면 422 → 데이터 부족 안내.
+     * "예측하기": 오늘자 예측 실행. 요청 body 없음 → 백엔드가 최신 혈당 직전 24시간
+     * (+서버 보관 carbs/bolus)으로 추론한다. 혈당 측정이 부족하면 422 → 데이터 부족 안내.
      */
     fun runPrediction() {
-        val userId = SessionHolder.userId ?: run {
+        if (SessionHolder.userId == null) {
             _prediction.value = PredictionUiState.Error("예측은 로그인 후 이용할 수 있어요.")
             return
         }
         viewModelScope.launch {
             _prediction.value = PredictionUiState.Loading
-            _prediction.value = runCatching { BloodGlucosePredictionApiClient.predict(userId, today()) }
+            _prediction.value = runCatching { BloodGlucosePredictionApiClient.predict(today()) }
                 .map { PredictionUiState.Loaded(it) }
                 .getOrElse { PredictionUiState.Error(messageFor(it)) }
         }
@@ -144,9 +134,9 @@ class GlucoseViewModel : ViewModel() {
 
     private fun messageFor(t: Throwable): String = when {
         t is PredictionApiException && t.code == 422 ->
-            "예측에 필요한 혈당 데이터가 부족해요. (24시간·5분 간격 288개 필요)"
-        t is PredictionApiException && t.code == 502 ->
-            "예측 서비스에 연결할 수 없어요. 잠시 후 다시 시도해주세요."
+            "예측에 필요한 혈당 데이터가 부족해요. (최소 6회 측정 · 24시간 중 12시간 이상 권장)"
+        t is PredictionApiException && t.code == 401 ->
+            "로그인이 만료됐어요. 다시 로그인한 뒤 시도해주세요."
         t is PredictionApiException -> t.detail.ifBlank { "예측에 실패했어요." }
         else -> "예측에 실패했어요. 네트워크 상태를 확인해주세요."
     }
@@ -171,6 +161,18 @@ class GlucoseViewModel : ViewModel() {
      */
     fun pushManualRecord(record: GlucoseRecord) {
         viewModelScope.launch { pushGlucoseToServer(listOf(record)) }
+    }
+
+    /**
+     * 사용자가 입력한 인슐린 1건을 백엔드로 push(혈당 예측 bolus 피처용).
+     * 게스트(userId == null)는 HealthSyncApiClient.pushInsulin 이 스킵한다.
+     * 실패해도 로컬 기록/UI 는 그대로 유지되도록 runCatching 으로 감싼다.
+     */
+    fun pushInsulinRecord(record: InsulinRecord) {
+        viewModelScope.launch {
+            runCatching { HealthSyncApiClient.pushInsulin(record) }
+                .onFailure { Log.w("GlucoseViewModel", "pushInsulin failed: ${it.message}") }
+        }
     }
 
     /**

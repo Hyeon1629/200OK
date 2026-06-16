@@ -13,8 +13,9 @@ enum class InsulinType(val label: String) {
 /**
  * 사용자가 직접 입력하는 인슐린 주입 기록 (수동 입력 전용 · 로컬 저장).
  *
- * 혈당과 동일한 "기록" 타임라인에 시간순으로 함께 표시된다. 혈당처럼 백엔드로
- * push 하지는 않으며(백엔드 인슐린 도메인 미정), MockDataProvider 가 SharedPreferences 로 영속화한다.
+ * 혈당과 동일한 "기록" 타임라인에 시간순으로 함께 표시된다. 로컬은 MockDataProvider 가
+ * SharedPreferences 로 영속화하고, 로그인 사용자는 혈당 예측 bolus 피처용으로 백엔드에도
+ * push 한다(POST /api/records/insulin · 2026-06-16 계약).
  */
 data class InsulinRecord(
     val id: String = UUID.randomUUID().toString(),

@@ -5,6 +5,7 @@ import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.model.ExerciseSession
 import com.checkdang.app.data.model.GlucoseRecord
 import com.checkdang.app.data.model.HeartRateSample
+import com.checkdang.app.data.model.InsulinRecord
 import com.checkdang.app.data.model.MealItem
 import com.checkdang.app.data.model.SleepSummary
 import com.checkdang.app.util.MealTiming
@@ -59,14 +60,37 @@ object HealthSyncApiClient {
         items.forEach { m ->
             val instant = anyClockToInstant(m.time)
             arr.put(JSONObject().apply {
-                put("sourceId",   "diet_${instant.toEpochMilli()}_${mealTypeToEnum(m.type)}")
-                put("foodName",   m.name)
-                put("mealType",   mealTypeToEnum(m.type))
-                put("recordedAt", instant.toString())
-                put("calories",   m.kcal.toDouble())
+                put("sourceId",     "diet_${instant.toEpochMilli()}_${mealTypeToEnum(m.type)}")
+                put("foodName",     m.name)
+                put("mealType",     mealTypeToEnum(m.type))
+                put("recordedAt",   instant.toString())
+                put("calories",     m.kcal.toDouble())
+                // 혈당 예측 carbs 피처용. 백엔드 DietSyncRequest 가 이미 수신·저장(2026-06-16 계약).
+                put("carbohydrate", m.carbsG.toDouble())
             })
         }
         post("/api/samsung-health/diets", arr)
+    }
+
+    // ── Spring Boot: 인슐린 (record 별 POST) ─────────────────────────────────
+
+    /**
+     * 사용자가 직접 입력한 인슐린 주입 1건을 백엔드로 전송(혈당 예측 bolus 피처용, 2026-06-16 계약).
+     * 예측은 속효성(RAPID)만 bolus 로 사용하지만, 기록 자체는 종류 구분 없이 모두 저장한다.
+     * `injectedAt` 은 KST LocalDateTime ISO(예: 2026-06-16T08:05:00). 게스트(userId == null)는 스킵.
+     *
+     * 단발 입력 이벤트라 재동기화 루프가 없어 멱등키(sourceId) 불필요 — 저장 1회당 POST 1회.
+     */
+    suspend fun pushInsulin(record: InsulinRecord) = withContext(Dispatchers.IO) {
+        SessionHolder.userId ?: return@withContext
+        val injectedAt = Instant.ofEpochMilli(record.injectedAt).atZone(KST).toLocalDateTime().toString()
+        val body = JSONObject().apply {
+            put("insulinType", record.type.name)   // RAPID / LONG / MIXED / OTHER
+            put("dosage",      record.units.toDouble())
+            put("injectedAt",  injectedAt)
+            record.memo?.let { put("memo", it) }
+        }
+        post("/api/records/insulin", body)
     }
 
     // ── Spring Boot: 수면 ─────────────────────────────────────────────────────

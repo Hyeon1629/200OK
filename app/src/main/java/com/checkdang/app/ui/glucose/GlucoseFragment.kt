@@ -115,6 +115,8 @@ class GlucoseFragment : Fragment() {
     private fun openInsulinInput() {
         val sheet = InsulinInputBottomSheet()
         sheet.onRecordSaved = { record ->
+            // 혈당 예측 bolus 피처용으로 백엔드에도 전송(로그인 사용자 한정, 게스트는 클라이언트가 스킵).
+            viewModel.pushInsulinRecord(record)
             Snackbar.make(binding.root, "인슐린 ${record.unitsLabel}U 기록이 저장되었어요", Snackbar.LENGTH_SHORT)
                 .show()
         }

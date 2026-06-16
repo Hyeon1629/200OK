@@ -123,10 +123,11 @@ object SamsungHealthMapper {
             totalProtein += protein
             totalFat     += fat
             MealItem(
-                type = koreanMealTypeName(mealType),
-                name = title?.takeIf { it.isNotBlank() } ?: "기록된 식사",
-                kcal = kcal.toInt(),
-                time = formatKoreanTime(dp.startTime.toEpochMilli())
+                type   = koreanMealTypeName(mealType),
+                name   = title?.takeIf { it.isNotBlank() } ?: "기록된 식사",
+                kcal   = kcal.toInt(),
+                time   = formatKoreanTime(dp.startTime.toEpochMilli()),
+                carbsG = carbs.toInt()
             )
         }
         if (meals.isEmpty() && totalKcal == 0) return null
