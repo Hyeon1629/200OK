@@ -40,7 +40,8 @@ public class SecurityConfig {
                                 "/api/payment/kakao/callback/success",
                                 "/api/payment/kakao/callback/cancel",
                                 "/api/payment/kakao/callback/fail",
-                                "/api/payment/google/rtdn"
+                                "/api/payment/google/rtdn",
+                                "/api/internal/glucose-alerts"
                         ).permitAll()
                         .requestMatchers("/api/home/**")
                                 .hasAnyRole("GUEST", "PATIENT", "CAREGIVER", "ADMIN")

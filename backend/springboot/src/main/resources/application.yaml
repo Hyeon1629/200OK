@@ -73,3 +73,11 @@ predictor:
 gemini:
   api-key: ${GEMINI_API_KEY:}
   model: ${GEMINI_MODEL:gemini-2.5-flash}
+
+# FastAPI -> Spring 내부 호출(혈당 알림 트리거) 인증용 공유 키
+internal:
+  api-key: ${INTERNAL_API_KEY}
+
+# Firebase Cloud Messaging — 저혈당/고혈당 푸시 알림
+fcm:
+  service-account-key: ${FIREBASE_SERVICE_ACCOUNT_KEY:}

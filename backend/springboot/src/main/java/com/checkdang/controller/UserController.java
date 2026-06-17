@@ -1,6 +1,8 @@
 package com.checkdang.controller;
 
 import com.checkdang.dto.ApiResponse;
+import com.checkdang.dto.FcmTokenRequest;
+import com.checkdang.dto.NotificationSettingRequest;
 import com.checkdang.dto.UserResponse;
 import com.checkdang.service.CognitoService;
 import com.checkdang.service.UserService;
@@ -32,6 +34,27 @@ public class UserController {
             throw new IllegalArgumentException("Cognito ID Token이 필요합니다.");
         }
         return ResponseEntity.ok(ApiResponse.ok(userService.syncUserFromCognito(jwt)));
+    }
+
+    // 저혈당/고혈당 등 푸시 알림 수신을 위한 FCM 토큰 등록/갱신
+    @PatchMapping("/fcm-token")
+    public ResponseEntity<ApiResponse<Void>> updateFcmToken(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody FcmTokenRequest request) {
+        userService.updateFcmToken(jwt, request.getFcmToken());
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    // 저혈당/고혈당 등 푸시 알림 수신 여부 설정 (알림 설정 화면 토글)
+    @PatchMapping("/notification-settings")
+    public ResponseEntity<ApiResponse<Void>> updateNotificationSettings(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody NotificationSettingRequest request) {
+        if (request.getNotificationEnabled() == null) {
+            throw new IllegalArgumentException("notificationEnabled는 필수입니다.");
+        }
+        userService.updateNotificationEnabled(jwt, request.getNotificationEnabled());
+        return ResponseEntity.ok(ApiResponse.ok());
     }
 
     // 기존 로컬 회원 일괄 Cognito 마이그레이션 (어드민 전용, 1회성)

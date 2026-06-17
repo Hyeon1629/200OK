@@ -23,6 +23,24 @@ public class UserService {
         return !userRepository.existsByEmail(email);
     }
 
+    // 앱이 FCM 토큰 발급/갱신 시마다 호출 (로그인 직후, 토큰 회전 시 등)
+    @Transactional
+    public void updateFcmToken(Jwt jwt, String fcmToken) {
+        User user = userRepository.findByEmail(resolveEmail(jwt))
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        user.setFcmToken(fcmToken);
+        userRepository.save(user);
+    }
+
+    // 저혈당/고혈당 등 푸시 알림 수신 여부 설정 (앱 알림 설정 화면에서 호출)
+    @Transactional
+    public void updateNotificationEnabled(Jwt jwt, boolean notificationEnabled) {
+        User user = userRepository.findByEmail(resolveEmail(jwt))
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        user.setNotificationEnabled(notificationEnabled);
+        userRepository.save(user);
+    }
+
     // Cognito JWT로 인증된 사용자를 RDS에 upsert.
     // 앱이 Cognito 로그인(로컬/소셜) 후 최초 1회 호출 → 이후 모든 API는 Cognito JWT만으로 동작.
     @Transactional
@@ -50,6 +68,7 @@ public class UserService {
                         .role(User.Role.PATIENT)
                         .isGuest(false)
                         .accountStatus(User.AccountStatus.ACTIVE)
+                        .notificationEnabled(true) // 저혈당/고혈당 알림 등 기본 활성화
                         .build()));
 
         return UserResponse.from(user);

@@ -75,6 +75,9 @@ public class User {
     @Column(name = "notification_enabled")
     private Boolean notificationEnabled;
 
+    @Column(name = "fcm_token")
+    private String fcmToken;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AccountStatus accountStatus;

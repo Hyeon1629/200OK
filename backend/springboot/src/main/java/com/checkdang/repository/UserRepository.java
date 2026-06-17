@@ -13,4 +13,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     List<User> findByProvider(User.Provider provider);
+
+    List<User> findByFamilyGroupIdAndFamilyRole(String familyGroupId, User.FamilyRole familyRole);
 }

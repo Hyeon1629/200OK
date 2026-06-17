@@ -35,6 +35,8 @@ dependencies {
 	implementation 'com.google.apis:google-api-services-androidpublisher:v3-rev20250318-2.0.0'
 	implementation 'com.google.auth:google-auth-library-oauth2-http:1.23.0'
 	implementation 'com.google.http-client:google-http-client-gson:1.44.1'
+	// Firebase Cloud Messaging — 저혈당/고혈당 푸시 알림
+	implementation 'com.google.firebase:firebase-admin:9.4.1'
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

@@ -16,6 +16,7 @@ public class UserResponse {
     private Boolean isPremium;
     private Boolean isGuest;
     private String familyGroupId;
+    private Boolean notificationEnabled;
     private LocalDateTime createdAt;
 
     public static UserResponse from(User user) {
@@ -27,6 +28,7 @@ public class UserResponse {
                 .isPremium(user.getIsPremium() != null ? user.getIsPremium() : false)
                 .isGuest(user.getIsGuest() != null ? user.getIsGuest() : false)
                 .familyGroupId(user.getFamilyGroupId())
+                .notificationEnabled(user.getNotificationEnabled() != null ? user.getNotificationEnabled() : false)
                 .createdAt(user.getCreatedAt())
                 .build();
     }
