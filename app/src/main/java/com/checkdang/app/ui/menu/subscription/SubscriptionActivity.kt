@@ -168,7 +168,8 @@ class SubscriptionActivity : AppCompatActivity() {
     }
 
     private fun startKakaoPay() {
-        viewModel.startKakaoPay(ProductIds.PREMIUM_MONTHLY)
+        val productId = if (selectedYearly) ProductIds.PREMIUM_YEARLY else ProductIds.PREMIUM_MONTHLY
+        viewModel.startKakaoPay(productId)
     }
 
     private fun setupRetryButton() {
@@ -272,7 +273,10 @@ class SubscriptionActivity : AppCompatActivity() {
                 binding.pbLoading.visibility = View.GONE
                 if (state.redirectUrl == SubscriptionViewModel.KAKAO_MOCK_URL) {
                     val intent = Intent(this, MockKakaoPayActivity::class.java)
-                        .putExtra(MockKakaoPayActivity.EXTRA_AMOUNT, "₩5,900")
+                        .putExtra(
+                            MockKakaoPayActivity.EXTRA_AMOUNT,
+                            if (selectedYearly) "₩49,000" else "₩5,900",
+                        )
                     mockKakaoLauncher.launch(intent)
                 } else {
                     openKakaoPayApp(state.redirectUrl)
