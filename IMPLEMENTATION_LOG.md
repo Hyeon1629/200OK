@@ -4,23 +4,261 @@
 
 ---
 
-## [2026-06-17] Google Play 결제 — Mock 모드에서 "구독 중" 즉시 표시 버그 수정
+## [2026-06-13] 삼성헬스 혈당 단위 변환 버그 수정 (mmol/L → mg/dL)
 
-### 배경
-`KAKAO_MOCK = true` 상태(개발·데모 모드)에서 구독 화면을 열면, 이전 테스트에서 남은 미승인(unacknowledged) 구매를 `queryExistingPurchases()`가 계속 검출하고 백엔드 mock이 `isPremium: true`를 반환해 `SessionHolder.tier = PAID` → "구독 중" 즉시 표시. 5분 이상 경과 후에도 동일 — 미승인 구매는 Google이 3일간 유지하기 때문.
+### 배경 / 발견
+실기 테스트 중 사용자가 입력하지 않은 5월 14/15/17일 혈당이 **5~6 mg/dL**(생리학적 불가값)로 표시됨. 추적 결과 로컬 SharedPreferences 에는 없고(오늘 입력 1건뿐), **삼성헬스 직접 연동(`switchToSamsungHealth`)** 으로 끌어온 실제 사용자 혈당이었음. `SamsungHealthMapper.toGlucoseRecords` 가 **mmol/L 값을 mg/dL 변환 없이 `.toInt()`** 로 잘라서 발생.
 
-### 수정 내용
+### 단위 확정 (실기 logcat)
+임시 진단 로그(`GlucoseUnitDiag`) 로 raw 값 확인: `5.5507 / 6.2723 / 6.6609` → 명백한 **mmol/L**. ×18.0182 시 100 / 113 / 120 mg/dL 정상값. 진단 로그는 확정 후 제거(add→remove).
+
+### 작업 내용
 | 파일 | 변경 |
 |------|------|
-| `data/billing/BillingRepository.kt` | `startConnection(checkExistingPurchases: Boolean = true)` 파라미터 추가. `checkExistingPurchasesOnConnect` 플래그로 `onBillingSetupFinished()`까지 전파 |
-| `ui/menu/subscription/SubscriptionViewModel.kt` | `retry(checkExistingPurchases: Boolean = true)` 파라미터 추가 |
-| `ui/menu/subscription/SubscriptionActivity.kt` | `onResume()`에서 `retry(checkExistingPurchases = !KAKAO_MOCK)` 호출 — Mock 모드에서는 기존 구매 재조회 스킵 |
+| `data/samsunghealth/SamsungHealthMapper.kt` | `mgdlFromMmol(mmol) = (mmol * 18.0182).roundToInt()` 헬퍼 추가. `toGlucoseRecords` 의 series/단일 경로 모두 `.toInt()` → `mgdlFromMmol(...)`. `import kotlin.math.roundToInt` |
 
-### 주요 결정
-- **Mock 모드(`KAKAO_MOCK=true`)에서만 스킵** — 실제 운영(`KAKAO_MOCK=false`)에서는 기존 구매 복원이 정상 동작.
-- `onPurchasesUpdated()` 경로(신규 구매)는 변경 없음 — Mock 모드에서도 새 결제는 정상 처리됨.
-- `resetMockPaidState()` + `queryExistingPurchases()` race condition 해소: 이제 Mock 모드에서는 기존 구매 조회 자체가 없으므로 경합 불필요.
+### 주요 결정 / 메모
+- **실기 검증 완료** — 수정 후 5월 기록이 100~120 mg/dL 정상 표시 확인.
+- **파급(별건, 백엔드 핸드오프)**: `refresh()` 가 끌어온 혈당을 `pushGlucoseToServer` 로 백엔드에도 push → **잘못된 5,6 값이 이미 백엔드 DB 에 들어갔을 수 있음.** 삼성 레코드 id 는 결정적(`uid-timestamp`)이라 `GlucoseSyncStore` 가 이미 전송됨으로 간주 → **앱이 정정값을 재전송하지 않음.** 백엔드(kgh)가 해당 레코드 정리/재계산 필요. AI 리포트/예측 데이터 미스매치의 원인 중 하나일 가능성.
+- 빌드 검증: `assembleDebug` BUILD SUCCESSFUL + 실기 설치 확인.
+
+---
+
+## [2026-06-13] 혈당 PDF 일지에 인슐린 주입 기록 추가
+
+### 배경
+인슐린은 화면(타임라인·홈 카드)엔 통합돼 있으나 PDF 혈당 일지엔 빠져 있었음(혈당만 출력). 진료 지참용 일지 완성도를 위해 인슐린 주입 기록을 PDF 에 추가. PDF 는 로컬 렌더링이라 **백엔드 의존 없는 프론트 단독 작업**.
+
+### 작업 내용
+| 파일 | 변경 |
+|------|------|
+| `ui/glucose/export/GlucosePdfExporter.kt` | `buildShareIntent`/`saveToDownloads`/`render` 에 `insulin: List<InsulinRecord>` 파라미터 추가. 혈당 표 아래 **"인슐린 주입 기록" 표**(날짜/시간/주입량 U/종류/메모) 신설 — 페이지 넘김·헤더 반복 처리. 헤더 건수에 "인슐린 N건" 추가. 제목 "혈당 기록 리포트"→"혈당·인슐린 기록 리포트", 공유 제목도 갱신 |
+| `ui/glucose/GlucoseFragment.kt` | 공유/저장 시 `MockDataProvider.insulinRecordsFlow.value` 를 함께 전달 |
+
+### 주요 결정 / 메모
+- **내보내기 게이트는 혈당 기준 유지** — 혈당 0건이면 기존대로 "내보낼 혈당 기록 없음" 차단(인슐린은 보조). 인슐린 0건이면 인슐린 표 자체를 생략.
+- 메모는 18자 초과 시 말줄임. 인슐린 종류는 `InsulinType.label`(속효성/지속형 등).
+- **인슐린의 남은 한계(이번 범위 밖)**: 백엔드 동기화·AI 분석·혈당 예측 반영은 여전히 미연동 — **백엔드 인슐린 도메인 부재**(외부 의존)라 프론트 단독 불가. 활성 "프론트 미완"이 아니라 "백엔드 도메인 생기면 후속". PDF 포함만으로 혈당-인슐린 데이터 분리가 부분 해소됨.
+- 빌드 검증: `compileDebugKotlin` BUILD SUCCESSFUL.
+
+---
+
+## [2026-06-13] 실기(Galaxy S21) E2E 테스트 — 6대 기능 실증 (코드 변경 없음)
+
+origin/frontend 와 동일한 툴체인(AGP 8.13.2)으로 빌드·설치 후 실기 검증. 프론트 코드 변경 없음(통증 진단 로그는 add→remove net 0). 미완 업무 목록 **불변** — "프론트 완료 / 외부 대기" 상태를 실증으로 확인.
+
+### 검증 결과
+
+| 기능 | 결과 | 판정 |
+|------|------|------|
+| 혈당/인슐린 입력→저장→조회→홈 카드 반영 | ✅ 정상 | 프론트 완료 재확인 |
+| 로그인(구글/카카오 임시우회) | ✅ 정상 | 완료 재확인 |
+| 통증 분석 (저장→분석 2단계) | ✅ 동작 (재로그인 후) | **프론트 실연동 E2E 검증 완료** ([[project_pain_analysis_status]] 잔여 E2E 해소) |
+| 식단 조언 / 종합 리포트 | 결과 출력되나 데이터 미스매치 | 프론트 정상, 백엔드 데이터소스/캐싱 대기 ([[project_ai_report_data_mismatch]]) |
+| 혈당 예측 | "데이터 부족"(422) = 정상 동작 | 프론트 정상, 백엔드 CGM 288개 시딩 대기 |
+
+### 주요 관찰 / 결정
+- **통증 "사용자를 찾을 수 없음"은 프론트 버그 아님** — 리포트·식단과 동일 토큰(`SessionHolder.accessToken`=Cognito ID Token)을 동일 헤더로 사용, 그쪽은 인증 통과. 재로그인으로 해소 → 백엔드 user 프로비저닝/토큰 타이밍 추정. 시연 직전 로그아웃→로그인 권장.
+- **혈당 예측 데이터** — 수동 입력 혈당은 백엔드로 동기화되나(`GlucoseViewModel.pushManualRecord`→`HealthSyncApiClient.pushGlucose`), 예측은 오늘 날짜 5분 간격 CGM 288개 필요 → 수동 입력으로는 비현실적. AI팀 시딩 필요.
+- **식단/리포트 미스매치** — 프론트는 데이터 무전송(GET). AI가 분석하는 건 백엔드 DB 의 식단/수면/운동(로컬 혈당/인슐린과 별개 소스) + 캐싱 이슈. 백엔드 처리 영역.
+
+### 백엔드/AI 핸드오프 (프론트 작업 아님)
+1. (AI팀) 데모 계정 오늘 날짜 CGM 288개 시딩 — 예측 곡선 시연용
+2. (백엔드 kgh) 식단/리포트 데이터 미스매치 + 리포트 캐싱(sourceCount=0인데 옛 본문) 재확인
+3. (백엔드 kgh) 통증 "사용자 없음" 간헐 재발 — user 프로비저닝 점검
+
+---
+
+## [2026-06-13] 6/8 작업현황 PDF ↔ 현재 코드 일치 검증 (코드 변경 없음)
+
+`프론트엔드_작업_현황(6월_8일자).pdf` 의 6개 항목 + 정리 주장을 현재 코드와 전수 대조. **전부 일치 확인.** 코드 변경 없음(검증·기록 전용).
+
+### PDF 6개 항목 검증 결과
+
+| # | PDF 주장 | 코드 근거 | 일치 |
+|---|---------|-----------|------|
+| 1 | 식단·종합·통증 셋 다 실연동 | `AiAdviceApiClient`/`AiReportApiClient`/`PainAnalysisApiClient` 모두 존재 | ✅ |
+| 2 | 로컬 알림 ✅ + FCM 배선 ✅ / 토큰 업로드 stub | `PushTokenStore.register()` 에 `TODO(push-backend)` + `Log.i("FcmToken")` stub 그대로 | ✅ |
+| 3 | 혈당 예측 프론트 배선 완료 / 모델 배포 대기 | `BloodGlucosePredictionApiClient.predict()/latest()` 존재 | ✅ |
+| 4 | 통증 Mock→실연동 전환 완료 | `PainAnalysisApiClient` 실연동, Mock 분석 코드 0건 | ✅ |
+| 5 | 결제 프론트 완성 / Play 대기 | `BillingRepository` 완성, 서버 verify 주석 = 백엔드 대기 | ✅ |
+| 6 | 모델 개발 — 프론트 영역 아님 | 해당 없음 | ✅ |
+
+### "코드 정리" 주장 커밋 확인
+- `ApiConstants.kt` 삭제 → `d44ed17` (현재 파일 없음 확인)
+- 미사용 Mock 통증 분석(`analyzePainMock`/`Correlation`/`AIAnalysisResult`) 제거 → `e6082b3` (흔적 0건)
+- `GlucosePredictor.kt`(옛 Mock 예측기) 삭제됨
+
+### 메모
+- PDF 는 6/8자. 이후 커밋(인슐린 입력, 홈 실데이터 연결, 상태바 인셋, Gemini 타임아웃 90s)이 더 쌓였으나 **6개 핵심 항목 상태는 불변** → PDF 유효.
+- 지금 시점 프론트가 추가 코드 작성할 항목 = **5번(FCM 토큰 업로드 1줄, 백엔드 회신 시)** 뿐. 나머지는 외부(백엔드/AI/Play) 트리거 대기.
+
+---
+
+## [2026-06-08] 프론트엔드 잔여 작업 상태 스냅샷 (시연 보고 기준)
+
+코드 변경 없음 — 현재 남은 작업/대기 상태만 기록(시연 보고·교차검증 결과).
+
+### 기능 6항목 상태 (프론트엔드 코드 기준)
+
+| # | 항목 | 프론트 상태 | 코드 근거 | E2E(백엔드·AI) 의존 |
+|---|------|------------|-----------|---------------------|
+| 1 | Gemini 종합 리포트 | ✅ 완료(배선) | `AiReportApiClient.getComprehensiveReport()` ← `ComprehensiveReportViewModel` | 백엔드 리포트 안정화(6/6 기준 500·캐싱 이슈) — 시연 전 확인 |
+| 2 | Gemini 통증 | ✅ 완료(저장→분석 2단계) | `PainAnalysisApiClient.analyze()` ← `AIAnalysisActivity` | 백엔드 Gemini 통증 배포·E2E(kgh3) — 시연 전 확인 |
+| 3 | Gemini 식단 | ✅ 완료(배선) | `AiAdviceApiClient.getDietAdviceForDemo()` ← `MealDetailActivity` | 데모 엔드포인트, 데이터 불일치 이슈 해소 확인(6/6) — 양호 |
+| 4 | AI 모델 출력(혈당 예측) | ✅ 완료(FastAPI 실연동) | `BloodGlucosePredictionApiClient.predict()/latest()` ← `GlucoseViewModel` → 36점 차트 | 모델 배포·동작 중. AI팀 성능 개선 진행(=6번) |
+| 5 | 가족 알림 연동 | ⏳ 미완료(배선만) | `PushTokenStore.register()` 업로드 stub(`TODO(push-backend)`) | 백엔드 토큰 등록 엔드포인트 회신 대기 |
+| 6 | 모델 개발 | ➖ 해당 없음 | 프론트 영역 아님 | AI팀 평가지표·성능 개선 중 |
+
+### 남은 작업 정리
+
+- **프론트가 추가 코드 작성**이 필요한 항목: **5번뿐** — 백엔드 엔드포인트 회신 시 `PushTokenStore.register()` 업로드 1줄 연결 + 진단 로그(`Log.i("FcmToken")`) 제거.
+- **출시 전(시연 범위 밖) 별도 잔여 작업**:
+  - 🔴 법무 자리표시자 실값 교체 + 검토 (`privacy_policy.md`/`terms_of_service.md`, `TODO(legal)`)
+  - 🔴 민감정보(건강) 별도 동의 화면 추가 (보호법 §23, 미구현)
+  - 🟠 개발자용 PAID/FREE 토글 release 빌드 제거 (`MenuFragment.kt`, `TODO(release)`)
+  - 🟠 카카오 로그인 임시 우회 원복 (email Optional + sub 기반 → 정식)
+  - ⚪ Android 13+ Themed Icon(monochrome) (`TODO(icon)`)
+
+### 메모
+- "완료"는 **프론트엔드 코드 기준**. 통증·혈당은 "프론트 완료 / 백엔드·AI 진행 중"으로 설명해야 보고-시연 내레이션이 충돌하지 않음.
+- 시연 전 확인 우선순위: **1·2번 > 3번** (백엔드 Gemini 응답 상태 1회 점검 권장).
+
+---
+
+## [2026-06-06] Gemini 클라이언트 readTimeout 60s→90s (백엔드 max_token↑ + thinking 대응)
+
+### 배경
+백엔드 회신: Gemini 오류(잘림) 지속 → **max_output_tokens 상향 + thinking 유지**로 수정. 출력이 길어지고 추론 시간이 늘어 응답 지연 증가. 프론트 확인 요청.
+
+### 확인 결과
+- **잘림**: 프론트는 받은 텍스트 그대로 렌더 → 백엔드 max_token 상향으로 해결, 프론트 수정 불요.
+- **타임아웃**: Gemini 3개 클라이언트 모두 readTimeout 60s 였음. 지연 증가로 마진 축소 → **90s 로 상향**(데모 중 타임아웃 예방).
+- **재시도**: 리포트는 5xx/IO 1회 재시도 유지(견고). 식단·통증은 무재시도(실패 시 수동 재시도) — 현행 유지.
+
+### 작업 내용
+| 파일 | 변경 |
+|------|------|
+| `AiReportApiClient.kt` | readTimeout 60s→90s + "출력 길이 고정" 옛 주석 정정 |
+| `AiAdviceApiClient.kt` | readTimeout 60s→90s |
+| `PainAnalysisApiClient.kt` | readTimeout 60s→90s |
+
+빌드 검증: `compileDebugKotlin` BUILD SUCCESSFUL.
+
+---
+
+## [2026-06-06] 상태바 겹침 수정 — 전 화면 fitsSystemWindows 인셋 처리
+
+### 배경
+온보딩 화면 상단 배너가 상태바(시계·아이콘)와 겹침(시연 스크린샷). 원인: 기기(One UI/Android 15+)가 엣지투엣지로 그리는데 액티비티 루트가 시스템바 인셋을 처리하지 않음(테마 `statusBarColor=white` 무시됨). 메인 포함 전반 동일 문제.
+
+### 작업 내용
+| 파일 | 변경 |
+|------|------|
+| `activity_main.xml` | 루트에 `fitsSystemWindows="true"` + 배경 white → 홈 등 BottomNav 5개 탭 전부 상태바 아래로, BottomNav 는 내비바 위로 |
+| `activity_onboarding.xml` | 루트에 `fitsSystemWindows="true"` + 배경(배너 겹침 해소) |
+| 툴바/진입 화면 12종 | `activity_ai_analysis / comprehensive_report / exercise_detail / family / legal_document / login / meal_detail / notification_settings / profile / sleep_detail / subscription / terms` 루트에 `fitsSystemWindows="true"` 추가 |
+
+### 주요 결정 / 메모
+- `fitsSystemWindows="true"` 는 인셋 없으면 패딩 0이라 무해, 엣지투엣지면 상태바/내비바 높이만큼 패딩 → 상태바 겹침 해소 + 하단 버튼·BottomNav 내비바 위로.
+- 미적용: `activity_splash`(풀블리드 의도), `activity_design_system`(개발용).
 - 빌드 검증: `assembleDebug` BUILD SUCCESSFUL.
+
+---
+
+## [2026-06-06] 홈 혈당·라이프스타일·주간차트 실데이터 연결 (placeholder 해소)
+
+### 배경
+홈 요약 카드들이 placeholder(`getGlucoseSummary()`/`getLifestyleSummary()`=null, `getWeeklyGlucose()`=empty)로 비어 있던 기존 미배선 상태. 데이터 소스는 이미 존재(혈당=`MockDataProvider.recordsFlow`, 라이프스타일=`HealthRepository`)했으나 홈이 연결을 안 하고 있었음 → 각 탭과 동일 소스에 연결.
+
+### 작업 내용
+| 파일 | 변경 |
+|------|------|
+| `ui/home/HomeViewModel.kt` | 혈당 요약/주간(7일 일별평균)을 `recordsFlow` 에서 파생(StateFlow). 라이프스타일은 `HealthRepository.get{Exercise,Meal,Sleep}Summary()` async 로드(`loadLifestyle()`). `buildGlucoseSummary`/`buildWeekly`/`labelFor`/`startOfDay` 헬퍼 |
+| `ui/home/HomeFragment.kt` | `.value` 1회 읽기 → flow 4종(혈당/라이프스타일/주간/인슐린) `repeatOnLifecycle` 구독. 진입 시 `loadLifestyle()` 재로드. 주간차트는 데이터 없는 날(0f) 점 제외 |
+
+### 주요 결정 / 메모
+- **혈당/주간/인슐린 = 로컬 실데이터 즉시 반영**(입력하면 홈에 최신값·오늘 횟수·평균·7일 그래프 갱신).
+- **라이프스타일 = 현재 HealthRepository 소스 반영** — Health Connect 연결 전엔 `MockHealthDataSource` 샘플(45/60분·1640kcal·7.2h), 라이프스타일 탭에서 HC 연결 후 진입하면 실데이터. (싱글톤 소스라 탭 전환으로 전파)
+- 혈당 탭/라이프스타일 탭 로직 불변(같은 소스 공유만). 회귀 위험 낮음.
+- 빌드 검증: `assembleDebug` BUILD SUCCESSFUL.
+
+---
+
+## [2026-06-06] 홈 "오늘 인슐린" 요약 카드 추가
+
+### 배경
+인슐린 최소 기능에 이어, 홈에서 오늘 주입 합계를 한눈에 보이도록 노출 요청. 확인 결과 홈 요약 카드(혈당/라이프스타일/주간차트)는 현재 모두 빈 placeholder(`getGlucoseSummary()` 등 null/empty — 기존 미배선). → 인슐린은 기존 카드에 얹지 않고 **실데이터로 동작하는 독립 카드**로 추가.
+
+### 작업 내용
+| 파일 | 변경 |
+|------|------|
+| `res/layout/fragment_home.xml` | 메인 혈당 카드 아래 `card_insulin` 추가(💉 오늘 인슐린 / 횟수·최근 / 합계 U, 인디고 액센트) |
+| `ui/home/HomeViewModel.kt` | `InsulinDaySummary` + `todayInsulin` StateFlow(`insulinRecordsFlow` → 오늘 합계/횟수/최근 1건) |
+| `ui/home/HomeFragment.kt` | `todayInsulin` 라이브 구독 바인딩(입력 즉시 반영), 카드 탭 → 혈당 탭 이동 |
+
+### 주요 결정 / 메모
+- 오늘 입력 인슐린 실데이터에서 집계 → 입력 즉시 라이브 갱신(flow). 기록 0건이면 "오늘 기록 없음 / 0 U".
+- 기존 혈당/차트 로직 불변(회귀 0). 홈 혈당·라이프스타일 카드의 빈 placeholder 는 별개 기존 이슈로 미해결.
+- 빌드 검증: `assembleDebug` BUILD SUCCESSFUL.
+
+---
+
+## [2026-06-06] 인슐린 수동 입력 최소 기능 추가 (혈당 기록 타임라인에 병행)
+
+### 배경
+시연 항목에 "인슐린 수동 입력→저장" 이 필요한데 앱에 인슐린 로직이 **전무**(GlucoseRecord에 필드 없음, 코드 전역 검색 0건)했다. 혈당 입력 패턴을 그대로 미러링해 최소 기능을 추가.
+
+### 설계
+- **혈당 `records` 흐름은 불변** — PDF/차트/통계가 의존하므로 건드리지 않고, 표시용 **타임라인만 병합**(혈당+인슐린 시간순). 인슐린은 백엔드 push 안 함(인슐린 도메인 미정) — MockDataProvider SharedPreferences 로컬 영속만.
+
+### 작업 내용
+| 파일 | 변경 |
+|------|------|
+| `data/model/InsulinRecord.kt` 🆕 | `InsulinRecord(units, type, injectedAt, memo)` + `InsulinType`(속효성/지속형/혼합형/기타) + `unitsLabel`(.0 제거) |
+| `data/mock/MockDataProvider.kt` | 인슐린 저장(`insulinRecordsFlow`/`addInsulinRecord`/`restoreInsulin`/`persistInsulin`, `KEY_INSULIN_RECORDS`) + init/clear 반영 |
+| `ui/glucose/GlucoseViewModel.kt` | `TimelineEntry`(Glucose/Insulin) sealed + `timeline` StateFlow(records ⊕ 인슐린, 시간 역순) |
+| `ui/glucose/list/GlucoseRecordAdapter.kt` | `ListItem` 에 GlucoseItem/InsulinItem 분리, `buildListItems(List<TimelineEntry>)`, 뷰타입 3종 + InsulinViewHolder |
+| `ui/glucose/list/GlucoseListFragment.kt` | `records` → `timeline` 구독 |
+| `ui/glucose/GlucoseFragment.kt` | FAB → 선택 다이얼로그(혈당/인슐린). 인슐린 저장 시 스낵바 |
+| `ui/glucose/input/InsulinInputBottomSheet.kt` 🆕 + `res/layout/bottom_sheet_insulin_input.xml` 🆕 | 주입량(U, 0.5~100)·종류 칩·시각·메모 입력 → 저장 |
+| `res/layout/item_insulin_record.xml` 🆕 + `colors.xml` | 인슐린 리스트 아이템(💉, 인디고 `insulin_accent`) |
+
+### 주요 결정 / 메모
+- 혈당과 한 "기록" 탭에 시간순 병합 → 시연 시 혈당·인슐린이 같은 타임라인에 쌓이는 모습. 혈당은 상태색/칩, 인슐린은 인디고 바 + "N U" 로 시각 구분.
+- 인슐린은 알림/예측/PDF/백엔드 동기화 대상 아님(최소 기능). 추후 백엔드 인슐린 도메인 생기면 동기화 추가.
+- 빌드 검증: `assembleDebug` BUILD SUCCESSFUL(APK 패키징까지).
+
+---
+
+## [2026-06-06] 통증 AI 분석 실연동 (Mock → 백엔드 2단계 호출, AI팀 Gemini PR 계약 반영)
+
+### 배경
+AI팀(lsy) PR `lsy_gemini`→`kgh3` 로 FastAPI `gemini.analyze_pain` 가 채워지며 통증 분석 백엔드 체인(**앱 → Spring `PainAnalysisService` → FastAPI `/analyze/pain` → Gemini**)이 완성·계약 확정. 직전까지 프론트는 `MockDataProvider.analyzePainMock`(delay 1.5s 자리표시자) 사용 → 실연동으로 교체. (6대 프론트 현황 중 통증만 유일하게 Mock 으로 남아있던 실작업.)
+
+### 계약 (백엔드 `kgh3` 기준)
+| 단계 | 호출 | 요청/응답 |
+|------|------|-----------|
+| 1 저장 | `POST /api/pain-records` | body `{bodyPart, intensity, qualityTags, situationTags}` → 201 `ApiResponse<{id,…}>` |
+| 2 분석 | `POST /api/ai/pain-analysis/{painRecordId}` | (body 없음) → `ApiResponse<{painRecordId, aiCause, aiFirstAid}>` |
+
+- **BodyPart enum 이름이 앱↔백엔드 100% 일치**(`PainRecord.BodyPart`), `qualityTags`/`situationTags` 도 `PainTaxonomy` 동일 어휘 → 추가 매핑 불요.
+- 응답 래퍼는 Spring 공통 `{success, data, message}`(PaymentApiClient 와 동일 패턴).
+
+### 작업 내용
+| 파일 | 변경 |
+|------|------|
+| `data/remote/PainAnalysisApiClient.kt` 🆕 | 2단계(저장→분석) 호출. `PainAnalysisResult(painRecordId, aiCause, aiFirstAid)`. Cognito Bearer, readTimeout 60s(Gemini), 비2xx 는 `message` 담아 예외 |
+| `ui/bodymap/analysis/AIAnalysisActivity.kt` | `analyzePainMock`+`delay(1500)` 제거 → 실 API. **로딩/결과/에러 3상태** + 게스트 차단(`userId==null`) + 재시도. 인라인 `CorrelationAdapter` 삭제 |
+| `res/layout/activity_ai_analysis.xml` | 결과 화면을 **예상 원인(`tv_ai_cause`) + 집에서 할 수 있는 조치(`tv_ai_first_aid`)** 2블록으로 재구성. 연관요인 RecyclerView 제거(백엔드 출력에 대응 없음). 에러 상태 레이아웃(`layout_error`/`tv_error`/`btn_retry`/`btn_error_close`) 추가 |
+
+### 주요 결정 / 메모
+- **프로비저널 배선** — `kgh3` 가 아직 머지·배포 전이라 `api.checkdang.xyz` 에서 E2E 검증 불가. 배포되면 코드 변경 없이 동작(종합리포트 골격 때와 동일 패턴).
+- **응답 형태 변화 반영** — 새 백엔드는 `aiCause`/`aiFirstAid` 자유텍스트 2개만 제공. 기존 Mock 의 summary/correlations/recommendation 구조는 대응 출력이 없어 화면에서 제거.
+- **게스트 차단** — 기존 AI/FastAPI 게스트 미지원 정책 그대로(`SessionHolder.userId == null` → 안내만 표시, 네트워크 호출 스킵).
+- **로컬 목록 유지** — 바디맵 기록 리스트가 아직 `MockDataProvider` 로컬 소스라 `addPainRecord` 유지(백엔드에도 1단계에서 별도 저장). 추후 `GET /api/pain-records` 로 전환 가능.
+- **후속(별건)**: 미사용이 된 Mock 통증 분석 코드(`analyzePainMock`/`Correlation`/`CorrelationLevel`/`AIAnalysisResult`/`item_correlation.xml`) 정리. + `data/remote/ApiConstants.kt` 는 **미참조 + 옛 Cognito 값**(`db7haykk4`/`chekdang://callback` 오타)이라 정리/확인 필요(현행 `amplifyconfiguration.json` 과 모순).
+- 빌드 검증: `compileDebugKotlin` BUILD SUCCESSFUL.
 
 ---
 

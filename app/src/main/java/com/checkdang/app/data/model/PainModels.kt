@@ -30,18 +30,6 @@ enum class BodyPart(val label: String, val view: BodyView) {
     RIGHT_SHOULDER_BACK("오른쪽 어깨 (뒤)", BodyView.BACK),
 }
 
-enum class CorrelationLevel(val label: String) {
-    HIGH("높음"),
-    MEDIUM("중간"),
-    LOW("낮음"),
-}
-
-data class Correlation(
-    val factor: String,
-    val level: CorrelationLevel,
-    val description: String,
-)
-
 data class PainRecord(
     val id: String = UUID.randomUUID().toString(),
     val bodyPart: BodyPart,
@@ -54,10 +42,3 @@ data class PainRecord(
     val tagSummary: String
         get() = (qualityTags + situationTags).joinToString(" · ").ifEmpty { "기록된 태그 없음" }
 }
-
-data class AIAnalysisResult(
-    val painRecord: PainRecord,
-    val summary: String,
-    val correlations: List<Correlation>,
-    val recommendation: String,
-)

@@ -9,6 +9,9 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.checkdang.app.R
 import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.model.GlucoseSummary
@@ -25,6 +28,7 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IFillFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -44,10 +48,35 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         setupHeader()
-        setupGlucoseCard(viewModel.glucoseSummary.value)
-        setupLifestyleSection(viewModel.lifestyleSummary.value)
-        setupWeeklyChart(viewModel.weeklyGlucose.value)
         setupClickListeners()
+        viewModel.loadLifestyle()   // 진입 시 현재 헬스 소스로 라이프스타일 재로드
+        observeHome()
+    }
+
+    /** 혈당/라이프스타일/주간차트/인슐린을 모두 실데이터 flow 로 구독. */
+    private fun observeHome() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch { viewModel.glucoseSummary.collect { setupGlucoseCard(it) } }
+                launch { viewModel.lifestyleSummary.collect { setupLifestyleSection(it) } }
+                launch { viewModel.weeklyGlucose.collect { setupWeeklyChart(it) } }
+                launch { viewModel.todayInsulin.collect { bindInsulin(it) } }
+            }
+        }
+    }
+
+    // ── 오늘 인슐린 요약 ────────────────────────────────────────────────────
+    private fun bindInsulin(s: InsulinDaySummary) {
+        if (s.count == 0) {
+            binding.tvInsulinTotal.text = "0 U"
+            binding.tvInsulinSub.text = "오늘 기록 없음"
+        } else {
+            val total = if (s.totalUnits % 1f == 0f) s.totalUnits.toInt().toString()
+                        else s.totalUnits.toString()
+            binding.tvInsulinTotal.text = "$total U"
+            binding.tvInsulinSub.text =
+                "${s.count}회" + (s.lastLabel?.let { " · 최근 $it" } ?: "")
+        }
     }
 
     // ── 헤더 ──────────────────────────────────────────────────────────────
@@ -172,9 +201,11 @@ class HomeFragment : Fragment() {
             fillFormatter  = IFillFormatter { _, _ -> 70f }
         }
 
-        // 혈당 라인
-        val entries = weeklyData.mapIndexed { i, v -> Entry(i.toFloat(), v) }
-        val dotColors = weeklyData.map { v ->
+        // 혈당 라인 — 데이터 없는 날(0f)은 점을 찍지 않는다.
+        val entries = weeklyData.mapIndexedNotNull { i, v ->
+            if (v > 0f) Entry(i.toFloat(), v) else null
+        }
+        val dotColors = weeklyData.filter { it > 0f }.map { v ->
             GlucoseEvaluator.getColor(
                 GlucoseEvaluator.evaluate(v.toInt(), MealTiming.POST_MEAL_2H),
                 requireContext()
@@ -209,6 +240,9 @@ class HomeFragment : Fragment() {
             startActivity(android.content.Intent(requireContext(), ComprehensiveReportActivity::class.java))
         }
         binding.cardGlucose.setOnClickListener {
+            bottomNav.selectedItemId = R.id.nav_glucose
+        }
+        binding.cardInsulin.setOnClickListener {
             bottomNav.selectedItemId = R.id.nav_glucose
         }
         binding.btnAddGlucose.setOnClickListener {

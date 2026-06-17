@@ -141,7 +141,7 @@ class GlucoseChartFragment : Fragment() {
                 }
                 // 혈당 예측은 로그인 사용자 전용 — 게스트는 조회/구독하지 않는다(고정 안내 유지).
                 if (!SessionHolder.isGuest) {
-                    // 진입 시 오늘자 최신 예측 조회 (이미 결과가 있으면 ViewModel 이 스킵)
+                    // 예측은 on-demand 전용 — 진입 시엔 '예측하기' 유도 상태만 둔다(결과 보유 시 유지)
                     viewModel.loadLatestPrediction()
                     launch {
                         viewModel.prediction.collect { bindPrediction(it) }
