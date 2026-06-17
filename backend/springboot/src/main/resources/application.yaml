@@ -30,6 +30,7 @@ google:
     package-name: ${GOOGLE_PLAY_PACKAGE_NAME}
     service-account-key: ${GOOGLE_PLAY_SERVICE_ACCOUNT_KEY}
     subscription-id: ${GOOGLE_PLAY_SUBSCRIPTION_ID}
+    mock-mode: ${GOOGLE_PLAY_MOCK_MODE:false}
 
 kakao:
   pay:

@@ -9,6 +9,7 @@ import java.time.Instant;
 @Builder
 public class GooglePlayVerifyResponse {
 
+    private Boolean isPremium;
     private String orderId;
     private String subscriptionId;
     private Integer premiumMonths;

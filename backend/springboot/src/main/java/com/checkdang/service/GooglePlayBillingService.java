@@ -45,6 +45,11 @@ public class GooglePlayBillingService {
     @Value("${google.play.subscription-id}")
     private String defaultSubscriptionId;
 
+    @Value("${google.play.mock-mode:false}")
+    private boolean mockMode;
+    // Play Console API 액세스 미설정 상태에서 시연용.
+    // true면 AndroidPublisher API 호출 없이 isPremium: true를 바로 반환 (DB 미반영).
+
     // notificationType 상수
     private static final int TYPE_RENEWED   = 2;
     private static final int TYPE_CANCELED  = 3;
@@ -54,6 +59,14 @@ public class GooglePlayBillingService {
 
     // Android 앱이 구매 완료 후 호출 — purchaseToken 검증 후 프리미엄 부여
     public GooglePlayVerifyResponse verify(String userEmail, GooglePlayVerifyRequest request) {
+        if (mockMode) {
+            log.info("[MOCK] Google Play 구독 검증 (DB 미반영) - purchaseToken: {}", request.getPurchaseToken());
+            return GooglePlayVerifyResponse.builder()
+                    .isPremium(true)
+                    .premiumExpiresAt(null)
+                    .build();
+        }
+
         if (request.getPurchaseToken() == null || request.getPurchaseToken().isBlank()) {
             throw new IllegalArgumentException("purchaseToken은 필수입니다.");
         }
@@ -88,6 +101,7 @@ public class GooglePlayBillingService {
         acknowledgeIfNeeded(subscriptionId, request.getPurchaseToken(), purchase);
 
         return GooglePlayVerifyResponse.builder()
+                .isPremium(true)
                 .orderId(purchase.getOrderId())
                 .subscriptionId(subscriptionId)
                 .premiumMonths(1)
