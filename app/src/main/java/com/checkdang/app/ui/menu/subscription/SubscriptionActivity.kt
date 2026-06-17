@@ -272,11 +272,9 @@ class SubscriptionActivity : AppCompatActivity() {
             is KakaoPayState.ReadyToLaunch -> {
                 binding.pbLoading.visibility = View.GONE
                 if (state.redirectUrl == SubscriptionViewModel.KAKAO_MOCK_URL) {
+                    val amount = if (selectedYearly) binding.tvPriceYearly.text else binding.tvPriceMonthly.text
                     val intent = Intent(this, MockKakaoPayActivity::class.java)
-                        .putExtra(
-                            MockKakaoPayActivity.EXTRA_AMOUNT,
-                            if (selectedYearly) "₩49,000" else "₩5,900",
-                        )
+                        .putExtra(MockKakaoPayActivity.EXTRA_AMOUNT, amount.toString())
                     mockKakaoLauncher.launch(intent)
                 } else {
                     openKakaoPayApp(state.redirectUrl)
