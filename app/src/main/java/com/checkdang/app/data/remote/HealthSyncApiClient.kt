@@ -5,6 +5,7 @@ import com.checkdang.app.data.mock.SessionHolder
 import com.checkdang.app.data.model.ExerciseSession
 import com.checkdang.app.data.model.GlucoseRecord
 import com.checkdang.app.data.model.HeartRateSample
+import com.checkdang.app.data.model.InsulinRecord
 import com.checkdang.app.data.model.MealItem
 import com.checkdang.app.data.model.SleepSummary
 import com.checkdang.app.util.MealTiming
@@ -40,10 +41,12 @@ object HealthSyncApiClient {
         if (sessions.isEmpty()) return@withContext
         val arr = JSONArray()
         sessions.forEach { s ->
+            val instant = koreanClockToInstant(s.startedAt)
             arr.put(JSONObject().apply {
+                put("sourceId",     "exercise_${instant.toEpochMilli()}_${s.type}")
                 put("exerciseName", s.type)
                 put("duration",     s.durationMin.toLong())
-                put("recordedAt",   koreanClockToIso(s.startedAt))
+                put("recordedAt",   instant.toString())
             })
         }
         post("/api/samsung-health/exercises", arr)
@@ -55,25 +58,51 @@ object HealthSyncApiClient {
         if (items.isEmpty()) return@withContext
         val arr = JSONArray()
         items.forEach { m ->
+            val instant = anyClockToInstant(m.time)
             arr.put(JSONObject().apply {
-                put("foodName",   m.name)
-                put("mealType",   mealTypeToEnum(m.type))
-                put("recordedAt", anyClockToIso(m.time))
-                put("calories",   m.kcal.toDouble())
+                put("sourceId",     "diet_${instant.toEpochMilli()}_${mealTypeToEnum(m.type)}")
+                put("foodName",     m.name)
+                put("mealType",     mealTypeToEnum(m.type))
+                put("recordedAt",   instant.toString())
+                put("calories",     m.kcal.toDouble())
+                // 혈당 예측 carbs 피처용. 백엔드 DietSyncRequest 가 이미 수신·저장(2026-06-16 계약).
+                put("carbohydrate", m.carbsG.toDouble())
             })
         }
         post("/api/samsung-health/diets", arr)
     }
 
+    // ── Spring Boot: 인슐린 (record 별 POST) ─────────────────────────────────
+
+    /**
+     * 사용자가 직접 입력한 인슐린 주입 1건을 백엔드로 전송(혈당 예측 bolus 피처용, 2026-06-16 계약).
+     * 예측은 속효성(RAPID)만 bolus 로 사용하지만, 기록 자체는 종류 구분 없이 모두 저장한다.
+     * `injectedAt` 은 KST LocalDateTime ISO(예: 2026-06-16T08:05:00). 게스트(userId == null)는 스킵.
+     *
+     * 단발 입력 이벤트라 재동기화 루프가 없어 멱등키(sourceId) 불필요 — 저장 1회당 POST 1회.
+     */
+    suspend fun pushInsulin(record: InsulinRecord) = withContext(Dispatchers.IO) {
+        SessionHolder.userId ?: return@withContext
+        val injectedAt = Instant.ofEpochMilli(record.injectedAt).atZone(KST).toLocalDateTime().toString()
+        val body = JSONObject().apply {
+            put("insulinType", record.type.name)   // RAPID / LONG / MIXED / OTHER
+            put("dosage",      record.units.toDouble())
+            put("injectedAt",  injectedAt)
+            record.memo?.let { put("memo", it) }
+        }
+        post("/api/records/insulin", body)
+    }
+
     // ── Spring Boot: 수면 ─────────────────────────────────────────────────────
 
     suspend fun pushSleep(summary: SleepSummary) = withContext(Dispatchers.IO) {
-        val bedIso  = anyClockToIso(summary.bedtime,  shiftDay = -1)  // 취침은 전날 밤이 일반적
-        val wakeIso = anyClockToIso(summary.wakeTime, shiftDay = 0)
+        val bedInstant  = anyClockToInstant(summary.bedtime,  shiftDay = -1)  // 취침은 전날 밤이 일반적
+        val wakeInstant = anyClockToInstant(summary.wakeTime, shiftDay = 0)
         val durationMin = (summary.totalHours * 60).toLong()
         val arr = JSONArray().put(JSONObject().apply {
-            put("sleepTime", bedIso)
-            put("wakeTime",  wakeIso)
+            put("sourceId",  "sleep_${bedInstant.toEpochMilli()}")  // 하룻밤 1건 (취침 시각 기준)
+            put("sleepTime", bedInstant.toString())
+            put("wakeTime",  wakeInstant.toString())
             put("duration",  durationMin)
             put("quality",   summary.efficiency.toDouble())
             put("stages",    JSONArray())   // stage 단위 시각 데이터 없음 → 빈 배열
@@ -191,8 +220,12 @@ object HealthSyncApiClient {
         else   -> "UNKNOWN"
     }
 
-    /** "오전 7:30" / "오후 1:45" 같은 한글 시각을 오늘 KST 기준 ISO date-time 으로 변환. 실패 시 현재 시각. */
-    private fun koreanClockToIso(korean: String, shiftDay: Int = 0): String = runCatching {
+    // 측정 시각을 Instant 로 반환한다. recordedAt(ISO)와 결정적 sourceId(epoch millis)를
+    // 같은 값에서 뽑기 위해 Instant 를 단일 진실원으로 둔다. 같은 날 재동기화 시 동일 clock →
+    // 동일 epoch → 동일 sourceId 가 되어 백엔드 멱등(existsByUserIdAndSourceId)이 작동한다.
+
+    /** "오전 7:30" / "오후 1:45" 같은 한글 시각을 오늘 KST 기준 Instant 로 변환. 실패 시 현재 시각. */
+    private fun koreanClockToInstant(korean: String, shiftDay: Int = 0): Instant = runCatching {
         val isPm = listOf("오후", "PM", "pm").any { it in korean }
         val isAm = listOf("오전", "AM", "am").any { it in korean }
         val cleaned = korean.replace(Regex("[오전후AMPMampm\\s]"), "")
@@ -205,20 +238,20 @@ object HealthSyncApiClient {
             else               -> rawH
         }
         LocalDate.now(KST).plusDays(shiftDay.toLong())
-            .atTime(LocalTime.of(h24, mm)).atZone(KST).toInstant().toString()
-    }.getOrElse { Instant.now().toString() }
+            .atTime(LocalTime.of(h24, mm)).atZone(KST).toInstant()
+    }.getOrElse { Instant.now() }
 
     /** "23:42" 형식의 HH:mm, 또는 한글 시각을 모두 처리. */
-    private fun anyClockToIso(clock: String, shiftDay: Int = 0): String = runCatching {
+    private fun anyClockToInstant(clock: String, shiftDay: Int = 0): Instant = runCatching {
         if (clock.contains("오전") || clock.contains("오후")) {
-            return koreanClockToIso(clock, shiftDay)
+            return koreanClockToInstant(clock, shiftDay)
         }
         val parts = clock.split(":")
         val h = parts[0].toInt()
         val m = parts.getOrNull(1)?.toIntOrNull() ?: 0
         LocalDate.now(KST).plusDays(shiftDay.toLong())
-            .atTime(LocalTime.of(h, m)).atZone(KST).toInstant().toString()
-    }.getOrElse { Instant.now().toString() }
+            .atTime(LocalTime.of(h, m)).atZone(KST).toInstant()
+    }.getOrElse { Instant.now() }
 
     // ── HTTP (Cognito ID Token Bearer 자동 부착. 로그인 사용자 전용) ──
     //

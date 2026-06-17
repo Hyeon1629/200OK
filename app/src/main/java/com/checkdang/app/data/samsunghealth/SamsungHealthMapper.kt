@@ -16,6 +16,7 @@ import com.samsung.android.sdk.health.data.data.entries.SleepSession as SdkSleep
 import com.samsung.android.sdk.health.data.request.DataType
 import java.time.Instant
 import java.time.ZoneId
+import kotlin.math.roundToInt
 
 /**
  * Samsung Health Data SDK 응답을 앱 도메인 모델로 변환.
@@ -32,6 +33,16 @@ object SamsungHealthMapper {
 
     /** joule (J) → kilocalorie (kcal). 1 kcal ≈ 4184 J. */
     fun kcalFromJoules(joules: Double): Int = (joules / 4184.0).toInt()
+
+    /**
+     * 혈당 mmol/L → mg/dL.
+     *
+     * Samsung Health Data SDK 의 BloodGlucose 값은 **mmol/L** 단위로 내려온다(2026-06-13 실기 logcat 확인:
+     * raw 5.55/6.27/6.66 → 100/113/120 mg/dL). 앱 전역 [GlucoseRecord] 는 mg/dL 기준이므로 변환 필수.
+     * 1 mmol/L ≈ 18.0182 mg/dL.
+     */
+    private const val MMOL_TO_MGDL = 18.0182
+    fun mgdlFromMmol(mmol: Float): Int = (mmol * MMOL_TO_MGDL).roundToInt()
 
     /** 초 → 분. */
     fun minutesFromSeconds(seconds: Long): Int = (seconds / 60L).toInt()
@@ -112,10 +123,11 @@ object SamsungHealthMapper {
             totalProtein += protein
             totalFat     += fat
             MealItem(
-                type = koreanMealTypeName(mealType),
-                name = title?.takeIf { it.isNotBlank() } ?: "기록된 식사",
-                kcal = kcal.toInt(),
-                time = formatKoreanTime(dp.startTime.toEpochMilli())
+                type   = koreanMealTypeName(mealType),
+                name   = title?.takeIf { it.isNotBlank() } ?: "기록된 식사",
+                kcal   = kcal.toInt(),
+                time   = formatKoreanTime(dp.startTime.toEpochMilli()),
+                carbsG = carbs.toInt()
             )
         }
         if (meals.isEmpty() && totalKcal == 0) return null
@@ -203,7 +215,7 @@ object SamsungHealthMapper {
                 series.map { sample ->
                     GlucoseRecord(
                         id         = "${dp.uid}-${sample.timestamp.toEpochMilli()}",
-                        value      = sample.glucose.toInt(),
+                        value      = mgdlFromMmol(sample.glucose),
                         timing     = timing,
                         measuredAt = sample.timestamp.toEpochMilli()
                     )
@@ -214,7 +226,7 @@ object SamsungHealthMapper {
                 else listOf(
                     GlucoseRecord(
                         id         = "${dp.uid}-${dp.startTime.toEpochMilli()}",
-                        value      = level.toInt(),
+                        value      = mgdlFromMmol(level),
                         timing     = timing,
                         measuredAt = dp.startTime.toEpochMilli()
                     )
