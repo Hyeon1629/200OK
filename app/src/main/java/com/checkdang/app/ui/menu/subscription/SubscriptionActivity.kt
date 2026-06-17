@@ -1,9 +1,11 @@
 package com.checkdang.app.ui.menu.subscription
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -32,6 +34,16 @@ class SubscriptionActivity : AppCompatActivity() {
     // Success 와 신규 구매 Success 를 구분해, 복원 시엔 자동 종료/"시작되었어요" 문구를 막는다.
     private var purchaseInitiated = false
 
+    private val mockKakaoLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            viewModel.approveKakaoPay("mock_token")
+        } else {
+            viewModel.handleKakaoCancel()
+        }
+    }
+
     private val benefits = listOf(
         "무제한 데이터 백업",
         "AI 바디맵 분석 무제한",
@@ -52,6 +64,8 @@ class SubscriptionActivity : AppCompatActivity() {
         setupRetryButton()
         observeBillingState()
         observeKakaoState()
+
+        if (SubscriptionViewModel.KAKAO_MOCK) viewModel.resetMockPaidState()
 
         // 딥링크로 직접 실행된 경우 처리
         handlePaymentDeepLink(intent)
@@ -256,7 +270,13 @@ class SubscriptionActivity : AppCompatActivity() {
 
             is KakaoPayState.ReadyToLaunch -> {
                 binding.pbLoading.visibility = View.GONE
-                openKakaoPayApp(state.redirectUrl)
+                if (state.redirectUrl == SubscriptionViewModel.KAKAO_MOCK_URL) {
+                    val intent = Intent(this, MockKakaoPayActivity::class.java)
+                        .putExtra(MockKakaoPayActivity.EXTRA_AMOUNT, "₩5,900")
+                    mockKakaoLauncher.launch(intent)
+                } else {
+                    openKakaoPayApp(state.redirectUrl)
+                }
                 viewModel.onKakaoAppLaunched()
             }
 

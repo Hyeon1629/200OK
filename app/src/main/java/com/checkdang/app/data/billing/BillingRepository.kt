@@ -36,6 +36,11 @@ class BillingRepository(private val appContext: Context) :
 
     private var productDetailsList: List<ProductDetails> = emptyList()
     private var reconnectAttempt = 0
+    private var skipExistingPurchaseChecks = false
+
+    fun setSkipExistingPurchaseChecks(skip: Boolean) {
+        skipExistingPurchaseChecks = skip
+    }
 
     private val billingClient: BillingClient = BillingClient.newBuilder(appContext)
         .setListener(this)
@@ -99,6 +104,7 @@ class BillingRepository(private val appContext: Context) :
     }
 
     private fun queryExistingPurchases() {
+        if (skipExistingPurchaseChecks) return
         val params = QueryPurchasesParams.newBuilder()
             .setProductType(BillingClient.ProductType.SUBS)
             .build()

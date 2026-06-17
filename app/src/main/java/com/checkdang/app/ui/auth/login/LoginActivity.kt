@@ -82,6 +82,9 @@ class LoginActivity : AppCompatActivity() {
             }.onFailure { android.util.Log.w("SocialLogin", "세션 사전 정리 실패: ${it.message}") }
 
             // 1. Hosted UI 로 IdP 인증
+            // WebView 쿠키 삭제 → Google/Kakao 계정 선택 화면 강제 표시
+            android.webkit.CookieManager.getInstance().removeAllCookies(null)
+            android.webkit.CookieManager.getInstance().flush()
             val signInResult = runCatching {
                 Amplify.Auth.signInWithSocialWebUI(authProvider, this@LoginActivity)
             }

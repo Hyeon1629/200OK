@@ -28,6 +28,7 @@ import com.checkdang.app.ui.legal.LegalDocument
 import com.checkdang.app.ui.legal.LegalDocumentActivity
 import com.checkdang.app.ui.menu.notification.NotificationSettingsActivity
 import com.checkdang.app.ui.menu.subscription.SubscriptionActivity
+import com.checkdang.app.ui.menu.subscription.SubscriptionViewModel
 import com.checkdang.app.ui.profile.ProfileActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
@@ -146,7 +147,7 @@ class MenuFragment : Fragment() {
         binding.btnSubscriptionCta.setOnClickListener {
             // PAID 는 구독 변경/해지를 Play 구독센터에서 처리. 구매 화면(SubscriptionActivity)은
             // 이미 구독 중이면 자동 종료되므로 진입시키지 않는다.
-            if (tier == UserTier.PAID) openPlaySubscriptionCenter()
+            if (tier == UserTier.PAID && !SubscriptionViewModel.KAKAO_MOCK) openPlaySubscriptionCenter()
             else startActivity(Intent(requireContext(), SubscriptionActivity::class.java))
         }
     }

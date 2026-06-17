@@ -3,16 +3,18 @@ package com.checkdang.app.data.mock
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import com.checkdang.app.data.model.AIAnalysisResult
 import com.checkdang.app.data.model.BodyPart
+import com.checkdang.app.data.model.Correlation
+import com.checkdang.app.data.model.CorrelationLevel
 import com.checkdang.app.data.model.ExerciseSummary
 import com.checkdang.app.data.model.FamilyMember
 import com.checkdang.app.data.model.GlucoseRecord
 import com.checkdang.app.data.model.GlucoseSummary
-import com.checkdang.app.data.model.InsulinRecord
-import com.checkdang.app.data.model.InsulinType
 import com.checkdang.app.data.model.LifestyleSummary
 import com.checkdang.app.data.model.MealSummary
 import com.checkdang.app.data.model.PainRecord
+import com.checkdang.app.data.model.PainTaxonomy
 import com.checkdang.app.data.model.SleepSummary
 import com.checkdang.app.util.MealTiming
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +35,6 @@ object MockDataProvider {
     private const val TAG = "MockDataProvider"
     private const val PREFS_NAME = "mock_data_store"
     private const val KEY_GLUCOSE_RECORDS = "glucose_records"
-    private const val KEY_INSULIN_RECORDS = "insulin_records"
     private const val KEY_PAIN_RECORDS    = "pain_records"
 
     private var prefs: SharedPreferences? = null
@@ -46,7 +47,6 @@ object MockDataProvider {
         prefs = context.applicationContext
             .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         restoreGlucose()
-        restoreInsulin()
         restorePain()
     }
 
@@ -107,58 +107,6 @@ object MockDataProvider {
             })
         }
         store.edit().putString(KEY_GLUCOSE_RECORDS, arr.toString()).apply()
-    }
-
-    // ── Insulin Records ──────────────────────────────────────────────────────
-
-    private val _insulinRecords: MutableList<InsulinRecord> = mutableListOf()
-
-    private val _insulinRecordsFlow = MutableStateFlow<List<InsulinRecord>>(
-        _insulinRecords.sortedByDescending { it.injectedAt }
-    )
-    val insulinRecordsFlow: StateFlow<List<InsulinRecord>> = _insulinRecordsFlow.asStateFlow()
-
-    fun addInsulinRecord(record: InsulinRecord) {
-        _insulinRecords.add(record)
-        _insulinRecordsFlow.value = _insulinRecords.sortedByDescending { it.injectedAt }
-        persistInsulin()
-    }
-
-    private fun restoreInsulin() {
-        val raw = prefs?.getString(KEY_INSULIN_RECORDS, null) ?: return
-        runCatching {
-            val arr = JSONArray(raw)
-            val list = mutableListOf<InsulinRecord>()
-            for (i in 0 until arr.length()) {
-                val o = arr.getJSONObject(i)
-                list += InsulinRecord(
-                    id         = o.getString("id"),
-                    units      = o.getDouble("units").toFloat(),
-                    type       = InsulinType.valueOf(o.getString("type")),
-                    injectedAt = o.getLong("injectedAt"),
-                    memo       = if (o.isNull("memo")) null else o.optString("memo")
-                )
-            }
-            _insulinRecords.clear()
-            _insulinRecords.addAll(list)
-            _insulinRecordsFlow.value = _insulinRecords.sortedByDescending { it.injectedAt }
-            Log.i(TAG, "restoreInsulin: loaded ${list.size} records")
-        }.onFailure { Log.w(TAG, "restoreInsulin failed: ${it.message}") }
-    }
-
-    private fun persistInsulin() {
-        val store = prefs ?: return
-        val arr = JSONArray()
-        _insulinRecords.forEach { r ->
-            arr.put(JSONObject().apply {
-                put("id",         r.id)
-                put("units",      r.units.toDouble())
-                put("type",       r.type.name)
-                put("injectedAt", r.injectedAt)
-                if (r.memo != null) put("memo", r.memo) else put("memo", JSONObject.NULL)
-            })
-        }
-        store.edit().putString(KEY_INSULIN_RECORDS, arr.toString()).apply()
     }
 
     // ── Summary / Lifestyle ──────────────────────────────────────────────────
@@ -245,16 +193,62 @@ object MockDataProvider {
      */
     fun clearAllUserData() {
         _records.clear()
-        _insulinRecords.clear()
         _painRecords.clear()
         _recordsFlow.value = emptyList()
-        _insulinRecordsFlow.value = emptyList()
         _painRecordsFlow.value = emptyList()
         prefs?.edit()
             ?.remove(KEY_GLUCOSE_RECORDS)
-            ?.remove(KEY_INSULIN_RECORDS)
             ?.remove(KEY_PAIN_RECORDS)
             ?.apply()
+    }
+
+    // TODO(backend): 실제 AI 분석 API로 교체 — 현재는 부위/유형 기반 규칙 기반 목 분석
+    fun analyzePainMock(record: PainRecord): AIAnalysisResult {
+        val partLabel = record.bodyPart.label
+        val correlations = buildCorrelations(record)
+        return AIAnalysisResult(
+            painRecord     = record,
+            summary        = "${partLabel} 통증 패턴 분석 결과, 최근 혈당 변동 및 수면 부족과의 연관성이 감지되었습니다. " +
+                             "통증 강도 ${record.intensity}/5 수준으로 지속적인 모니터링이 권장됩니다.",
+            correlations   = correlations,
+            recommendation = "규칙적인 스트레칭과 충분한 수면(7~8시간)을 유지하세요. " +
+                             "혈당을 안정적으로 관리하면 신경 관련 통증 완화에 도움이 될 수 있습니다. " +
+                             "통증이 지속되거나 악화될 경우 전문의 상담을 권장합니다."
+        )
+    }
+
+    private fun buildCorrelations(record: PainRecord): List<Correlation> {
+        val list = mutableListOf<Correlation>()
+        // Glucose correlation — always include
+        list += Correlation(
+            factor      = "혈당 변동성",
+            level       = if (record.intensity >= 4) CorrelationLevel.HIGH else CorrelationLevel.MEDIUM,
+            description = "최근 7일간 혈당 변동폭이 크게 나타났습니다. 고혈당 상태는 신경 염증을 악화시킬 수 있습니다."
+        )
+        // Sleep correlation
+        list += Correlation(
+            factor      = "수면 부족",
+            level       = CorrelationLevel.MEDIUM,
+            description = "수면 시간이 권장 기준(7~8시간)보다 낮은 날과 통증 기록이 겹치는 경향이 있습니다."
+        )
+        // Exercise correlation depending on body part
+        if (record.bodyPart in listOf(BodyPart.LOWER_BACK, BodyPart.LEFT_KNEE, BodyPart.RIGHT_KNEE,
+                BodyPart.LEFT_THIGH_FRONT, BodyPart.RIGHT_THIGH_FRONT)) {
+            list += Correlation(
+                factor      = "운동 강도",
+                level       = CorrelationLevel.LOW,
+                description = "기록된 운동 세션과 해당 부위 통증 사이의 낮은 상관관계가 발견되었습니다."
+            )
+        }
+        // 통증 성질 기반 상관관계 — 신경성 태그가 있으면 신경 민감도 추가
+        if (record.qualityTags.any { it in PainTaxonomy.NEURAL_TAGS }) {
+            list += Correlation(
+                factor      = "신경 민감도",
+                level       = CorrelationLevel.HIGH,
+                description = "저림·타는 느낌·방사통 등은 신경 관련 증상일 수 있으며, 혈당 조절과 밀접한 연관이 있습니다."
+            )
+        }
+        return list
     }
 
     // ── Family Members ───────────────────────────────────────────────────────

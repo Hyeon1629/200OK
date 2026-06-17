@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:fitsSystemWindows="true"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -41,44 +40,6 @@
             android:text="AI가 분석 중입니다…"
             android:textAppearance="@style/TextAppearance.CheckDang.Body1"
             android:textColor="@color/text_secondary" />
-    </LinearLayout>
-
-    <!-- Error State -->
-    <LinearLayout
-        android:id="@+id/layout_error"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:paddingHorizontal="32dp"
-        android:visibility="gone">
-
-        <TextView
-            android:id="@+id/tv_error"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:gravity="center"
-            android:textAppearance="@style/TextAppearance.CheckDang.Body1"
-            android:textColor="@color/text_secondary"
-            tools:text="분석 중 문제가 발생했어요. 잠시 후 다시 시도해주세요." />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_retry"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginBottom="8dp"
-            android:text="다시 시도"
-            app:cornerRadius="12dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_error_close"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:text="닫기"
-            app:cornerRadius="12dp" />
     </LinearLayout>
 
     <!-- Result State -->
@@ -148,7 +109,7 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- 예상 원인 카드 -->
+            <!-- AI 요약 카드 -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -167,26 +128,50 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
-                        android:text="예상 원인"
+                        android:text="AI 분석 요약"
                         android:textAppearance="@style/TextAppearance.CheckDang.Body1"
                         android:textColor="@color/brand_green" />
 
                     <TextView
-                        android:id="@+id/tv_ai_cause"
+                        android:id="@+id/tv_summary"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:textAppearance="@style/TextAppearance.CheckDang.Caption"
                         android:textColor="@color/text_primary"
-                        tools:text="최근 같은 부위 통증이 반복되고, 전날 운동량 증가가 함께 나타났어요…" />
+                        tools:text="허리 통증 패턴 분석 결과…" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- 집에서 할 수 있는 조치 -->
+            <!-- 상관관계 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
-                android:text="집에서 할 수 있는 조치"
+                android:text="연관 요인"
+                android:textAppearance="@style/TextAppearance.CheckDang.Body1"
+                android:textColor="@color/text_primary" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="@color/background_primary"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_correlations"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 추천 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="생활 습관 권장 사항"
                 android:textAppearance="@style/TextAppearance.CheckDang.Body1"
                 android:textColor="@color/text_primary" />
 
@@ -199,13 +184,13 @@
                 app:cardElevation="2dp">
 
                 <TextView
-                    android:id="@+id/tv_ai_first_aid"
+                    android:id="@+id/tv_recommendation"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:padding="16dp"
                     android:textAppearance="@style/TextAppearance.CheckDang.Caption"
                     android:textColor="@color/text_primary"
-                    tools:text="가벼운 스트레칭과 온찜질을 시도해보세요…" />
+                    tools:text="규칙적인 스트레칭…" />
             </com.google.android.material.card.MaterialCardView>
 
             <!-- 면책 조항 -->
@@ -220,12 +205,18 @@
                 android:padding="12dp" />
 
             <!-- 버튼 영역 -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_confirm"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="확인"
-                app:cornerRadius="12dp" />
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_confirm"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:text="확인"
+                    app:cornerRadius="12dp" />
+            </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </LinearLayout>

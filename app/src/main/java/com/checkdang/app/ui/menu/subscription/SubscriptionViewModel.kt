@@ -18,8 +18,18 @@ import kotlinx.coroutines.launch
 
 class SubscriptionViewModel(application: Application) : AndroidViewModel(application) {
 
+    companion object {
+        // TODO(mock): 사업자 등록 완료 후 false 로 변경
+        const val KAKAO_MOCK = true
+        const val KAKAO_MOCK_URL = "kakao_mock://pay"
+    }
+
     private val repository: BillingRepository =
         (application as CheckDangApplication).billingRepository
+
+    init {
+        if (KAKAO_MOCK) repository.setSkipExistingPurchaseChecks(true)
+    }
 
     val state: StateFlow<BillingState> = repository.state
 
@@ -45,6 +55,13 @@ class SubscriptionViewModel(application: Application) : AndroidViewModel(applica
     fun startKakaoPay(subscriptionId: String) {
         viewModelScope.launch {
             _kakaoState.value = KakaoPayState.Loading
+            // TODO(mock): 사업자 등록 완료 후 아래 mock 블록 제거 후 실제 API 호출로 교체
+            if (KAKAO_MOCK) {
+                kotlinx.coroutines.delay(500)
+                SessionHolder.kakaoPendingOrderId = "mock_order_id"
+                _kakaoState.value = KakaoPayState.ReadyToLaunch(KAKAO_MOCK_URL)
+                return@launch
+            }
             val result = runCatching { PaymentApiClient.kakaoReady(subscriptionId) }
             if (result.isFailure) {
                 _kakaoState.value = KakaoPayState.Error(
@@ -93,5 +110,12 @@ class SubscriptionViewModel(application: Application) : AndroidViewModel(applica
 
     fun resetKakaoState() {
         _kakaoState.value = KakaoPayState.Idle
+    }
+
+    fun resetMockPaidState() {
+        viewModelScope.launch {
+            runCatching { PaymentApiClient.resetMockIsPremium() }
+            SessionHolder.tier = UserTier.FREE
+        }
     }
 }

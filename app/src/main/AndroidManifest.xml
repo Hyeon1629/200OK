@@ -202,6 +202,11 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.menu.subscription.MockKakaoPayActivity"
+            android:exported="false"
+            android:theme="@style/Theme.CheckDang" />
+
     </application>
 
 </manifest>

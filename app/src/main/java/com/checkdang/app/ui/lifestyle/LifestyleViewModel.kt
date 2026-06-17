@@ -141,16 +141,6 @@ class LifestyleViewModel(app: Application) : AndroidViewModel(app) {
             Log.i(TAG, "pushLifestyleToServer[$source]: guest — skip backend sync")
             return
         }
-        // Mock(기본 소스)은 절대 백엔드로 올리지 않는다. 실제 헬스 소스가 연결됐을 때만 push.
-        // 진입 직후/권한 전환 전에는 활성 소스가 MockHealthDataSource 라서, 가드가 없으면
-        // Mock 식단 픽스처(아몬드+그릭요거트, 샐러드+두부 등)가 DB 에 유출돼 AI 리포트/식단 조언이
-        // 실제 섭취와 무관한 내용을 읽게 된다.
-        if (!HealthRepository.isConnectedToHealthConnect() &&
-            !HealthRepository.isConnectedToSamsungHealth()
-        ) {
-            Log.i(TAG, "pushLifestyleToServer[$source]: mock source — skip backend sync")
-            return
-        }
         val ex = _exercise.value
         val ml = _meal.value
         val sl = _sleep.value

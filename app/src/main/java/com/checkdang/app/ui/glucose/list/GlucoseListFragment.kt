@@ -35,14 +35,14 @@ class GlucoseListFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.timeline.collect { entries ->
-                    val items = GlucoseRecordAdapter.buildListItems(entries)
+                viewModel.records.collect { records ->
+                    val items = GlucoseRecordAdapter.buildListItems(records)
                     adapter.submitList(items)
 
                     binding.layoutEmpty.visibility =
-                        if (entries.isEmpty()) View.VISIBLE else View.GONE
+                        if (records.isEmpty()) View.VISIBLE else View.GONE
                     binding.recyclerRecords.visibility =
-                        if (entries.isEmpty()) View.GONE else View.VISIBLE
+                        if (records.isEmpty()) View.GONE else View.VISIBLE
                 }
             }
         }

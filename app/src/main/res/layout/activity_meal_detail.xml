@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:fitsSystemWindows="true"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -162,7 +161,7 @@
                     android:padding="8dp" />
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Gemini AI 식단 조언 (/api/ai/diet-advice/recent) -->
+            <!-- Gemini AI 식단 조언 (데모: /api/ai/demo-diet-advice) -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_ai_advice"
                 android:layout_width="match_parent"

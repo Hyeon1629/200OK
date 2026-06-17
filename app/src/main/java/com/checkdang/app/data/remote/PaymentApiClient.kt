@@ -77,6 +77,10 @@ object PaymentApiClient {
         )
     }
 
+    suspend fun resetMockIsPremium(): Unit = withContext(Dispatchers.IO) {
+        post("/api/payment/kakao/mock/reset", JSONObject())
+    }
+
     private fun post(path: String, body: JSONObject): String {
         val conn = (URL("$BASE_URL$path").openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"

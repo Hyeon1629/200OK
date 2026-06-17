@@ -119,9 +119,8 @@ object AiReportApiClient {
             // Spring 경로 — 로그인 사용자 Cognito ID Token Bearer 만 부착(게스트는 호출 안 함).
             SessionHolder.accessToken?.let { setRequestProperty("Authorization", "Bearer $it") }
             connectTimeout = 15_000
-            // Gemini 생성 시간. 백엔드가 max_token↑ + thinking 유지로 변경(2026-06-06)되며
-            // 응답이 길어질 수 있어 60s→90s 로 상향(데이터 많은 계정 첫 호출 여유 확보).
-            readTimeout = 90_000
+            // 첫 호출 ~8-10초(백엔드 회신 2026-06-03), 출력 길이 고정이라 데이터량 무관 → 60s 면 충분.
+            readTimeout = 60_000
         }
         try {
             val code = conn.responseCode
