@@ -68,18 +68,16 @@ class HealthConnectDataSource(private val client: HealthConnectClient) : HealthD
         var totalPro   = 0.0
         var totalFat   = 0.0
         val meals = records.map { r ->
-            val kcal  = r.energy?.inKilocalories?.toInt() ?: 0
-            val carbs = r.totalCarbohydrate?.inGrams ?: 0.0
+            val kcal = r.energy?.inKilocalories?.toInt() ?: 0
             totalKcal  += kcal
-            totalCarbs += carbs
-            totalPro   += r.protein?.inGrams ?: 0.0
-            totalFat   += r.totalFat?.inGrams ?: 0.0
+            totalCarbs += r.totalCarbohydrate?.inGrams ?: 0.0
+            totalPro   += r.protein?.inGrams           ?: 0.0
+            totalFat   += r.totalFat?.inGrams          ?: 0.0
             MealItem(
-                type   = mealTypeName(r.mealType),
-                name   = r.name ?: "기록된 식사",
-                kcal   = kcal,
-                time   = formatTime(r.startTime),
-                carbsG = carbs.toInt()
+                type  = mealTypeName(r.mealType),
+                name  = r.name ?: "기록된 식사",
+                kcal  = kcal,
+                time  = formatTime(r.startTime)
             )
         }
         return MealSummary(

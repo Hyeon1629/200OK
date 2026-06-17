@@ -4,22 +4,25 @@ import android.util.Log
 import com.checkdang.app.data.mock.SessionHolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * ML 혈당 예측 API 클라이언트 (Spring → FastAPI · `api.checkdang.xyz`).
+ * ML 혈당 예측 API 클라이언트 (FastAPI · `api.checkdang.xyz`).
  *
- * 백엔드 운영 배포 계약(2026-06-16, kgh): 그 날짜 기준 최신 혈당에서 직전 24시간을 입력으로
- * 향후 3시간(5분 간격 36스텝) 혈당을 예측한다. **on-demand 전용** — 호출 시 계산만 하고
- * 저장하지 않으므로 별도 조회/저장(latest/history) API 가 없다.
- *  - POST `/api/ai/predict/blood-glucose?date=YYYY-MM-DD` — 예측 실행 (요청 body 없음)
+ * 백엔드 명세(2026-05-29, kgh): 24시간 × 5분 간격 혈당 288개를 입력으로
+ * 향후 3시간(5분 간격 36개) 혈당을 예측한다.
+ *  - POST `/ai/predict/blood-glucose/{user_id}?date=` — 예측 실행 + 자동 저장
+ *  - GET  `/ai/predictions/{user_id}/latest?date=`    — 최신 예측 1건
+ *  - GET  `/ai/predictions/{user_id}?date=`           — 날짜별 예측 이력
  *
- * 입력 혈당·carbs·bolus 는 모두 백엔드가 서버에서 모은다(앱이 추가로 보낼 입력 없음).
- * `date` 는 선택(생략 시 오늘)이지만 결정성을 위해 호출 측에서 오늘 날짜를 명시한다.
+ * 입력 288개는 앱이 직접 보유하지 않으므로(수동 입력 위주) **body 를 생략**해
+ * 백엔드가 DynamoDB `blood_glucose_record` 에서 288개를 자동 조회하게 한다(명세 "방식 B").
+ * 앱이 CGM 288개를 갖게 되면 [predict] 에 glucose 배열 body 만 추가하면 "방식 A" 가 된다.
  *
- * Bearer(Cognito ID 토큰)만 검증한다. 따라서 예측은 로그인 사용자 전용이며,
+ * FastAPI 는 Bearer 토큰만 검증한다(게스트 필터 없음). 따라서 예측은 로그인 사용자 전용이며,
  * 게스트는 호출 측(GlucoseViewModel)에서 차단한다.
  */
 object BloodGlucosePredictionApiClient {
@@ -28,28 +31,50 @@ object BloodGlucosePredictionApiClient {
     private const val BASE_URL = "https://api.checkdang.xyz"
 
     /**
-     * 예측 실행. 요청 body 없음 → 백엔드가 최신 혈당 직전 24시간(+서버 보관 carbs/bolus)으로 추론.
-     * @throws PredictionApiException 422(혈당 측정 부족: 최소 6회 또는 24h 중 12시간 미만) / 401(토큰) 등.
+     * 예측 실행 + 자동 저장. body 생략 → 백엔드가 DynamoDB 에서 해당 날짜 혈당 288개 조회.
+     * @throws PredictionApiException 422(데이터 288개 미달) / 502(예측 서비스 연결 실패) 등.
      */
-    suspend fun predict(date: String): BloodGlucosePrediction =
+    suspend fun predict(userId: String, date: String): BloodGlucosePrediction =
         withContext(Dispatchers.IO) {
-            val text = request("POST", "/api/ai/predict/blood-glucose?date=$date", body = null)
+            val text = request("POST", "/ai/predict/blood-glucose/$userId?date=$date", body = null)
             parse(JSONObject(text))
+        }
+
+    /** 해당 날짜의 최신 예측 1건. 예측 기록이 없으면(404) null. */
+    suspend fun latest(userId: String, date: String): BloodGlucosePrediction? =
+        withContext(Dispatchers.IO) {
+            try {
+                val text = request("GET", "/ai/predictions/$userId/latest?date=$date", body = null)
+                parse(JSONObject(text))
+            } catch (e: PredictionApiException) {
+                if (e.code == 404) null else throw e
+            }
+        }
+
+    /** 해당 날짜의 예측 이력(최신순). 없으면 빈 리스트. */
+    suspend fun history(userId: String, date: String): List<BloodGlucosePrediction> =
+        withContext(Dispatchers.IO) {
+            val text = request("GET", "/ai/predictions/$userId?date=$date", body = null)
+            val arr = JSONArray(text)
+            (0 until arr.length()).map { parse(arr.getJSONObject(it)) }
         }
 
     private fun parse(o: JSONObject): BloodGlucosePrediction {
         val arr = o.getJSONArray("predictions")
         val preds = (0 until arr.length()).map { arr.getDouble(it).toFloat() }
         return BloodGlucosePrediction(
-            predictions    = preds,
-            // 신 계약은 camelCase(horizonMinutes). 구 snake(horizon_minutes)도 폴백으로 허용.
-            horizonMinutes = o.optInt("horizonMinutes", o.optInt("horizon_minutes", 180)),
+            predictions     = preds,
+            horizonMinutes  = o.optInt("horizon_minutes", 180),
+            intervalMinutes = o.optInt("interval_minutes", 5),
+            source          = o.optString("source", ""),
+            predictedAt     = o.optString("predicted_at", ""),
+            modelVersion    = if (o.isNull("model_version")) null else o.optString("model_version", null),
         )
     }
 
     /**
      * 공통 HTTP. 2xx 면 본문 문자열 반환, 그 외엔 응답 body 의 `detail` 을 담아
-     * [PredictionApiException] 으로 던진다(422/401 분기는 호출 측 책임).
+     * [PredictionApiException] 으로 던진다(422/404/502 분기는 호출 측 책임).
      */
     private fun request(method: String, path: String, body: JSONObject?): String {
         val conn = (URL("$BASE_URL$path").openConnection() as HttpURLConnection).apply {
@@ -85,17 +110,15 @@ object BloodGlucosePredictionApiClient {
     }
 }
 
-/**
- * 예측 응답 1건. 신 계약 응답은 `predictions`(36개) + `horizonMinutes`(180) 2개뿐.
- * [intervalMinutes] 는 계약상 고정 5분, [predictedAt] 은 on-demand 라 서버가 주지 않으므로
- * 차트 X축은 "+분" 상대 라벨로 표시한다(빈 문자열 → 상대 라벨 폴백).
- */
+/** 예측 응답 1건 (predict / latest / history 공통). */
 data class BloodGlucosePrediction(
-    val predictions: List<Float>,       // 향후 예측 혈당 36개 (mg/dL, 5분 간격)
-    val horizonMinutes: Int,            // 예측 지평 (180)
-    val intervalMinutes: Int = 5,       // 예측 간격 (고정 5분)
-    val predictedAt: String = "",       // 서버 미제공 → 상대 라벨 사용
+    val predictions: List<Float>,   // 향후 예측 혈당 36개 (mg/dL, 5분 간격)
+    val horizonMinutes: Int,        // 예측 지평 (180)
+    val intervalMinutes: Int,       // 예측 간격 (5)
+    val source: String,             // "body"(직접 전송) / "db"(DynamoDB 조회)
+    val predictedAt: String,        // 예측 실행 시각 (예: "2026-05-29T15:00:00")
+    val modelVersion: String? = null,
 )
 
-/** 예측 API 비정상 응답. [code] 로 422(데이터 부족)/401(토큰) 등을 구분한다. */
+/** 예측 API 비정상 응답. [code] 로 422(데이터 부족)/404(기록 없음)/502(서비스 장애) 를 구분한다. */
 class PredictionApiException(val code: Int, val detail: String) : Exception("HTTP $code: $detail")
