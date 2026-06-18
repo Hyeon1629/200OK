@@ -26,6 +26,7 @@ import com.checkdang.app.data.remote.AuthApiClient
 import com.checkdang.app.data.remote.CognitoGuestSession
 import com.checkdang.app.databinding.ActivityLoginBinding
 import com.checkdang.app.databinding.DialogSocialLoadingBinding
+import com.checkdang.app.push.PushTokenStore
 import com.checkdang.app.ui.auth.onboarding.OnboardingActivity
 import com.checkdang.app.ui.legal.LegalDocument
 import com.checkdang.app.ui.legal.LegalDocumentActivity
@@ -125,6 +126,9 @@ class LoginActivity : AppCompatActivity() {
             SessionHolder.refreshToken   = null
 
             android.util.Log.d("SocialLogin", "✅ Cognito + 백엔드 등록 | userId=${info.userId}")
+
+            // 콜드 스타트 때 세션이 없어 건너뛴 FCM 토큰 등록을 로그인 완료 후 마무리.
+            PushTokenStore.syncCachedToken(applicationContext)
 
             dismissLoadingDialog()
             navigateAfterLogin(provider)
