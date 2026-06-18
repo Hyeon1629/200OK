@@ -24,6 +24,7 @@ CREATE TABLE users (
     target_blood_sugar       INT,
     samsung_health_connected TINYINT(1)   DEFAULT 0,
     notification_enabled     TINYINT(1)   DEFAULT 1,
+    fcm_token                VARCHAR(255),
     account_status           VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE',
     created_at               DATETIME     NOT NULL,
     updated_at               DATETIME,

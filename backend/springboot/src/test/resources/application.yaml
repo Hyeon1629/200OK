@@ -43,6 +43,7 @@ aws:
     table-name: users
     refresh-token-table-name: refresh_tokens
     blood-sugar-table-name: blood_glucose_record
+    payment-table-name: payment_records
 
 jwt:
   secret: Y2hlY2tkYW5nLWp3dC1zZWNyZXQta2V5LW11c3QtYmUtYXQtbGVhc3QtMjU2LWJpdHMtbG9uZw==
@@ -51,3 +52,9 @@ jwt:
 
 oauth2:
   redirect-uri: http://localhost:3000/oauth2/callback
+
+ai:
+  server-url: http://localhost:8000
+
+predictor:
+  server-url: http://localhost:8000

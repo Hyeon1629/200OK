@@ -13,10 +13,6 @@ router = APIRouter(prefix="/blood-glucose", tags=["blood_glucose"])
 
 TABLE_NAME = "blood_glucose_record"
 
-# 의학적 기준값 (mg/dL) — 저혈당/고혈당 알림 트리거 기준
-GLUCOSE_LOW_THRESHOLD = 70
-GLUCOSE_HIGH_THRESHOLD = 180
-
 # Spring Boot 내부 알림 API. ECS Fargate + Service Connect 환경이라 docker bridge(172.17.0.1)는
 # 통하지 않음 — fastapi가 "fastapi:8000"으로 디스커버리되는 것과 동일하게, Spring Boot 쪽도
 # Service Connect 서버로 등록되어야 "springboot:8080"으로 호출 가능 (현재 미등록, 인프라 작업 필요).
@@ -25,21 +21,15 @@ INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY", "")
 
 
 async def _trigger_glucose_alert(user_id: str, record: "BloodGlucoseCreateRequest") -> None:
-    """저혈당/고혈당 기준 초과 시 Spring Boot에 알림 발송을 위임한다.
+    """혈당 저장 시 Spring Boot 내부 알림 API를 무조건 호출하여 발송 판단을 위임한다.
 
+    (실제 정상/주의/위험 평가 및 푸시 알림 발송 여부는 Spring Boot가 결정함)
     알림 발송 실패가 혈당 기록 저장 자체를 막으면 안 되므로 예외를 삼키고 로그만 남긴다.
     """
-    if record.level < GLUCOSE_LOW_THRESHOLD:
-        alert_type = "LOW"
-    elif record.level > GLUCOSE_HIGH_THRESHOLD:
-        alert_type = "HIGH"
-    else:
-        return
-
     payload = {
         "userId": user_id,
         "level": record.level,
-        "alertType": alert_type,
+        "alertType": "DETERMINE_BY_SPRING",
         "measuredAt": record.timestamp,
         "mealTiming": record.meal_timing,
     }

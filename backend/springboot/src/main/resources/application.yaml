@@ -80,4 +80,5 @@ internal:
 
 # Firebase Cloud Messaging — 저혈당/고혈당 푸시 알림
 fcm:
+  service-account-file: ${FIREBASE_SERVICE_ACCOUNT_FILE:}
   service-account-key: ${FIREBASE_SERVICE_ACCOUNT_KEY:}
