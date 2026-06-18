@@ -49,8 +49,13 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         setupHeader()
         setupClickListeners()
-        viewModel.loadLifestyle()   // 진입 시 현재 헬스 소스로 라이프스타일 재로드
         observeHome()
+    }
+
+    /** 홈 탭 재방문 시(예: 구독 후 복귀) 구독 상태 변화를 즉시 반영하기 위해 매번 재로드. */
+    override fun onResume() {
+        super.onResume()
+        viewModel.loadLifestyle()
     }
 
     /** 혈당/라이프스타일/주간차트/인슐린을 모두 실데이터 flow 로 구독. */

@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.checkdang.app.data.health.HealthRepository
 import com.checkdang.app.data.mock.MockDataProvider
+import com.checkdang.app.data.mock.SessionHolder
+import com.checkdang.app.data.mock.UserTier
 import com.checkdang.app.data.model.GlucoseRecord
 import com.checkdang.app.data.model.GlucoseSummary
 import com.checkdang.app.data.model.LifestyleSummary
@@ -61,9 +63,23 @@ class HomeViewModel : ViewModel() {
 
     init { loadLifestyle() }
 
-    /** 현재 HealthRepository 소스(Mock/HealthConnect/Samsung)로 라이프스타일 재로드. 홈 진입 시 호출. */
+    /**
+     * 현재 HealthRepository 소스(Mock/HealthConnect/Samsung)로 라이프스타일 재로드. 홈 진입/재방문 시 호출.
+     * 프리미엄(PAID) 구독자가 아니면 삼성 헬스 연동 자체가 제공되지 않으므로 0 값으로 고정.
+     */
     fun loadLifestyle() {
         viewModelScope.launch {
+            if (SessionHolder.tier != UserTier.PAID) {
+                _lifestyleSummary.value = LifestyleSummary(
+                    exerciseMinutes     = 0,
+                    exerciseGoalMinutes = 60,
+                    mealKcal            = 0,
+                    mealGoalKcal        = 2000,
+                    sleepHours          = 0f,
+                    sleepEfficiency     = 0,
+                )
+                return@launch
+            }
             val ex = HealthRepository.getExerciseSummary()
             val ml = HealthRepository.getMealSummary()
             val sl = HealthRepository.getSleepSummary()

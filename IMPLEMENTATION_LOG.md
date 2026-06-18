@@ -37,6 +37,25 @@
 
 ---
 
+## [2026-06-18] 홈 화면 — AI 생활습관 리포트 & 오늘의 라이프스타일도 PAID 구독 게이트 적용
+
+### 배경
+라이프스타일 탭은 게이팅했지만, 홈 화면의 "AI 생활습관 리포트" 카드와 "오늘의 라이프스타일" 미니 카드(운동/식사/수면)는 구독 여부와 무관하게 `HealthRepository`(기본 Mock) 데이터를 그대로 보여주고 있었음(실기 스크린샷으로 확인 — 비구독 상태에서도 45/60분, 1,640kcal, 7.2시간 등 표시). 홈 화면도 동일 정책으로 통일 요청.
+
+### 작업 내용
+| 파일 | 변경 |
+|------|------|
+| `ui/home/HomeViewModel.kt` | `loadLifestyle()` — `SessionHolder.tier != PAID` 면 `HealthRepository` 호출 없이 운동 0분/식사 0kcal/수면 0시간 고정값으로 `_lifestyleSummary` 설정. PAID일 때만 기존처럼 실제 데이터 조회 |
+| `ui/home/HomeFragment.kt` | `onViewCreated`의 `loadLifestyle()` 호출을 제거하고 `onResume()`으로 이동 — 홈 탭 재방문(구독 후 복귀 등) 시마다 최신 tier 기준으로 재로드 |
+| `ui/report/ComprehensiveReportActivity.kt` | `applyAccessGate()` 신설 — 게스트는 기존 로그인 유도 메시지, **비구독(tier != PAID)** 은 새 메시지 "구독으로 삼성헬스 연동을 통해 삼성헬스에서 데이터 입력후 생성됩니다" 노출하고 리포트 API 호출 자체를 막음. PAID 구독자는 최초 1회만 `viewModel.loadReport()` 호출(`reportRequested` 플래그). `onResume()`에서 매번 게이트 재평가 → 구독 후 복귀 시 자동으로 리포트 로드 시작 |
+
+### 주요 결정
+- 비PAID 상태에선 `HealthRepository`를 호출하지 않고 즉시 0 값을 세팅 — Mock 소스가 실제 데이터처럼 보이는 값을 반환하는 문제를 원천 차단.
+- 리포트 화면은 게스트 체크 → 구독 체크 순서로 평가(로그인이 더 근본적인 차단 조건).
+- 빌드 검증: `compileDebugKotlin` BUILD SUCCESSFUL.
+
+---
+
 ## [2026-06-13] 삼성헬스 혈당 단위 변환 버그 수정 (mmol/L → mg/dL)
 
 ### 배경 / 발견

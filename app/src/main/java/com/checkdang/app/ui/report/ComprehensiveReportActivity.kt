@@ -8,6 +8,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.checkdang.app.data.mock.SessionHolder
+import com.checkdang.app.data.mock.UserTier
 import com.checkdang.app.databinding.ActivityComprehensiveReportBinding
 import io.noties.markwon.Markwon
 import io.noties.markwon.ext.tables.TablePlugin
@@ -19,7 +20,7 @@ import kotlinx.coroutines.launch
  * (혈당·통증은 현재 백엔드 리포트 로직 미포함 — 후속 작업 예정.)
  *
  * 진입: Home 대시보드 'AI 생활습관 리포트' 카드.
- * 로그인 사용자 전용 — 게스트는 진입 시 안내만 표시하고 호출하지 않는다.
+ * 로그인 + 프리미엄(PAID) 구독자 전용 — 게스트/비구독자는 진입 시 안내만 표시하고 호출하지 않는다.
  */
 class ComprehensiveReportActivity : AppCompatActivity() {
 
@@ -33,21 +34,40 @@ class ComprehensiveReportActivity : AppCompatActivity() {
             .build()
     }
 
+    private var reportRequested = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
         setupToolbar()
         binding.btnRetry.setOnClickListener { viewModel.loadReport() }
+        observeState()
+    }
 
-        // 종합 리포트는 로그인 사용자 전용(백엔드 정책). 게스트는 사전 차단.
+    /** 탭/액티비티 재방문 시(예: 구독 후 복귀) 접근 권한을 다시 평가한다. */
+    override fun onResume() {
+        super.onResume()
+        applyAccessGate()
+    }
+
+    /**
+     * 게스트는 로그인 유도, 비구독(FREE)자는 구독 유도 안내만 표시하고 리포트 호출 자체를 막는다.
+     * PAID 구독자에게는 최초 1회만 리포트를 로드(중복 호출 방지).
+     */
+    private fun applyAccessGate() {
         if (SessionHolder.isGuest) {
             showLoginRequired()
             return
         }
-
-        observeState()
-        viewModel.loadReport()
+        if (SessionHolder.tier != UserTier.PAID) {
+            showSubscriptionRequired()
+            return
+        }
+        if (!reportRequested) {
+            reportRequested = true
+            viewModel.loadReport()
+        }
     }
 
     private fun setupToolbar() {
@@ -98,6 +118,15 @@ class ComprehensiveReportActivity : AppCompatActivity() {
         binding.scrollContent.visibility = View.GONE
         binding.layoutError.visibility   = View.VISIBLE
         binding.tvError.text = "AI 생활습관 리포트는 로그인 후 이용할 수 있어요."
+        binding.btnRetry.visibility = View.GONE
+    }
+
+    /** 비구독(FREE/GUEST tier): 호출 없이 구독 유도 안내만 표시(재시도 버튼 숨김). */
+    private fun showSubscriptionRequired() {
+        binding.layoutLoading.visibility = View.GONE
+        binding.scrollContent.visibility = View.GONE
+        binding.layoutError.visibility   = View.VISIBLE
+        binding.tvError.text = "구독으로 삼성헬스 연동을 통해 삼성헬스에서 데이터 입력후 생성됩니다."
         binding.btnRetry.visibility = View.GONE
     }
 }
