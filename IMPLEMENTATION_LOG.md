@@ -56,6 +56,23 @@
 
 ---
 
+## [2026-06-18] 버그 수정 — 구독(PAID) 완료 후 구독 화면 재진입 시 자동으로 FREE 로 리셋되던 문제
+
+### 배경
+사용자 보고: "구독 취소를 안 했는데도 금방 삼성헬스 연동/AI 리포트가 비구독 상태처럼 막힌다." 원인 추적 결과 `SubscriptionActivity.onCreate()`(`KAKAO_MOCK=true`, 사업자 등록 전 임시 mock 플래그)가 화면에 진입할 때마다 무조건 `viewModel.resetMockPaidState()`를 호출했고, 이 함수가 조건 없이 `SessionHolder.tier = UserTier.FREE`로 덮어쓰고 있었음. 원래 의도는 "테스트 중 반복 구매 플로우 테스트를 위해 mock 백엔드 isPremium 플래그 초기화"였으나, **이미 PAID인 사용자가 구독 화면을 다시 열기만 해도(예: 구독 상태 확인) 구독이 풀려버리는 버그**였음.
+
+### 작업 내용
+| 파일 | 변경 |
+|------|------|
+| `ui/menu/subscription/SubscriptionViewModel.kt` | `resetMockPaidState()` 맨 앞에 `if (SessionHolder.tier == UserTier.PAID) return` 가드 추가 — 이미 PAID 면 mock 리셋을 건너뛰어 구독 상태 유지. FREE/GUEST 상태에서 화면 재진입 시에는 기존처럼 mock 플래그 초기화(반복 구매 테스트 가능) |
+
+### 주요 결정 / 메모
+- `BillingRepository.handlePurchase()`(Google Play 실 구매 verify 경로)는 실제 구매 내역 기반이라 문제 없음 — 이번 버그는 KAKAO_MOCK 전용 임시 코드(`resetMockPaidState`)에서만 발생.
+- **TODO(mock) 잔존**: `KAKAO_MOCK=true` 는 사업자 등록 완료 후 `false` 로 변경되며, 그 시점에 `resetMockPaidState()` 호출 자체가 제거될 예정(`SubscriptionViewModel.kt:23` 주석 참고). 그 전까지는 이번 가드로 안전.
+- 빌드 검증: `compileDebugKotlin` BUILD SUCCESSFUL.
+
+---
+
 ## [2026-06-13] 삼성헬스 혈당 단위 변환 버그 수정 (mmol/L → mg/dL)
 
 ### 배경 / 발견

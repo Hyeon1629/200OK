@@ -112,7 +112,13 @@ class SubscriptionViewModel(application: Application) : AndroidViewModel(applica
         _kakaoState.value = KakaoPayState.Idle
     }
 
+    /**
+     * 테스트 목적의 mock 헬퍼 — 백엔드 mock isPremium 플래그를 초기화해 반복 구매 테스트를 가능케 한다.
+     * 이미 PAID 상태(실제 구독 완료)라면 화면을 다시 열었다는 이유만으로 구독을 풀어버리면 안 되므로
+     * 그 경우엔 아무 것도 하지 않고 PAID 상태를 유지한다.
+     */
     fun resetMockPaidState() {
+        if (SessionHolder.tier == UserTier.PAID) return
         viewModelScope.launch {
             runCatching { PaymentApiClient.resetMockIsPremium() }
             SessionHolder.tier = UserTier.FREE
