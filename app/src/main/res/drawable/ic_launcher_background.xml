@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 체크당 런처 아이콘 배경. 둥근 모서리는 OS 가 adaptive icon 마스킹으로 자동 처리한다. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M0,0 L108,0 L108,108 L0,108 Z"
+        android:fillColor="#F1F8E9" />
+</vector>

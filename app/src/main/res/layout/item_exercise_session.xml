@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="60dp"
+    android:paddingHorizontal="16dp">
+
+    <!-- 운동 종류 아이콘 (글자 뱃지) -->
+    <TextView
+        android:id="@+id/tv_exercise_icon"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/bg_circle"
+        android:gravity="center"
+        android:textAppearance="@style/TextAppearance.CheckDang.Body1"
+        android:textColor="@color/brand_green_dark"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="걷" />
+
+    <!-- 종류명 -->
+    <TextView
+        android:id="@+id/tv_session_type"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:textAppearance="@style/TextAppearance.CheckDang.Body1"
+        android:textColor="@color/text_primary"
+        app:layout_constraintBottom_toTopOf="@+id/tv_session_stats"
+        app:layout_constraintEnd_toStartOf="@+id/tv_session_time"
+        app:layout_constraintStart_toEndOf="@id/tv_exercise_icon"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="걷기" />
+
+    <!-- 시간/칼로리 -->
+    <TextView
+        android:id="@+id/tv_session_stats"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+        android:textColor="@color/text_secondary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/tv_session_time"
+        app:layout_constraintStart_toEndOf="@id/tv_exercise_icon"
+        app:layout_constraintTop_toBottomOf="@id/tv_session_type"
+        tools:text="30분 · 200 kcal" />
+
+    <!-- 시작 시각 -->
+    <TextView
+        android:id="@+id/tv_session_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+        android:textColor="@color/text_secondary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="오전 7:30" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

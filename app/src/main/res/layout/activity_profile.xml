@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:fitsSystemWindows="true"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background_secondary">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/background_primary"
+        android:elevation="2dp"
+        app:title="환자 프로필 관리"
+        app:titleTextColor="@color/text_primary"
+        app:titleTextAppearance="@style/TextAppearance.CheckDang.Title2" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="24dp">
+
+            <!-- ===== 기본 정보 ===== -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="기본 정보"
+                android:textAppearance="@style/TextAppearance.CheckDang.Title2"
+                android:layout_marginBottom="12dp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/background_primary"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- 닉네임 -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/til_nickname"
+                        style="@style/Widget.CheckDang.TextInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/hint_nickname">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_nickname"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textPersonName"
+                            android:imeOptions="actionNext"
+                            android:maxLength="12" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- 생년월일 -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/til_birth_date"
+                        style="@style/Widget.CheckDang.TextInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/hint_birth_date"
+                        app:endIconMode="custom"
+                        app:endIconDrawable="@android:drawable/ic_menu_today">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_birth_date"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:focusable="false"
+                            android:cursorVisible="false"
+                            android:inputType="none" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- 성별 -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="성별"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Body2"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginTop="20dp"
+                        android:layout_marginBottom="8dp" />
+
+                    <com.google.android.material.button.MaterialButtonToggleGroup
+                        android:id="@+id/toggle_gender"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:singleSelection="true"
+                        app:selectionRequired="false">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_male"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:text="@string/gender_male"
+                            android:textSize="15sp"
+                            android:gravity="center"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_female"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:text="@string/gender_female"
+                            android:textSize="15sp"
+                            android:gravity="center"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp" />
+
+                    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ===== 신체 정보 ===== -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="신체 정보"
+                android:textAppearance="@style/TextAppearance.CheckDang.Title2"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="12dp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/background_primary"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/til_height"
+                        style="@style/Widget.CheckDang.TextInput"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="@string/hint_height">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_height"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal"
+                            android:imeOptions="actionNext" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <Space
+                        android:layout_width="12dp"
+                        android:layout_height="match_parent" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/til_weight"
+                        style="@style/Widget.CheckDang.TextInput"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="@string/hint_weight">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_weight"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal"
+                            android:imeOptions="actionNext" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ===== 당뇨 정보 ===== -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="당뇨 정보"
+                android:textAppearance="@style/TextAppearance.CheckDang.Title2"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="12dp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/background_primary"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="당뇨 유형"
+                        android:textAppearance="@style/TextAppearance.CheckDang.Body2"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="8dp" />
+
+                    <com.google.android.material.button.MaterialButtonToggleGroup
+                        android:id="@+id/toggle_diabetes_type"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:singleSelection="true"
+                        app:selectionRequired="false">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_dm_type1"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_weight="1"
+                            android:text="1형"
+                            android:textSize="14sp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_dm_type2"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_weight="1"
+                            android:text="2형"
+                            android:textSize="14sp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_dm_gestational"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_weight="1"
+                            android:text="임신성"
+                            android:textSize="14sp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_dm_pre"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_weight="1"
+                            android:text="전단계"
+                            android:textSize="14sp"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp" />
+                    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/til_diagnosed_at"
+                        style="@style/Widget.CheckDang.TextInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:hint="진단 시점 (YYYY-MM)"
+                        app:endIconMode="custom"
+                        app:endIconDrawable="@android:drawable/ic_menu_today">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_diagnosed_at"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:focusable="false"
+                            android:cursorVisible="false"
+                            android:inputType="none" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ===== 혈당 목표치 ===== -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="혈당 목표치 (mg/dL)"
+                android:textAppearance="@style/TextAppearance.CheckDang.Title2"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="비워두면 가이드라인 기준(공복 70–99 / 식후 &lt;140)이 사용돼요."
+                android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="12dp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/background_primary"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/til_fasting_target"
+                        style="@style/Widget.CheckDang.TextInput"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="공복 목표">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_fasting_target"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:maxLength="3"
+                            android:imeOptions="actionNext" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <Space
+                        android:layout_width="12dp"
+                        android:layout_height="match_parent" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/til_post_meal_target"
+                        style="@style/Widget.CheckDang.TextInput"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="식후 목표">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_post_meal_target"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:maxLength="3"
+                            android:imeOptions="actionDone" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_save"
+                style="@style/Widget.CheckDang.Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="32dp"
+                android:text="저장하기" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

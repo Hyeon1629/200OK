@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Samsung Health Data SDK: AAR 의 minSdk=29 와 앱 minSdk=26 충돌 해소.
+         API 26-28 단말에서는 SamsungHealthRepository.connect() 가 Unsupported 반환. -->
+    <uses-sdk tools:overrideLibrary="com.samsung.android.sdk.health.data" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- 고/저혈당(위험 범위) 본인 로컬 알림 — API 33+ 런타임 권한 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- 혈당 PDF "기기에 저장" — API 26–28 레거시 Downloads 쓰기용. API 29+ 는 MediaStore 라 불요. -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
+    <!-- Health Connect 읽기 권한 (삼성 헬스 → Health Connect 동기화 데이터) -->
+    <uses-permission android:name="android.permission.health.READ_EXERCISE" />
+    <uses-permission android:name="android.permission.health.READ_SLEEP" />
+    <uses-permission android:name="android.permission.health.READ_NUTRITION" />
+    <!-- 아래 두 줄 추가 -->
+    <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+
+    <!-- 패키지 가시성 선언 (Android 11+) -->
+    <!-- Health Connect: com.google.android.apps.healthdata -->
+    <!-- Samsung Health: com.sec.android.app.shealth (STEP 11 — Data SDK 호스트) -->
+    <queries>
+        <package android:name="com.google.android.apps.healthdata" />
+        <package android:name="com.sec.android.app.shealth" />
+    </queries>
+
+    <application
+        android:name=".CheckDangApplication"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.CheckDang">
+
+        <!-- 혈당 PDF 공유용 FileProvider (cacheDir/reports → content://) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <activity
+            android:name=".ui.splash.SplashActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.designsystem.DesignSystemActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.auth.login.LoginActivity"
+            android:exported="false"
+            android:launchMode="singleTop" />
+
+        <activity
+            android:name=".ui.auth.onboarding.OnboardingActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+
+        <activity
+            android:name=".ui.main.MainActivity"
+            android:exported="true">
+            <!-- Android 13 이하 (Health Connect APK) -->
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
+        </activity>
+
+        <!-- Android 14+ (Health Connect 플랫폼 통합) — system 만 호출 가능하도록 permission 제한 필수 -->
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".ui.main.MainActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity
+            android:name=".ui.lifestyle.exercise.ExerciseDetailActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.main.MainActivity" />
+
+        <activity
+            android:name=".ui.lifestyle.meal.MealDetailActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.main.MainActivity" />
+
+        <activity
+            android:name=".ui.lifestyle.sleep.SleepDetailActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.main.MainActivity" />
+
+        <activity
+            android:name=".ui.bodymap.analysis.AIAnalysisActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.main.MainActivity" />
+
+        <activity
+            android:name=".ui.family.FamilyActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.main.MainActivity" />
+
+        <activity
+            android:name=".ui.profile.ProfileActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.main.MainActivity"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".ui.legal.LegalDocumentActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.main.MainActivity" />
+
+        <activity
+            android:name=".ui.menu.subscription.SubscriptionActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:parentActivityName=".ui.main.MainActivity">
+            <!-- 카카오페이 결제 콜백: checkdang://payment/success?pg_token=xxx 등 -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="checkdang" android:host="payment" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.report.ComprehensiveReportActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.main.MainActivity" />
+
+        <activity
+            android:name=".ui.menu.notification.NotificationSettingsActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.main.MainActivity" />
+
+        <!-- FCM 푸시 수신 (Firebase 프로젝트: checkdang-65238) -->
+        <service
+            android:name=".push.CheckDangMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- 백그라운드 notification 메시지의 기본 채널/아이콘(시스템 트레이 표시용) -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="push_default" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_bell" />
+
+        <!-- 카카오 OAuth 리다이렉트 처리 -->
+        <activity
+            android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="oauth"
+                    android:scheme="kakao0da8cdd9268d25e9acf957d657ddce68" />
+            </intent-filter>
+        </activity>
+
+        <!-- AWS Cognito Hosted UI 리다이렉트 처리 (Amplify Auth)
+             Cognito App Client Callback/Logout URLs: checkdang://signin/, checkdang://signout/
+             (백엔드 등록 완료 — kgh 회신 2026-05-25) -->
+        <activity
+            android:name="com.amplifyframework.auth.cognito.activities.HostedUIRedirectActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="checkdang" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.menu.subscription.MockKakaoPayActivity"
+            android:exported="false"
+            android:theme="@style/Theme.CheckDang" />
+
+    </application>
+
+</manifest>

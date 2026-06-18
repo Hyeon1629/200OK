@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "477360099821",
+    "project_id": "checkdang-65238",
+    "storage_bucket": "checkdang-65238.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:477360099821:android:63c0f0b7f3c13396bdd7e4",
+        "android_client_info": {
+          "package_name": "com.checkdang.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAF2kaRoC5I1l_yf2wXPE697G0pvLBIAjU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

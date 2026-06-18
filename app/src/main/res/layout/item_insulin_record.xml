@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="72dp"
+    android:background="@color/background_primary">
+
+    <!-- 좌측 인슐린 색상 바 (4dp) -->
+    <View
+        android:id="@+id/view_accent_bar"
+        android:layout_width="4dp"
+        android:layout_height="0dp"
+        android:background="@color/insulin_accent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 시간 텍스트 -->
+    <TextView
+        android:id="@+id/tv_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:textAppearance="@style/TextAppearance.CheckDang.Body1"
+        android:textColor="@color/text_primary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/view_accent_bar"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="08:00" />
+
+    <!-- 종류 라벨 + 메모 (중간) -->
+    <LinearLayout
+        android:id="@+id/layout_type"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="12dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/layout_value"
+        app:layout_constraintStart_toEndOf="@id/tv_time"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tv_type_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.CheckDang.Body2"
+            android:textColor="@color/insulin_accent"
+            tools:text="💉 인슐린 · 속효성" />
+
+        <TextView
+            android:id="@+id/tv_memo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+            android:textColor="@color/text_secondary"
+            android:visibility="gone"
+            tools:text="아침 식전"
+            tools:visibility="visible" />
+    </LinearLayout>
+
+    <!-- 우측: 주입량 -->
+    <LinearLayout
+        android:id="@+id/layout_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tv_units"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.CheckDang.Title2"
+            android:textColor="@color/insulin_accent"
+            tools:text="6" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
+            android:text="U"
+            android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+            android:textColor="@color/text_secondary" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

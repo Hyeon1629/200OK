@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <!-- body -->
+    <path android:fillColor="@android:color/transparent"
+        android:strokeColor="#FF000000" android:strokeWidth="2"
+        android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M20,21v-2a4,4 0,0 0,-4 -4H8a4,4 0,0 0,-4 4v2" />
+    <!-- head: circle(cx=12,cy=7,r=4) as arc path -->
+    <path android:fillColor="@android:color/transparent"
+        android:strokeColor="#FF000000" android:strokeWidth="2"
+        android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M8,7 A4,4 0,1,0 16,7 A4,4 0,1,0 8,7 Z" />
+</vector>

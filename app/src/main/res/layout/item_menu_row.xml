@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="56dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingHorizontal="20dp"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- 좌측 아이콘 -->
+    <ImageView
+        android:id="@+id/iv_menu_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginEnd="12dp"
+        android:src="@drawable/ic_chevron_right"
+        tools:ignore="ContentDescription" />
+
+    <!-- 메뉴 제목 -->
+    <TextView
+        android:id="@+id/tv_menu_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textAppearance="@style/TextAppearance.CheckDang.Body1"
+        android:textColor="@color/text_primary"
+        tools:text="메뉴 항목" />
+
+    <!-- 우측 서브텍스트 (버전 등) -->
+    <TextView
+        android:id="@+id/tv_menu_sub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:textAppearance="@style/TextAppearance.CheckDang.Caption"
+        android:textColor="@color/text_secondary"
+        android:visibility="gone"
+        tools:text="1.0.0" />
+
+    <!-- 우측 잠금 아이콘 -->
+    <ImageView
+        android:id="@+id/iv_lock"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_marginEnd="6dp"
+        android:src="@drawable/ic_lock"
+        android:visibility="gone"
+        tools:ignore="ContentDescription" />
+
+    <!-- 우측 화살표 -->
+    <ImageView
+        android:id="@+id/iv_arrow"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:src="@drawable/ic_chevron_right"
+        android:alpha="0.3"
+        tools:ignore="ContentDescription" />
+</LinearLayout>

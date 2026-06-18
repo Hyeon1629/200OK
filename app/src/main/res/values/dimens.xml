@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Spacing -->
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="spacing_s">8dp</dimen>
+    <dimen name="spacing_m">12dp</dimen>
+    <dimen name="spacing_l">16dp</dimen>
+    <dimen name="spacing_xl">24dp</dimen>
+    <dimen name="spacing_xxl">32dp</dimen>
+
+    <!-- Corner Radius -->
+    <dimen name="corner_radius_card">16dp</dimen>
+    <dimen name="corner_radius_button">12dp</dimen>
+
+    <!-- Elevation -->
+    <dimen name="card_elevation">2dp</dimen>
+
+    <!-- Onboarding dot -->
+    <dimen name="dot_size">10dp</dimen>
+
+    <!-- Bottom Sheet -->
+    <dimen name="bottom_sheet_corner_radius">20dp</dimen>
+</resources>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="400dp"
+    android:viewportWidth="200"
+    android:viewportHeight="400">
+
+    <!-- Head -->
+    <path
+        android:fillColor="#D0D0D0"
+        android:pathData="M100,10 C85,10 74,22 74,38 C74,54 85,66 100,66 C115,66 126,54 126,38 C126,22 115,10 100,10 Z" />
+
+    <!-- Neck Back -->
+    <path
+        android:fillColor="#BEBEBE"
+        android:pathData="M92,66 L108,66 L110,82 L90,82 Z" />
+
+    <!-- Left Shoulder Back -->
+    <path
+        android:fillColor="#BEBEBE"
+        android:pathData="M52,82 C44,80 34,86 30,96 L30,118 C32,126 40,128 50,124 L52,100 Z" />
+
+    <!-- Right Shoulder Back -->
+    <path
+        android:fillColor="#BEBEBE"
+        android:pathData="M148,82 C156,80 166,86 170,96 L170,118 C168,126 160,128 150,124 L148,100 Z" />
+
+    <!-- Upper Back -->
+    <path
+        android:fillColor="#C0C0C0"
+        android:pathData="M52,82 L148,82 L148,160 L52,160 Z" />
+
+    <!-- Lower Back -->
+    <path
+        android:fillColor="#BCBCBC"
+        android:pathData="M52,160 L148,160 L148,200 L52,200 Z" />
+
+    <!-- Left Arm Back -->
+    <path
+        android:fillColor="#C8C8C8"
+        android:pathData="M30,118 L26,118 C22,118 18,122 18,126 L18,178 C18,182 22,186 26,186 L40,186 C44,186 48,182 48,178 L48,124 Z" />
+
+    <!-- Right Arm Back -->
+    <path
+        android:fillColor="#C8C8C8"
+        android:pathData="M170,118 L174,118 C178,118 182,122 182,126 L182,178 C182,182 178,186 174,186 L160,186 C156,186 152,182 152,178 L152,124 Z" />
+
+    <!-- Hips Back -->
+    <path
+        android:fillColor="#BEBEBE"
+        android:pathData="M52,200 L148,200 L148,224 C148,230 142,234 136,234 L64,234 C58,234 52,230 52,224 Z" />
+
+    <!-- Left Thigh Back -->
+    <path
+        android:fillColor="#C8C8C8"
+        android:pathData="M60,234 L96,234 L96,304 L62,304 C58,304 54,300 54,296 L54,244 C54,238 57,234 60,234 Z" />
+
+    <!-- Right Thigh Back -->
+    <path
+        android:fillColor="#C8C8C8"
+        android:pathData="M140,234 L104,234 L104,304 L138,304 C142,304 146,300 146,296 L146,244 C146,238 143,234 140,234 Z" />
+
+    <!-- Left Calf -->
+    <path
+        android:fillColor="#BEBEBE"
+        android:pathData="M62,304 L96,304 L96,386 L66,386 C60,386 56,382 56,376 L56,310 C56,306 59,304 62,304 Z" />
+
+    <!-- Right Calf -->
+    <path
+        android:fillColor="#BEBEBE"
+        android:pathData="M138,304 L104,304 L104,386 L134,386 C140,386 144,382 144,376 L144,310 C144,306 141,304 138,304 Z" />
+
+    <!-- Body outline -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#A0A0A0"
+        android:strokeWidth="1.5"
+        android:pathData="M100,10 C85,10 74,22 74,38 C74,54 85,66 100,66 C115,66 126,54 126,38 C126,22 115,10 100,10 Z" />
+</vector>

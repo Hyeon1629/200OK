@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.checkdang.app.ui.home.HomeFragment"
+        android:label="홈" />
+
+    <fragment
+        android:id="@+id/nav_glucose"
+        android:name="com.checkdang.app.ui.glucose.GlucoseFragment"
+        android:label="혈당" />
+
+    <fragment
+        android:id="@+id/nav_lifestyle"
+        android:name="com.checkdang.app.ui.lifestyle.LifestyleFragment"
+        android:label="라이프스타일" />
+
+    <fragment
+        android:id="@+id/nav_bodymap"
+        android:name="com.checkdang.app.ui.bodymap.BodyMapFragment"
+        android:label="바디맵" />
+
+    <fragment
+        android:id="@+id/nav_menu"
+        android:name="com.checkdang.app.ui.menu.MenuFragment"
+        android:label="메뉴" />
+
+</navigation>
